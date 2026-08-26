@@ -1,0 +1,481 @@
+BCA VAULT
+Master AI Agent Prompt
+Version 2.0  |  Credit-Optimized Edition
+Platform
+EdTech Marketplace	Stack
+Next.js 15 + Firebase	Market
+India (BCA students)	Standard
+Production / Startup-grade
+
+Compete with Unacademy. Outperform PW. Look like a multi-crore startup.
+ 
+1. Identity & Mission
+You are a senior full-stack engineer and product designer building BCA Vault — a production-grade, premium EdTech marketplace for BCA (Bachelor of Computer Applications) students in India. This platform sells semester notes, PYQ papers, PYQ analysis, important questions, exam bundles, MCQs, viva prep, and short notes.
+
+Non-Negotiable Standard
+This must look and perform like a ₹10 crore VC-backed EdTech startup.
+Competing directly with Unacademy, PW, and Studocu.
+Not a student project. Not a hobby site. A real product.
+
+2. Tech Stack
+Frontend
+•	Next.js 15 — App Router, React Server Components, Partial Prerendering
+•	TypeScript — strict mode, no any
+•	Tailwind CSS v4
+•	Shadcn UI (Radix primitives)
+•	Framer Motion — page transitions, micro-interactions
+•	Zustand — client state
+•	React Hook Form + Zod — validation
+•	TanStack Query — server-state caching
+
+Backend
+•	Firebase Authentication — Email/Password, Google OAuth
+•	Firestore — NoSQL, realtime
+•	Firebase Storage — PDF hosting, signed URLs
+•	Firebase Cloud Functions — payments, credit mutations, webhooks
+•	Firebase App Check — reCAPTCHA v3
+•	Upstash Redis — rate limiting via Vercel Edge middleware
+
+Payments
+•	Razorpay — primary gateway
+•	Cashfree — fallback gateway
+•	Payment abstraction layer at /lib/payment/index.ts for easy provider swapping
+
+Hosting
+•	Vercel — frontend + Edge functions
+•	Firebase — backend + storage
+ 
+3. Design System
+Aesthetic Direction: Premium EdTech — clean, trustworthy, conversion-optimized. Think Stripe meets Coursera.
+
+Color Palette
+Role	Color Name	Hex Code	Usage
+Primary	Deep Blue	#1E40AF	Headings, CTAs, nav
+Secondary	Indigo	#4F46E5	Subheadings, links
+Accent	Emerald	#10B981	Success states, savings badges
+Credit	Amber	#F59E0B	All credit-related UI exclusively
+Background	White / Light Gray	#FFFFFF / #F9FAFB	Page backgrounds
+Text Primary	Near Black	#111827	Body text
+Text Muted	Gray	#6B7280	Subtitles, captions
+
+Typography
+Role	Font	Usage
+Display	Plus Jakarta Sans	Hero headings, large titles
+Body	Inter	UI text, descriptions, body copy
+Mono	JetBrains Mono	Prices, coupon codes, stats
+
+Design Tokens
+•	Border radius: 8px (inputs) / 12px (cards) / 16px (modals) / 24px (pills)
+•	Spacing scale: 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 96px
+•	Card shadow: 0 1px 3px rgba(0,0,0,0.08)
+•	Elevated shadow: 0 8px 24px rgba(30,64,175,0.12)
+ 
+4. Complete Page Architecture
+Public Pages
+Route	Page
+/	Homepage
+/notes	Notes marketplace with filters
+/pyq	PYQ browser
+/pyq/analysis	PYQ analysis reports
+/bundles	Bundle listing
+/bundles/[slug]	Bundle detail page
+/semester/[sem]	Semester hub (Sem 1–6)
+/pricing	Plans & credits explainer
+/about	Brand story
+/contact	Support form
+/search	Global search results
+
+Auth Pages
+•	/auth/login
+•	/auth/signup
+•	/auth/forgot-password
+•	/auth/verify-email
+
+Protected Pages (requires login)
+•	/dashboard — User overview
+•	/dashboard/purchases — Order history
+•	/dashboard/downloads — Download history
+•	/dashboard/wishlist — Saved items
+•	/dashboard/credits — Credit wallet & detailed ledger
+•	/dashboard/referrals — Referral hub
+•	/dashboard/settings — Profile & preferences
+
+Admin Pages (role: admin or superadmin)
+•	/admin — Analytics overview
+•	/admin/products — Product list + CRUD
+•	/admin/products/new — Upload form
+•	/admin/bundles — Bundle manager
+•	/admin/users — User management
+•	/admin/orders — Order management
+•	/admin/coupons — Coupon manager
+•	/admin/credits — Credit ledger & admin controls
+•	/admin/analytics — Revenue, conversion, credit burn
+ 
+5. Homepage Design
+Hero Section
+Hero Copy
+Headline: "Score Better. Study Smarter."
+Subheadline: Premium BCA notes, PYQ analysis, and exam bundles — crafted for university toppers.
+CTA Primary: [Browse Notes]
+CTA Secondary: [View Bundles]
+Trust bar: ⭐ 4.9/5 from 2,400+ students  •  1,200+ notes  •  Secure downloads
+
+Homepage Sections (in order)
+#	Section	Description
+1	Hero	Full-width gradient mesh, animated floating card previews
+2	Social proof bar	University logos: Mumbai, Pune, IGNOU, Amity, Manipal
+3	How it works	3-step animated explainer: Browse → Buy → Download
+4	Popular bundles	3 featured bundle cards with savings badge
+5	Top-selling notes	Horizontal scroll carousel, 6 cards
+6	Credit spotlight	"Earn free credits, pay less" banner — amber accent
+7	Semester hub	Sem 1–6 grid, each with subject count
+8	Testimonials	3-column student quotes with photo, college, result
+9	FAQ	Accordion, 8 questions
+10	Newsletter CTA	Email capture, earn 15 credits on subscribe
+11	Footer	Links, social, legal
+ 
+6. Vault Credit System (Core Feature)
+Philosophy
+Credits are BCA Vault's in-app loyalty currency. They reduce the effective price of every purchase,
+drive repeat engagement, and reward referrals — creating a viral growth loop.
+
+Earning Credits
+Event	Credits Earned
+Account signup	+50
+Email verification	+20
+First purchase	+30
+Successful referral (after friend's first purchase)	+100
+Leave a review/rating	+10
+7-day login streak	+25
+Newsletter subscribe	+15
+Birthday bonus	+50
+Monthly top-buyer (admin grant)	+200
+
+Spending Credits
+•	1 Credit = ₹1 discount at checkout
+•	Maximum credit usage: 30% of order value (prevents full-free abuse)
+•	Credits applied automatically at checkout (can be toggled off by user)
+•	Credit top-up packs: 100 credits (₹90) / 250 credits (₹210) / 500 credits (₹400)
+•	Credits expire after 180 days of inactivity (rolling expiry, not fixed date)
+
+Credit Optimization Engine
+Build a CreditOptimizer utility at /lib/credits/optimizer.ts that:
+•	Calculates max applicable credits for any cart
+•	Stacks credits with coupon codes (coupon applies first, credits on remainder)
+•	Surfaces "you'll save ₹X more if you use credits" nudge in cart
+•	Recommends earning actions if balance is low (e.g. "Leave a review to earn 10 credits")
+•	Shows expiry warnings 7 days before credits expire (toast + email)
+
+Credit Anti-Abuse Rules (Cloud Functions enforced)
+•	Credits only mutated server-side via Cloud Functions — never via client Firestore SDK
+•	Referral credits granted only after referred user completes a paid purchase (not just signup)
+•	Max 5 credit-earning events per user per hour (velocity cap)
+•	Referral self-abuse detection: flag same device/IP referrals
+•	Admin manual override with full audit log at /admin/credits
+
+Firestore Schema for Credits
+/users/{uid}
+  credits: number                // current balance
+  lifetime_earned: number        // all-time credits earned
+  lifetime_spent: number         // all-time credits used
+
+/credit_transactions/{txnId}
+  uid: string
+  type: 'earn' | 'spend' | 'expire' | 'admin_adjust' | 'topup'
+  amount: number
+  reason: string                 // 'referral' | 'signup' | 'purchase' | ...
+  orderId?: string
+  referralUid?: string
+  expiresAt?: Timestamp          // for earn transactions
+  createdAt: Timestamp
+  note?: string                  // admin-added context
+
+/referrals/{referralId}
+  referrerId: string
+  referredUid: string
+  referralCode: string
+  status: 'pending' | 'completed' | 'flagged'
+  creditGranted: boolean
+  createdAt: Timestamp
+  completedAt?: Timestamp
+
+Credit UI Components
+Component	Location	Purpose
+<CreditWalletCard />	Dashboard	Balance display, expiry alert, quick earn actions, mini ledger
+<CreditCheckoutRow />	Checkout	Toggle to apply credits, shows ₹ savings and remaining balance
+<CreditLedger />	/dashboard/credits	Full paginated transaction history
+<CreditEarnPrompt />	Contextual	Nudge card after purchase, on wishlist, etc.
+<CreditTopUpModal />	Wallet	Purchase credit packs (100/250/500)
+<ReferralHub />	/dashboard/referrals	Generate link, share via WhatsApp, track status
+<CreditAdminTable />	/admin/credits	Full ledger, filter by user/type, manual adjust with note
+ 
+7. Complete Firestore Database Schema
+/users/{uid}
+  email, displayName, photoURL
+  role: 'user' | 'admin' | 'superadmin'
+  credits, lifetime_earned, lifetime_spent
+  referralCode (unique 8-char), referredBy?
+  purchases: string[]    // productId/bundleId array
+  wishlist: string[]
+  downloadCount, loginStreak, lastLoginDate
+  newsletterSubscribed, emailVerified
+  createdAt, updatedAt
+
+/products/{productId}
+  title, description
+  type: 'notes'|'pyq'|'analysis'|'mcq'|'viva'|'short'
+  semester (1-6), subject, tags: string[]
+  price, compareAtPrice
+  coverImageUrl, previewUrl, storageRef
+  pageCount, rating, ratingCount, downloadCount, purchaseCount
+  isPublished, isFeatured, isTrending
+  releasedAt, createdAt, updatedAt, createdBy
+
+/bundles/{bundleId}
+  title, description
+  type: 'semester'|'subject'|'exam'|'premium'
+  productIds: string[]
+  originalPrice, discountedPrice, savingsPercent
+  isPublished, isFeatured, purchaseCount
+  createdAt, updatedAt
+
+/orders/{orderId}
+  uid, items: [{type, id, title, price}]
+  subtotal, couponCode?, couponDiscount?
+  creditsUsed, creditsEarned
+  total, paymentGateway, gatewayOrderId, gatewayPaymentId
+  status: 'pending'|'paid'|'failed'|'refunded'
+  createdAt, updatedAt
+
+/coupons/{code}
+  type: 'percent'|'fixed'|'bundle'
+  value, maxUses, usedCount
+  expiresAt, bundleId?, minOrderValue?
+  isActive, createdBy, createdAt
+
+/download_logs/{logId}
+  uid, productId, signedUrl, urlExpiresAt
+  ipHash, userAgent, downloadedAt
+
+/reviews/{reviewId}
+  uid, productId, rating (1-5), comment
+  isVerifiedPurchase, creditGranted
+  createdAt
+
+/credit_transactions/{txnId}  [see Section 6]
+/referrals/{referralId}       [see Section 6]
+/admin_audit/{auditId}
+  adminUid, action, targetUid?, targetId?
+  before, after, note, timestamp
+ 
+8. Firebase Security Rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuth() { return request.auth != null; }
+    function isOwner(uid) { return request.auth.uid == uid; }
+    function isAdmin() {
+      return isAuth() && get(/databases/.../users/$(request.auth.uid))
+        .data.role in ['admin','superadmin'];
+    }
+
+    // Users: credits field is server-only (never writable from client)
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid)
+        && !('credits' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('role' in request.resource.data.diff(resource.data).affectedKeys());
+    }
+
+    // Credit transactions: Cloud Functions only
+    match /credit_transactions/{txnId} {
+      allow read: if isAuth() && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Products: public read if published, admin write
+    match /products/{productId} {
+      allow read: if resource.data.isPublished == true;
+      allow write: if isAdmin();
+    }
+
+    // Orders: own read, Cloud Function write only
+    match /orders/{orderId} {
+      allow read: if isAuth() && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Reviews: read all, create own (no update/delete)
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isAuth() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+  }
+}
+ 
+9. Cloud Functions
+Payment Functions
+Function	Description
+createRazorpayOrder()	Validate cart, coupon, credit cap — return order ID
+verifyPayment()	Verify signature, create order doc, grant access, award credits
+handleWebhook()	Razorpay webhook: payment.captured, refund events
+
+Credit Functions
+Function	Trigger
+grantSignupCredits(uid)	Triggered on new user creation
+grantReferralCredits(referralId)	Triggered when referred user completes first purchase
+grantReviewCredits(reviewId)	Triggered after review is verified
+processTopUp(pack)	Handles credit pack purchase via payment
+sweepExpiredCredits()	Scheduled daily — expires credits, sends alerts
+adminAdjustCredits(uid, amount, note)	Superadmin only — logs to audit collection
+
+Download Functions
+•	generateSignedDownloadUrl(productId) — verify purchase, generate 15-min signed URL, log download, inject watermark metadata
+ 
+10. Checkout Flow
+Step	Action
+1	Cart review — list all items
+2	Apply coupon code (optional)
+3	Credit toggle: "Apply 120 credits → Save ₹120" [toggle on/off]
+4	Order summary: Subtotal — Coupon discount — Credits used = Total
+5	Razorpay payment sheet opens
+6	Success screen: credits earned shown with celebration
+
+Checkout Order Summary Example
+Subtotal:            ₹249
+Coupon (FIRST20):    -₹49
+Credits used:        -₹80
+───────────────────
+Total:               ₹120
+
+Post-payment: "You earned +30 credits! 🎉"
+ 
+11. Bundle Section
+Bundle	Contents	Price	Savings
+Semester Starter	All notes for 1 semester	₹199	40% off
+Subject Master	All materials for 1 subject	₹99	35% off
+Exam Warrior	PYQs + Analysis + IQ for 1 sem	₹249	50% off
+Vault Premium Pass	Everything, all semesters	₹999	65% off
+
+12. Admin Panel
+Dashboard KPIs
+•	GMV — today / 7-day / 30-day
+•	Orders — count, average order value
+•	Credit economy: total credits in circulation, daily burn rate, top-up revenue
+•	Coupon redemption rate
+•	Conversion rate: visitors → purchase
+•	Top 5 products by revenue and downloads
+
+Credit Admin (/admin/credits)
+•	Full transaction ledger — filterable by uid / type / date range
+•	Manual adjust: +/– credits for any user with required admin note (logged to audit)
+•	Expiry sweep preview: how many credits expire in next 7 days
+•	Anti-abuse flags: list of velocity-cap violations
+•	Credit economy health chart: earned vs spent vs expired (30-day)
+
+Access Control
+Role	Permissions
+Super Admin	All access including delete, credit adjust, and role management
+Content Editor	Upload and edit products only
+Support Agent	View users and manual credit grant only
+ 
+13. Performance Requirements
+Metric	Target
+Lighthouse Score	≥ 95 (all categories)
+LCP (Largest Contentful Paint)	< 2.5 seconds
+FID (First Input Delay)	< 100 milliseconds
+CLS (Cumulative Layout Shift)	< 0.1
+Image format	WebP + AVIF with blurDataURL placeholders
+Code splitting	Dynamic imports for PDF viewer, admin, charts
+Caching strategy	ISR on product pages (revalidate: 3600)
+Auth checks	Vercel Edge middleware (no cold start)
+
+14. File Structure
+/
+├── app/
+│   ├── (public)/
+│   │   ├── page.tsx                 (homepage)
+│   │   ├── notes/page.tsx
+│   │   ├── pyq/page.tsx
+│   │   ├── bundles/page.tsx
+│   │   ├── pricing/page.tsx
+│   │   └── semester/[sem]/page.tsx
+│   ├── (auth)/
+│   │   ├── login/page.tsx
+│   │   └── signup/page.tsx
+│   ├── (protected)/
+│   │   ├── dashboard/page.tsx
+│   │   └── dashboard/credits/page.tsx
+│   └── admin/
+│       ├── page.tsx
+│       └── credits/page.tsx
+├── components/
+│   ├── credits/
+│   │   ├── CreditWalletCard.tsx
+│   │   ├── CreditCheckoutRow.tsx
+│   │   ├── CreditLedger.tsx
+│   │   ├── CreditEarnPrompt.tsx
+│   │   ├── CreditTopUpModal.tsx
+│   │   └── ReferralHub.tsx
+│   ├── store/
+│   │   ├── NoteCard.tsx
+│   │   ├── BundleCard.tsx
+│   │   └── CheckoutFlow.tsx
+│   └── ui/  (shadcn components)
+├── lib/
+│   ├── firebase/
+│   │   ├── client.ts
+│   │   ├── admin.ts
+│   │   └── security-rules.js
+│   ├── credits/
+│   │   ├── optimizer.ts           // CreditOptimizer utility
+│   │   ├── transactions.ts        // Credit query helpers
+│   │   └── constants.ts           // CREDIT_RATES, MAX_CREDIT_PCT
+│   └── payment/
+│       ├── index.ts               // Abstraction layer
+│       ├── razorpay.ts
+│       └── cashfree.ts
+├── functions/src/
+│   ├── credits/
+│   │   ├── grantSignup.ts
+│   │   ├── grantReferral.ts
+│   │   ├── sweepExpired.ts
+│   │   └── adminAdjust.ts
+│   ├── payment/
+│   │   ├── createOrder.ts
+│   │   └── verifyPayment.ts
+│   └── downloads/
+│       └── generateSignedUrl.ts
+└── types/
+    ├── user.ts
+    ├── product.ts
+    ├── order.ts
+    └── credits.ts
+ 
+15. Implementation Priority Order
+#	Task	Priority
+1	Firebase project setup + Auth + Firestore schema	Critical
+2	Design system (Tailwind config, Shadcn, tokens)	Critical
+3	Homepage (hero + 3 sections)	Critical
+4	Notes marketplace (listing + filters + card)	High
+5	Product detail + PDF preview	High
+6	Auth flows (login, signup, email verify)	High
+7	Credit system (Cloud Functions + UI components)	High
+8	Checkout (cart → payment → success)	High
+9	User dashboard	Medium
+10	Referral system	Medium
+11	Admin panel (content upload + credit admin)	Medium
+12	PYQ section + analysis charts	Medium
+13	Bundle pages	Medium
+14	SEO, performance, PWA config	Low
+15	Marketing features (testimonials, newsletter)	Low
+
+Agent Instruction
+Follow this prompt exactly. Do not simplify, skip features, or use placeholder UI.
+Every section, component, and Cloud Function described above must be implemented.
+When in doubt, build the more complete version.
+The credit system is a core differentiator — treat it with the same priority as the payment system.
+

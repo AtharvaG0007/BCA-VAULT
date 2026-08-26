@@ -1,0 +1,74 @@
+sites-runtime.051362…64afa2cfe62.js:8122 New error in code-component (0:7) ReferenceError: Sparkles is not defined
+    at lJ (https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:27779:44)
+    at pI (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:6:16997)
+    at TC (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8:43968)
+    at mC (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8:39726)
+    at U2 (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8:39654)
+    at Bm (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8:39508)
+    at Fg (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8:35876)
+    at dC (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8:34827)
+    at SO (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:1:9298)
+    at MessagePort.TO (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:1:9692)
+
+React stack:
+    at lJ (https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:27745:13)
+    at https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:89:675
+    at main
+    at https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:89:675
+    at BJ
+    at https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:89:675
+    at div
+    at s (https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:4253:10)
+    at https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:89:675
+    at yr (https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:53482:25)
+    at https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:89:675
+    at SD (https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:871:29)
+    at OD (https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:1110:13)
+    at uL (https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:3719:25)
+    at Cs (https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:3763:25)
+    at https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:89:675
+    at div
+    at https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:89:675
+    at div
+    at https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:89:675
+    at e1e (https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:53517:13)
+    at https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:89:675
+    at https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:89:675
+    at vY (https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:23194:25)
+    at https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:89:675
+    at https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:89:675
+    at hY (https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:23098:25)
+    at https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:89:675
+    at CD (https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:1062:13)
+    at nR (https://nix-gothic-88798603.figma.site/_components/v2/ad02f1a….js:1517:13)
+    at t1e
+    at ra (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8222:141)
+    at h$ (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8222:34433)
+    at Dl (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8222:10048)
+    at div
+    at nV (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8268:6769)
+    at https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8222:32033
+    at uU (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8222:33038)
+    at https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8268:2677
+    at ra (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8222:141)
+    at https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8268:5423
+    at https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8219:179955
+    at https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8268:2677
+    at ra (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8222:141)
+    at uN (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8222:9859)
+    at fN (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8222:32907)
+    at ZU (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8268:1985)
+    at https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8268:2677
+    at BR (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8219:5374)
+    at W9 (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8271:3677)
+    at div
+    at nV (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8268:6769)
+    at div
+    at nV (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8268:6769)
+    at nU (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8222:30907)
+    at GC (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8065:6862)
+    at RS (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8122:26305)
+    at ra (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8222:141)
+    at MD (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8122:25505)
+    at B9 (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8271:192)
+    at mV (https://nix-gothic-88798603.figma.site/_runtimes/sites-runtime.0513629….js:8271:2949)

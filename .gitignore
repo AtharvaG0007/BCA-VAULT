@@ -1,0 +1,32 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+venv/
+.venv/
+__pycache__/
+
+# Build / generated files
+dist/
+build/
+.next/
+out/
+
+# IDE / editor
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local/private configuration
+*.local
+config.local.*
+secrets/
