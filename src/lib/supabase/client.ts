@@ -1,10 +1,26 @@
 import { createClient } from "@supabase/supabase-js";
-import { projectId, publicAnonKey } from "/utils/supabase/info";
+import { projectId, publicAnonKey as defaultAnonKey } from "../../../utils/supabase/info";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || `https://${projectId}.supabase.co`;
-const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || publicAnonKey;
+export const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || `https://${projectId}.supabase.co`;
+export const publicAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || defaultAnonKey;
 
-export const supabase = createClient(supabaseUrl, supabasePublishableKey);
+// Client for student UI (standard session persistence)
+export const supabase = createClient(supabaseUrl, publicAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    storageKey: "bca_student_auth",
+  },
+});
+
+// Client for Super Admin UI (isolated memory session - no session persistence)
+export const adminSupabase = createClient(supabaseUrl, publicAnonKey, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+    storageKey: "bca_admin_auth",
+  },
+});
 
 export const SERVER_URL = `${supabaseUrl}/functions/v1/make-server-6704fe8f`;
 
@@ -18,8 +34,10 @@ export async function serverFetch(
     ...options,
     headers: {
       "Content-Type": "application/json",
+      "apikey": publicAnonKey,
       "Authorization": `Bearer ${token}`,
       ...(options.headers ?? {}),
     },
   });
 }
+

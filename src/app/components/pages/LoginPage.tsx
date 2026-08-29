@@ -30,8 +30,8 @@ export function LoginPage() {
     setSubmitting(true);
     try {
       await signIn(email, password);
-      // Role redirect handled by ProtectedRoute; navigate to home and let guards redirect
-      navigate(from ?? "/", { replace: true });
+      // Role redirect handled by /dashboard or original protected route
+      navigate(from ?? "/dashboard", { replace: true });
     } catch (err: any) {
       setError(friendlyError(err.code));
     } finally {

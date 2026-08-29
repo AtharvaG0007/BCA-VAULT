@@ -1,38 +1,181 @@
-import { supabase } from "./client";
+import { supabase, adminSupabase, publicAnonKey, supabaseUrl } from "./client";
+
+const studentFn = async <T>(path: string, body: unknown): Promise<T> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  const response = await fetch(`${supabaseUrl}/functions/v1/make-server-6704fe8f${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": publicAnonKey,
+      Authorization: `Bearer ${session?.access_token ?? ""}`,
+    },
+    body: JSON.stringify(body),
+  });
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(json.error ?? "Student operation failed.");
+  return json as T;
+};
 
 const adminFn = async <T>(path: string, body: unknown): Promise<T> => {
-  const { data: { session } } = await supabase.auth.getSession();
-  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bca-admin${path}`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token ?? ""}` }, body: JSON.stringify(body) });
-  const json = await response.json();
+  const { data: { session } } = await adminSupabase.auth.getSession();
+  const response = await fetch(`${supabaseUrl}/functions/v1/bca-admin${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": publicAnonKey,
+      Authorization: `Bearer ${session?.access_token ?? ""}`,
+    },
+    body: JSON.stringify(body),
+  });
+  const json = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(json.error ?? "Administrative operation failed.");
   return json as T;
 };
 
 export const adminApi = {
-  listPayments: (status = "all", search = "") => { let q = supabase.from("payment_submissions").select("id,reference_id,user_id,bundle_id,full_name,email,phone,course,semester,amount,utr,screenshot_bucket,screenshot_path,status,admin_notes,verified_at,verified_by,created_at,bundles(title)", { count: "exact" }).order("created_at", { ascending: false }).range(0, 49); if (status !== "all") q = q.eq("status", status); if (search) q = q.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,utr.ilike.%${search}%`); return q; },
-  listStudents: (search = "") => { let q = supabase.from("profiles").select("user_id,full_name,email,phone,course,semester,status,created_at", { count: "exact" }).order("created_at", { ascending: false }).range(0, 49); if (search) q = q.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`); return q; },
+  listPayments: (status = "all", search = "") => {
+    let q = adminSupabase.from("payment_submissions").select("id,reference_id,user_id,full_name,email,phone,course,semester,amount,utr,screenshot_bucket,screenshot_path,status,admin_notes,verified_at,verified_by,created_at", { count: "exact" }).order("created_at", { ascending: false }).range(0, 49);
+    if (status !== "all") q = q.eq("status", status);
+    if (search) q = q.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,utr.ilike.%${search}%`);
+    return q;
+  },
+  listStudents: (search = "") => {
+    let q = adminSupabase.from("profiles").select("user_id,full_name,email,phone,course,semester,status,created_at", { count: "exact" }).order("created_at", { ascending: false }).range(0, 49);
+    if (search) q = q.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
+    return q;
+  },
   listAccess: async () => {
-    const { data: access, error: accessError } = await supabase.from("access_permissions").select("id,user_id,bundle_id,status,granted_at,granted_by,expires_at,bundles(title)").order("granted_at", { ascending: false }).range(0, 99);
+    const { data: access, error: accessError } = await adminSupabase.from("access_permissions").select("id,user_id,bundle_id,status,granted_at,granted_by,expires_at,bundles(title)").order("granted_at", { ascending: false }).range(0, 99);
     if (accessError || !access?.length) return { data: access ?? [], error: accessError };
 
-    const { data: profiles, error: profilesError } = await supabase.from("profiles").select("user_id,full_name,email").in("user_id", [...new Set(access.map((row) => row.user_id))]);
+    const { data: profiles, error: profilesError } = await adminSupabase.from("profiles").select("user_id,full_name,email").in("user_id", [...new Set(access.map((row) => row.user_id))]);
     if (profilesError) return { data: null, error: profilesError };
 
     const profilesByUserId = new Map((profiles ?? []).map((profile) => [profile.user_id, profile]));
     return { data: access.map((row) => ({ ...row, profiles: profilesByUserId.get(row.user_id) ?? null })), error: null };
   },
-  listBundles: () => supabase.from("bundles").select("id,title,description,price,published,created_at,notes(count),access_permissions(count)").order("created_at", { ascending: false }).range(0, 99),
-  listNotes: () => supabase.from("notes").select("id,title,description,subject,semester,bundle_id,storage_bucket,storage_path,published,created_at,bundles(title)").order("created_at", { ascending: false }).range(0, 99),
-  listActivity: () => supabase.from("activity_logs").select("id,action,target_type,target_id,metadata,created_at,actor_id").order("created_at", { ascending: false }).range(0, 99),
-  reviewPayment: async (id: string, status: "approved" | "rejected", note = "") => { await adminFn("/payments/review", { id, status, note }); },
-  updateProfile: async (id: string, status: "active" | "inactive") => { const result = await supabase.from("profiles").update({ status }).eq("user_id", id); if (result.error) throw result.error; },
-  grantAccess: async (user_id: string, bundle_id: string, expires_at?: string) => { const { data: { user } } = await supabase.auth.getUser(); const result = await supabase.from("access_permissions").upsert({ user_id, bundle_id, status: "active", granted_by: user.user?.id, expires_at: expires_at || null }, { onConflict: "user_id,bundle_id" }); if (result.error) throw result.error; },
-  revokeAccess: async (id: string) => { const result = await supabase.from("access_permissions").update({ status: "revoked" }).eq("id", id); if (result.error) throw result.error; },
-  saveBundle: async (payload: { id?: string; title: string; description: string; price: number; published: boolean }) => { const { id, ...data } = payload; const q = id ? supabase.from("bundles").update(data).eq("id", id) : supabase.from("bundles").insert(data); const result = await q; if (result.error) throw result.error; },
-  saveNote: async (payload: Record<string, unknown>) => { const result = await supabase.from("notes").insert(payload); if (result.error) throw result.error; },
+  listBundles: () => adminSupabase.from("bundles").select("id,title,description,price,published,created_at,notes(count),access_permissions(count)").order("created_at", { ascending: false }).range(0, 99),
+  listNotes: () => adminSupabase.from("notes").select("id,title,description,subject,semester,bundle_id,storage_bucket,storage_path,published,created_at,bundles(title)").order("created_at", { ascending: false }).range(0, 99),
+  listActivity: () => adminSupabase.from("activity_logs").select("id,action,target_type,target_id,metadata,created_at,actor_id").order("created_at", { ascending: false }).range(0, 99),
+  
+  // Delete a bundle and all associated data
+  deleteBundle: async (bundleId: string) => {
+    // Verify admin session
+    const { data: { user } } = await adminSupabase.auth.getUser();
+    if (!user) throw new Error("Unauthenticated");
+    const { data: adminProfile, error: adminErr } = await adminSupabase
+      .from("admin_profiles")
+      .select("role,status")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (adminErr) throw adminErr;
+    if (!adminProfile || adminProfile.role !== "superadmin" || adminProfile.status !== "active")
+      throw new Error("Unauthorized");
+
+    // Fetch bundle
+    const { data: bundle, error: bundleErr } = await adminSupabase
+      .from("bundles")
+      .select("id,title,published")
+      .eq("id", bundleId)
+      .single();
+    if (bundleErr) throw bundleErr;
+    if (!bundle) throw new Error("Bundle not found");
+
+    // Fetch associated notes
+    const { data: notes, error: notesErr } = await adminSupabase
+      .from("notes")
+      .select("id,storage_bucket,storage_path")
+      .eq("bundle_id", bundleId);
+    if (notesErr) throw notesErr;
+
+    // Fetch associated access permissions
+    const { data: access, error: accessErr } = await adminSupabase
+      .from("access_permissions")
+      .select("id")
+      .eq("bundle_id", bundleId);
+    if (accessErr) throw accessErr;
+
+    // Delete access permissions
+    if (access && access.length) {
+      const { error: delAccessErr } = await adminSupabase
+        .from("access_permissions")
+        .delete()
+        .eq("bundle_id", bundleId);
+      if (delAccessErr) throw delAccessErr;
+    }
+
+    // Delete storage files and notes
+    if (notes && notes.length) {
+      for (const note of notes) {
+        const bucket = note.storage_bucket || "Bca_notes";
+        const { error: storageErr } = await adminSupabase.storage.from(bucket).remove([note.storage_path]);
+        if (storageErr) throw storageErr;
+      }
+      const { error: delNotesErr } = await adminSupabase.from("notes").delete().eq("bundle_id", bundleId);
+      if (delNotesErr) throw delNotesErr;
+    }
+
+    // Delete the bundle itself
+    const { error: delBundleErr } = await adminSupabase.from("bundles").delete().eq("id", bundleId);
+    if (delBundleErr) throw delBundleErr;
+
+    // Activity log
+    await adminSupabase.from("activity_logs").insert([
+      {
+        action: "bundle_deleted",
+        actor_id: user.id,
+        target_type: "bundle",
+        target_id: bundleId,
+        metadata: JSON.stringify({ title: bundle.title }),
+        created_at: new Date().toISOString(),
+      },
+    ]);
+    return true;
+  },
+
+  updateProfile: async (id: string, status: "active" | "inactive") => {
+    const result = await adminSupabase.from("profiles").update({ status }).eq("user_id", id);
+    if (result.error) throw result.error;
+  },
+  grantAccess: async (user_id: string, bundle_id: string, expires_at?: string) => {
+    const { data: { user } } = await adminSupabase.auth.getUser();
+    const result = await adminSupabase.from("access_permissions").upsert({
+      user_id,
+      bundle_id,
+      status: "active",
+      granted_by: user?.id,
+      expires_at: expires_at || null,
+    }, { onConflict: "user_id,bundle_id" });
+    if (result.error) throw result.error;
+  },
+  revokeAccess: async (id: string) => {
+    const result = await adminSupabase.from("access_permissions").update({ status: "revoked" }).eq("id", id);
+    if (result.error) throw result.error;
+  },
+  saveBundle: async (payload: { id?: string; title: string; description: string; price: number; published: boolean }) => {
+    const { id, ...data } = payload;
+    const q = id ? adminSupabase.from("bundles").update(data).eq("id", id) : adminSupabase.from("bundles").insert(data);
+    const result = await q;
+    if (result.error) throw result.error;
+  },
+  saveNote: async (payload: Record<string, unknown>) => {
+    const result = await adminSupabase.from("notes").insert(payload);
+    if (result.error) throw result.error;
+  },
   createStudent: (data: unknown) => adminFn<{ student: { user_id: string } }>("/students", data),
+  
+  // Student‑authorized signed URL generation using server downloads endpoint
+  getStudentSignedNoteUrl: (bucket: string, storagePath: string) =>
+    studentFn<{ download: unknown; signedUrl: string }>("/downloads", {
+      bucket: bucket || "Bca_notes",
+      fileRef: storagePath,
+    }),
+
+  reviewPayment: (id: string, status: "approved" | "rejected", note = "") =>
+    adminFn<{ success: boolean; payment: unknown }>("/payments/review", { id, status, note }),
   resetPassword: (email: string) => adminFn("/students/reset-password", { email }),
   paymentUrl: (bucket: string, path: string) => adminFn<{ url: string }>("/payments/signed-url", { bucket, path }),
   noteUploadUrl: (fileName: string) => adminFn<{ bucket: string; path: string; token: string }>("/notes/upload-url", { fileName, contentType: "application/pdf" }),
   deleteNote: (id: string) => adminFn("/notes/delete", { id }),
 };
+

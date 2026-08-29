@@ -5,20 +5,25 @@ import { Shield, Eye, EyeOff, Loader2, AlertCircle, Lock } from "lucide-react";
 import { useAdminAuth } from "@/app/components/auth/AdminAuthContext";
 
 export function AdminLoginPage() {
-  const navigate   = useNavigate();
-  const location   = useLocation();
-  const { signIn, logout } = useAdminAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, role, loading: authLoading, signIn, logout } = useAdminAuth();
 
-  const isSuperAdmin = true;
-
-  const [email,    setEmail]    = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPw,   setShowPw]   = useState(false);
-  const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState<string | null>(null);
+  const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [attempts, setAttempts] = useState(0);
-  const [locked,   setLocked]   = useState(false);
+  const [locked, setLocked] = useState(false);
   const [lockTime, setLockTime] = useState(0);
+
+  // If already authenticated as superadmin, redirect to /admin/dashboard
+  useEffect(() => {
+    if (!authLoading && user && role === "superadmin") {
+      navigate("/admin/dashboard", { replace: true });
+    }
+  }, [user, role, authLoading, navigate]);
 
   // Rate limit: lock after 5 failed attempts for 5 minutes
   useEffect(() => {
@@ -36,7 +41,7 @@ export function AdminLoginPage() {
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [locked]);
+  }, [locked, lockTime]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -47,27 +52,24 @@ export function AdminLoginPage() {
 
     try {
       const profile = await signIn(email, password);
-      const role = profile.role;
-      const hasAccess = role === "superadmin";
+      const userRole = profile.role;
 
-      if (!hasAccess) {
+      if (userRole !== "superadmin") {
         await logout();
-        throw new Error("This account is not authorized for this portal.");
+        throw new Error("This account is not authorized for administration.");
       }
 
-      // Redirect based on actual role
-      navigate("/admin-root/dashboard", { replace: true });
-
+      navigate("/admin/dashboard", { replace: true });
       setAttempts(0);
     } catch (err: any) {
-      setAttempts(a => {
+      setAttempts((a) => {
         const next = a + 1;
         if (next >= 5) {
           setLocked(true);
           setLockTime(300);
           setError("Too many failed attempts. Please try again in 5 minutes.");
         } else {
-          const msg = err?.message ?? "Login failed. Please try again.";
+          const msg = err?.message ?? "Login failed. Please verify your credentials.";
           setError(msg);
         }
         return next;
@@ -87,47 +89,48 @@ export function AdminLoginPage() {
       >
         {/* Icon + title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#1E40AF]/20 border border-[#1E40AF]/30 mb-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#1E40AF]/20 border border-[#1E40AF]/30 mb-4 shadow-lg shadow-indigo-500/10">
             <Shield className="w-7 h-7 text-[#60A5FA]" />
           </div>
-          <h1 className="text-xl font-black text-white" style={{ fontFamily: "var(--font-display)" }}>
-            {isSuperAdmin ? "Super Admin" : "Admin"} Access
+          <h1 className="text-2xl font-black text-white" style={{ fontFamily: "var(--font-display)" }}>
+            Super Admin Access
           </h1>
-          <p className="text-gray-500 text-sm mt-1">
-            {isSuperAdmin ? "Root-level administration" : "Dashboard administration"}
-          </p>
+          <p className="text-gray-400 text-xs mt-1">Root-level system administration</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-gray-400 mb-1.5">Email</label>
+            <label className="block text-xs font-semibold text-gray-300 mb-1.5">Admin Email</label>
             <input
               type="email"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               required
               disabled={locked || loading}
               placeholder="superadmin@bcavault.in"
-              className="w-full bg-gray-900 border border-gray-700 text-white placeholder-gray-600 px-4 py-3 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#1E40AF] focus:border-transparent transition disabled:opacity-50"
+              autoComplete="username"
+              className="w-full bg-gray-900 border border-gray-700 text-white placeholder-gray-500 px-4 py-3 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#1E40AF] focus:border-transparent transition disabled:opacity-50"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-400 mb-1.5">Password</label>
+            <label className="block text-xs font-semibold text-gray-300 mb-1.5">Password</label>
             <div className="relative">
               <input
                 type={showPw ? "text" : "password"}
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={locked || loading}
                 placeholder="••••••••"
-                className="w-full bg-gray-900 border border-gray-700 text-white placeholder-gray-600 px-4 py-3 pr-12 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#1E40AF] focus:border-transparent transition disabled:opacity-50"
+                autoComplete="current-password"
+                className="w-full bg-gray-900 border border-gray-700 text-white placeholder-gray-500 px-4 py-3 pr-12 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#1E40AF] focus:border-transparent transition disabled:opacity-50"
               />
               <button
                 type="button"
-                onClick={() => setShowPw(v => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-300 transition"
+                onClick={() => setShowPw((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-200 transition"
+                aria-label={showPw ? "Hide password" : "Show password"}
               >
                 {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -135,33 +138,36 @@ export function AdminLoginPage() {
           </div>
 
           {error && (
-            <div className="flex items-start gap-2 bg-red-950/50 border border-red-900 rounded-xl px-4 py-3 text-red-400 text-sm">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" /> {error}
+            <div className="flex items-start gap-2 bg-red-950/60 border border-red-900 rounded-xl px-4 py-3 text-red-300 text-xs font-medium">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{error}</span>
             </div>
           )}
 
           {locked && (
-            <div className="flex items-center gap-2 bg-orange-950/50 border border-orange-900 rounded-xl px-4 py-3 text-orange-400 text-sm">
+            <div className="flex items-center gap-2 bg-orange-950/60 border border-orange-900 rounded-xl px-4 py-3 text-orange-300 text-xs font-medium">
               <Lock className="w-4 h-4 shrink-0" />
-              Account locked. Try again in {lockTime}s.
+              <span>Account locked. Try again in {lockTime}s.</span>
             </div>
           )}
 
           <button
             type="submit"
             disabled={loading || locked}
-            className="w-full h-12 bg-[#1E40AF] hover:bg-[#1E3A8A] disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition mt-2"
+            className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition mt-2"
           >
             {loading ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Verifying…</>
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Verifying…
+              </>
             ) : (
-              "Sign In"
+              "Sign In to Admin Portal"
             )}
           </button>
         </form>
 
-        <p className="text-center text-xs text-gray-700 mt-8">
-          Unauthorized access attempts are logged and monitored.
+        <p className="text-center text-[11px] text-gray-500 mt-8">
+          Authorized Super Admin access only. Unauthorized attempts are logged.
         </p>
       </motion.div>
     </div>

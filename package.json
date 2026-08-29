@@ -6,7 +6,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "provision:role": "tsx scripts/provision-role.ts"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
@@ -52,9 +52,11 @@
     "motion": "12.23.24",
     "next-themes": "0.4.6",
     "qrcode.react": "^4.2.0",
+    "react": "18.3.1",
     "react-day-picker": "8.10.1",
     "react-dnd": "16.0.1",
     "react-dnd-html5-backend": "16.0.1",
+    "react-dom": "18.3.1",
     "react-hook-form": "7.55.0",
     "react-popper": "2.3.0",
     "react-resizable-panels": "2.1.7",
@@ -69,23 +71,15 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.1.12",
+    "@types/node": "^20.17.0",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
     "@vercel/node": "^5.10.2",
-    "tsx": "^4.20.5",
     "@vitejs/plugin-react": "4.7.0",
     "tailwindcss": "4.1.12",
+    "tsx": "^4.20.5",
+    "typescript": "^5.7.2",
     "vite": "6.3.5"
-  },
-  "peerDependencies": {
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
-  },
-  "peerDependenciesMeta": {
-    "react": {
-      "optional": true
-    },
-    "react-dom": {
-      "optional": true
-    }
   },
   "pnpm": {
     "overrides": {

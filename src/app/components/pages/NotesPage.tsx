@@ -10,7 +10,27 @@ function SubjectDetail({ subject }: { subject: Subject }) {
       <div className="border-b border-slate-200 bg-slate-950"><div className="mx-auto max-w-6xl px-5 py-12 sm:px-8"><button onClick={() => navigate("/notes")} className="mb-6 text-xs font-bold uppercase tracking-[0.14em] text-indigo-200">← BCA Syllabus 2026–27</button><p className="font-mono text-sm font-bold text-indigo-300">{subject.courseCode} · SEMESTER {subject.semester}</p><h1 className="mt-3 max-w-3xl text-3xl font-bold tracking-[-0.025em] text-white sm:text-5xl">{subject.officialTitle}</h1><div className="mt-6 flex flex-wrap gap-2">{[subject.courseType, "Theory Notes Only", "2026–27"].map((label) => <span key={label} className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white">{label}</span>)}</div></div></div>
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-10 sm:px-8 lg:grid-cols-[1fr_280px]">
         <div>{subject.units.length > 0 ? <div className="space-y-4">{subject.units.map((unit, index) => <section key={unit.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-start gap-4"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-indigo-50 font-mono text-xs font-bold text-indigo-600">{String(index + 1).padStart(2, "0")}</span><div><h2 className="text-lg font-bold text-slate-900">{unit.title}</h2><div className="mt-4 grid gap-2 sm:grid-cols-2">{unit.topics.map((topic) => <div key={topic} className="flex gap-2 text-sm leading-5 text-slate-600"><ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-indigo-500" />{topic}</div>)}</div></div></div></section>)}</div> : <div className="rounded-2xl border border-slate-200 bg-white p-8"><BookOpen className="h-8 w-8 text-indigo-600" /><h2 className="mt-4 text-xl font-bold text-slate-900">Subject structure is being prepared</h2><p className="mt-2 max-w-lg text-sm leading-6 text-slate-500">This official 2026–27 course is included in the Complete Theory Bundle. Unit-level content will be published from the official course detail before notes are released.</p></div>}</div>
-        <aside className="space-y-4"><div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-5"><p className="text-xs font-bold uppercase tracking-[0.13em] text-indigo-600">Inside this subject</p><ul className="mt-4 space-y-3 text-sm font-medium text-slate-700">{[[Layers3, "Theory Notes"], [FileQuestion, "Previous Year Questions"], [Flame, "Most Repeated Questions"]].map(([Icon, label]) => { const Component = Icon as typeof Layers3; return <li key={label} className="flex gap-2"><Component className="h-4 w-4 text-indigo-600" />{label}</li>; })}</ul><p className="mt-5 border-t border-indigo-100 pt-4 text-xs leading-5 text-slate-500">PYQ frequency and year details appear only after verified data is entered.</p></div><div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm leading-6 text-slate-500">Practical files, lab manuals, coding exercises and projects are not part of BCA Vault.</div></aside>
+        <aside className="space-y-4">
+          <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-5">
+            <p className="text-xs font-bold uppercase tracking-[0.13em] text-indigo-600">Inside this subject</p>
+            <ul className="mt-4 space-y-3 text-sm font-medium text-slate-700">
+              {[
+                { icon: Layers3, label: "Theory Notes" },
+                { icon: FileQuestion, label: "Previous Year Questions" },
+                { icon: Flame, label: "Most Repeated Questions" },
+              ].map(({ icon: Icon, label }) => (
+                <li key={label} className="flex gap-2">
+                  <Icon className="h-4 w-4 text-indigo-600" />
+                  {label}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-5 border-t border-indigo-100 pt-4 text-xs leading-5 text-slate-500">PYQ frequency and year details appear only after verified data is entered.</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm leading-6 text-slate-500">
+            Practical files, lab manuals, coding exercises and projects are not part of BCA Vault.
+          </div>
+        </aside>
       </div>
     </div>
   );

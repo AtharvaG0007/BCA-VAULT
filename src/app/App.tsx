@@ -68,7 +68,7 @@ function RoleRedirect() {
   if (!hasAccepted)
     return <Navigate to="/legal-consent" replace />;
   if (role === "superadmin")
-    return <Navigate to="/admin-root/dashboard" replace />;
+    return <Navigate to="/admin/dashboard" replace />;
   return <Navigate to="/app/dashboard" replace />;
 }
 
@@ -77,6 +77,8 @@ const noNavRoutes = [
   "/auth/",
   "/admin",
   "/admin-root",
+  "/admin-root-login",
+  "/admin-login",
   "/app/dashboard",
   "/legal-consent",
 ];
@@ -192,8 +194,11 @@ function AppLayout() {
             />
             <Route path="/auth/signup" element={<Navigate to="/auth/login" replace />} />
 
-            {/* ── Admin Login (hidden pages) ────────────────────────────── */}
-            <Route path="/admin-root/login" element={<AdminLoginPage />} />
+            {/* ── Super Admin Login (/admin-root-login) ────────────────── */}
+            <Route path="/admin-root-login" element={<AdminLoginPage />} />
+            <Route path="/admin-root/login" element={<Navigate to="/admin-root-login" replace />} />
+            <Route path="/admin-login" element={<Navigate to="/admin-root-login" replace />} />
+            <Route path="/admin/login" element={<Navigate to="/admin-root-login" replace />} />
 
             {/* ── Post-login role redirect ──────────────────────────────── */}
             <Route
@@ -205,7 +210,39 @@ function AppLayout() {
               element={<RoleRedirect />}
             />
 
-            {/* ── Super Admin (/admin-root) ─────────────────────────────── */}
+            {/* ── Super Admin Dashboard (/admin & /admin-root) ─────────── */}
+            <Route
+              path="/admin"
+              element={
+                <AdminProtectedRoute allowedRoles={["superadmin"]}>
+                  <SuperAdminDashboard />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard"
+              element={
+                <AdminProtectedRoute allowedRoles={["superadmin"]}>
+                  <SuperAdminDashboard />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/:subpage"
+              element={
+                <AdminProtectedRoute allowedRoles={["superadmin"]}>
+                  <SuperAdminDashboard />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin-root"
+              element={
+                <AdminProtectedRoute allowedRoles={["superadmin"]}>
+                  <SuperAdminDashboard />
+                </AdminProtectedRoute>
+              }
+            />
             <Route
               path="/admin-root/dashboard"
               element={
@@ -215,30 +252,29 @@ function AppLayout() {
               }
             />
             <Route
-              path="/admin-root/*"
+              path="/admin-root/:subpage"
               element={
                 <AdminProtectedRoute allowedRoles={["superadmin"]}>
                   <SuperAdminDashboard />
                 </AdminProtectedRoute>
               }
             />
-            {/* Legacy redirect */}
+
+            {/* Legacy aliases */}
             <Route
               path="/superadmin"
               element={
-                <Navigate to="/admin-root/dashboard" replace />
+                <Navigate to="/admin/dashboard" replace />
               }
             />
             <Route
               path="/superadmin/*"
               element={
-                <Navigate to="/admin-root/dashboard" replace />
+                <Navigate to="/admin/dashboard" replace />
               }
             />
 
-            <Route path="/admin/*" element={<Navigate to="/admin-root/login" replace />} />
-
-            {/* ── Student (/app/dashboard) ──────────────────────────────── */}
+            {/* ── Student Dashboard (/app/dashboard & /student) ──────────── */}
             <Route
               path="/app/dashboard"
               element={
@@ -255,7 +291,6 @@ function AppLayout() {
                 </ProtectedRoute>
               }
             />
-            {/* Legacy redirect */}
             <Route
               path="/student"
               element={<Navigate to="/app/dashboard" replace />}

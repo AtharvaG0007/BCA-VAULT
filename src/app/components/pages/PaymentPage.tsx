@@ -1,20 +1,211 @@
 import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { ArrowUpRight, Check, Clipboard, Clock3, ExternalLink, LockKeyhole, ShieldCheck, Smartphone } from "lucide-react";
-import { PaymentEvidenceForm } from "../payment/PaymentEvidenceForm";
+
+export const GOOGLE_PAYMENT_FORM_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSfKie4-l2VIcbkQ8cej2Wuq0BYQInPb6EfobEiQeZiu8bPbLg/viewform?usp=dialog";
 
 const UPI_ID = "gogawaleatharva997-1@oksbi";
 const UPI_NAME = "BCA Vault";
 const upiUrl = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_NAME)}&am=899&cu=INR&tn=${encodeURIComponent("BCA Vault Complete Theory Bundle")}`;
-const instructions = ["Login or register to your BCA Vault account.", "Complete the payment using the BCA Vault UPI ID or QR code.", "Take a clear screenshot of the successful payment.", "Click Submit Payment Form.", "Enter the same email address used for your BCA Vault account.", "Upload your payment screenshot and submit the form.", "Our admin team manually verifies your payment.", "After approval, your Complete Theory Bundle appears in My Library."];
+
+const instructions = [
+  "Login or register to your BCA Vault account.",
+  "Complete the payment using the BCA Vault UPI ID or QR code.",
+  "Take a clear screenshot of the successful payment.",
+  "Click Submit Payment Form to open the official Google Form.",
+  "Enter the same email address used for your BCA Vault account.",
+  "Upload your payment screenshot and submit the form.",
+  "Our admin team manually verifies your payment.",
+  "After approval, your Complete Theory Bundle appears in My Library.",
+];
 
 export function PaymentPage() {
   const [copied, setCopied] = useState(false);
-  const [evidenceFormOpen, setEvidenceFormOpen] = useState(false);
-  const copyUpi = async () => { await navigator.clipboard.writeText(UPI_ID).catch(() => undefined); setCopied(true); window.setTimeout(() => setCopied(false), 1800); };
-  return <><main className="min-h-screen bg-[#f7f8fc]"><section className="relative overflow-hidden bg-slate-950 pb-24 pt-16 text-white sm:pt-20"><div className="absolute inset-0 opacity-50 [background-image:radial-gradient(circle_at_20%_20%,rgba(79,70,229,0.45),transparent_28%),radial-gradient(circle_at_78%_4%,rgba(16,185,129,0.2),transparent_24%)]" /><div className="relative mx-auto max-w-6xl px-5 sm:px-8"><div className="max-w-2xl"><p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-200">Secure manual verification</p><h1 className="mt-4 text-4xl font-bold tracking-[-0.025em] sm:text-5xl">Complete your BCA Vault payment.</h1><p className="mt-5 max-w-xl text-base leading-7 text-slate-300">Pay by UPI, then submit your payment evidence securely without leaving BCA Vault.</p></div></div></section>
-    <section className="relative -mt-12 pb-20"><div className="mx-auto grid max-w-6xl gap-6 px-5 sm:px-8 lg:grid-cols-[0.9fr_1.1fr]"><aside className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5 sm:p-8"><p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">BCA Vault</p><h2 className="mt-3 text-2xl font-bold tracking-[-0.02em] text-slate-950">Complete Theory Bundle</h2><div className="my-7 border-y border-slate-100 py-6"><p className="font-mono text-5xl font-bold text-slate-950">₹899</p><p className="mt-2 text-sm text-slate-500">One-time manual UPI payment</p></div><p className="text-sm leading-6 text-slate-600">Theory Notes + PYQs + PYQ Analysis + Most Repeated Questions</p><div className="mt-7 space-y-3 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">{["Semester 1 & Semester 2", "Theory-focused content", "Mathematics, labs & projects excluded"].map((item) => <p key={item} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />{item}</p>)}</div></aside>
-      <div className="space-y-6"><article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">Step 1 · Make payment</p><h2 className="mt-2 text-2xl font-bold text-slate-950">UPI / QR Payment</h2></div><Smartphone className="h-6 w-6 text-indigo-600" /></div><div className="mt-6 grid gap-6 sm:grid-cols-[1fr_156px] sm:items-center"><div><p className="text-sm text-slate-500">Pay exactly <strong className="text-slate-900">₹899</strong> to the BCA Vault UPI ID.</p><div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">UPI ID</p><p className="mt-1 truncate font-mono text-sm font-bold text-slate-900">{UPI_ID}</p></div><button type="button" onClick={copyUpi} className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-bold text-indigo-700 shadow-sm ring-1 ring-slate-200">{copied ? <Check className="h-3.5 w-3.5" /> : <Clipboard className="h-3.5 w-3.5" />}{copied ? "Copied" : "Copy"}</button></div><a href={upiUrl} className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-800">Open your UPI app <ArrowUpRight className="h-4 w-4" /></a></div><div className="justify-self-center rounded-2xl border border-slate-200 bg-white p-3"><QRCodeSVG value={upiUrl} size={132} level="M" includeMargin /><p className="mt-2 text-center text-[10px] font-semibold text-slate-400">Scan to pay</p></div></div></article>
-        <article className="rounded-3xl border border-indigo-100 bg-indigo-50/50 p-6 sm:p-8"><div className="flex items-start gap-3"><div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-600 text-white"><ExternalLink className="h-5 w-5" /></div><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">Step 2 · Submit evidence</p><h2 className="mt-1 text-2xl font-bold text-slate-950">Submit Payment Form</h2><p className="mt-2 text-sm leading-6 text-slate-600">Submit your payment details and screenshot securely without leaving BCA Vault.</p></div></div><button type="button" onClick={() => setEvidenceFormOpen(true)} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-4 text-sm font-bold text-white transition hover:bg-indigo-700">Submit Payment Form <ArrowUpRight className="h-4 w-4" /></button><div className="mt-5 flex gap-2 rounded-xl border border-indigo-100 bg-white/80 p-3 text-xs leading-5 text-slate-600"><LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />Your screenshot is uploaded to private BCA Vault storage and reviewed manually by our admin team.</div></article></div></div></section>
-    <section className="border-t border-slate-200 bg-white py-16"><div className="mx-auto max-w-6xl px-5 sm:px-8"><div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">How to get access</p><h2 className="mt-2 text-3xl font-bold tracking-[-0.025em] text-slate-950">A clear, manual approval process.</h2></div><p className="flex items-center gap-2 text-sm font-medium text-slate-500"><Clock3 className="h-4 w-4 text-indigo-600" />Payment verification is manual. Access is activated after successful verification.</p></div><ol className="mt-9 grid gap-3 md:grid-cols-2">{instructions.map((instruction, index) => <li key={instruction} className="flex gap-4 rounded-2xl border border-slate-200 p-4"><span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-slate-950 font-mono text-xs font-bold text-white">{index + 1}</span><p className="pt-0.5 text-sm leading-6 text-slate-600">{instruction}</p></li>)}</ol><div className="mt-8 flex gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 text-sm leading-6 text-emerald-950"><ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600" />Payment evidence submission does not grant access automatically. Only an authenticated BCA Vault admin can verify payment and authorize the Complete Theory Bundle for the matching Firebase account.</div></div></section></main>{evidenceFormOpen && <PaymentEvidenceForm onClose={() => setEvidenceFormOpen(false)} />}</>;
+
+  const copyUpi = async () => {
+    await navigator.clipboard.writeText(UPI_ID).catch(() => undefined);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  };
+
+  const openGoogleForm = () => {
+    window.open(GOOGLE_PAYMENT_FORM_URL, "_blank", "noopener,noreferrer");
+  };
+
+  return (
+    <main className="min-h-screen bg-[#f7f8fc]">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-slate-950 pb-24 pt-16 text-white sm:pt-20">
+        <div className="absolute inset-0 opacity-50 [background-image:radial-gradient(circle_at_20%_20%,rgba(79,70,229,0.45),transparent_28%),radial-gradient(circle_at_78%_4%,rgba(16,185,129,0.2),transparent_24%)]" />
+        <div className="relative mx-auto max-w-6xl px-5 sm:px-8">
+          <div className="max-w-2xl">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-200">
+              Secure manual verification
+            </p>
+            <h1 className="mt-4 text-4xl font-bold tracking-[-0.025em] sm:text-5xl">
+              Complete your BCA Vault payment.
+            </h1>
+            <p className="mt-5 max-w-xl text-base leading-7 text-slate-300">
+              Pay by UPI, then submit your payment evidence through our official verification form.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Payment Section */}
+      <section className="relative -mt-12 pb-20">
+        <div className="mx-auto grid max-w-6xl gap-6 px-5 sm:px-8 lg:grid-cols-[0.9fr_1.1fr]">
+          {/* Bundle Summary Card */}
+          <aside className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5 sm:p-8">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">BCA Vault</p>
+            <h2 className="mt-3 text-2xl font-bold tracking-[-0.02em] text-slate-950">
+              Complete Theory Bundle
+            </h2>
+            <div className="my-7 border-y border-slate-100 py-6">
+              <p className="font-mono text-5xl font-bold text-slate-950">₹899</p>
+              <p className="mt-2 text-sm text-slate-500">One-time manual UPI payment</p>
+            </div>
+            <p className="text-sm leading-6 text-slate-600">
+              Theory Notes + PYQs + PYQ Analysis + Most Repeated Questions
+            </p>
+            <div className="mt-7 space-y-3 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
+              {[
+                "Semester 1 & Semester 2",
+                "Theory-focused content",
+                "Mathematics, labs & projects excluded",
+              ].map((item) => (
+                <p key={item} className="flex gap-2">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                  {item}
+                </p>
+              ))}
+            </div>
+          </aside>
+
+          {/* Payment Steps */}
+          <div className="space-y-6">
+            {/* Step 1: UPI / QR */}
+            <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">
+                    Step 1 · Make payment
+                  </p>
+                  <h2 className="mt-2 text-2xl font-bold text-slate-950">UPI / QR Payment</h2>
+                </div>
+                <Smartphone className="h-6 w-6 text-indigo-600" />
+              </div>
+
+              <div className="mt-6 grid gap-6 sm:grid-cols-[1fr_156px] sm:items-center">
+                <div>
+                  <p className="text-sm text-slate-500">
+                    Pay exactly <strong className="text-slate-900">₹899</strong> to the BCA Vault UPI ID.
+                  </p>
+                  <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                        UPI ID
+                      </p>
+                      <p className="mt-1 truncate font-mono text-sm font-bold text-slate-900">{UPI_ID}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={copyUpi}
+                      className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-bold text-indigo-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 transition"
+                    >
+                      {copied ? <Check className="h-3.5 w-3.5" /> : <Clipboard className="h-3.5 w-3.5" />}
+                      {copied ? "Copied" : "Copy"}
+                    </button>
+                  </div>
+                  <a
+                    href={upiUrl}
+                    className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-800 transition"
+                  >
+                    Open in UPI app <ArrowUpRight className="h-4 w-4" />
+                  </a>
+                </div>
+
+                <div className="justify-self-center rounded-2xl border border-slate-200 bg-white p-3 text-center">
+                  <QRCodeSVG value={upiUrl} size={132} level="M" includeMargin />
+                  <p className="mt-2 text-center text-[10px] font-semibold text-slate-400">Scan to pay</p>
+                </div>
+              </div>
+            </article>
+
+            {/* Step 2: Google Form Redirection */}
+            <article className="rounded-3xl border border-indigo-100 bg-indigo-50/50 p-6 sm:p-8">
+              <div className="flex items-start gap-3">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-600 text-white">
+                  <ExternalLink className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">
+                    Step 2 · Submit evidence
+                  </p>
+                  <h2 className="mt-1 text-2xl font-bold text-slate-950">Submit Payment Form</h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    After completing payment, submit your transaction ID (UTR) and screenshot via our official
+                    Google Form.
+                  </p>
+                </div>
+              </div>
+
+              <a
+                href={GOOGLE_PAYMENT_FORM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-4 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700"
+              >
+                Submit Payment Form <ExternalLink className="h-4 w-4" />
+              </a>
+
+              <div className="mt-5 flex gap-2 rounded-xl border border-indigo-100 bg-white/80 p-3 text-xs leading-5 text-slate-600">
+                <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
+                Your screenshot is collected securely and reviewed manually by our administration team.
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      {/* Instructions & Approval Process */}
+      <section className="border-t border-slate-200 bg-white py-16">
+        <div className="mx-auto max-w-6xl px-5 sm:px-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">
+                How to get access
+              </p>
+              <h2 className="mt-2 text-3xl font-bold tracking-[-0.025em] text-slate-950">
+                A clear, manual approval process.
+              </h2>
+            </div>
+            <p className="flex items-center gap-2 text-sm font-medium text-slate-500">
+              <Clock3 className="h-4 w-4 text-indigo-600" />
+              Payment verification is manual. Access is activated after successful verification.
+            </p>
+          </div>
+
+          <ol className="mt-9 grid gap-3 md:grid-cols-2">
+            {instructions.map((instruction, index) => (
+              <li key={instruction} className="flex gap-4 rounded-2xl border border-slate-200 p-4">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-slate-950 font-mono text-xs font-bold text-white">
+                  {index + 1}
+                </span>
+                <p className="pt-0.5 text-sm leading-6 text-slate-600">{instruction}</p>
+              </li>
+            ))}
+          </ol>
+
+          <div className="mt-8 flex gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 text-sm leading-6 text-emerald-950">
+            <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600" />
+            Payment evidence submission does not grant access automatically. Only an authenticated BCA Vault
+            admin can verify payment and authorize the Complete Theory Bundle for the matching BCA Vault
+            account.
+          </div>
+        </div>
+      </section>
+    </main>
+  );
 }

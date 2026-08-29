@@ -10,7 +10,7 @@ const configDir = path.dirname(fileURLToPath(import.meta.url))
 function figmaAssetResolver() {
   return {
     name: 'figma-asset-resolver',
-    resolveId(id) {
+    resolveId(id: string) {
       if (id.startsWith('figma:asset/')) {
         const filename = id.replace('figma:asset/', '')
         return path.resolve(configDir, 'src/assets', filename)
@@ -48,10 +48,6 @@ export default defineConfig({
       'react-dom/client',
       'react-router',
       'motion/react',
-      'firebase/app',
-      'firebase/auth',
-      'firebase/database',
-      'firebase/storage',
     ],
   },
 
