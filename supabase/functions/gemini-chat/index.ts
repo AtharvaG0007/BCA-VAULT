@@ -1,3 +1,5 @@
+import { createClient } from "npm:@supabase/supabase-js@2";
+
 const ALLOWED_ORIGINS = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
@@ -26,45 +28,268 @@ function getCorsHeaders(req: Request) {
   };
 }
 
-const SYSTEM_INSTRUCTION = `You are the official AI Assistant for BCA Vault (bcavault.in), a dedicated educational platform for Bachelor of Computer Applications (BCA) students, especially Bharati Vidyapeeth Deemed University (BVDU).
+const url = Deno.env.get("SUPABASE_URL") ?? "";
+const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const admin = createClient(url, serviceKey, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
 
-Key Platform Facts:
-- Purpose: BCA Vault provides semester-wise theory notes, Previous Year Questions (PYQs) with solutions, and comprehensive theory bundles.
-- Semesters: Covers BCA Semesters 1 through 6.
-- Pricing & Coupons:
-  - Base Complete Theory Bundle Price: ₹899
-  - Active Marketing Coupon: BUDMS400 (offers ₹400 discount, reducing final price to ₹499)
-  - Special Quiz Winners Coupon: WINNER150 (final price ₹349)
-- Access: Free previews of syllabus and PYQs are available on the website. Full note bundles require manual purchase verification.
-- Payment Process: Students transfer via UPI (QR code / UPI ID provided at checkout), upload their transaction screenshot and enter the 12-digit UTR/transaction ID. The administration team manually verifies payments and activates dashboard access.
-- Support Email: bcavault07@gmail.com
-- WhatsApp Support: +919326342123 (https://wa.me/919326342123)
-- Rules:
-  1. Be concise, friendly, encouraging, and accurate.
-  2. If a student asks about subject syllabus, explain key topics (e.g. C Programming, Data Structures, Java, DBMS, Web Tech, OS, Software Engineering).
-  3. Never invent fake phone numbers, unofficial discount codes, or promise immediate instant automated access without payment verification.
-  4. Always guide students to the Notes, Bundles, or Checkout pages on the platform when relevant.
-  5. If you do not have confirmed information about a question, respond with: "I don't have confirmed information about that. Please contact BCA Vault support at bcavault07@gmail.com or WhatsApp +919326342123."`;
+// In-memory rate limiting: max 30 requests per 5 minutes per user/IP
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
-// Fallback knowledge engine if no Gemini API key is configured
-function generateRuleBasedAnswer(message: string): string {
+function checkRateLimit(identifier: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(identifier);
+
+  if (!entry || now > entry.resetTime) {
+    rateLimitMap.set(identifier, { count: 1, resetTime: now + 5 * 60 * 1000 });
+    return true;
+  }
+
+  if (entry.count >= 30) {
+    return false;
+  }
+
+  entry.count++;
+  return true;
+}
+
+// BCA Syllabus Knowledge Base
+const SYLLABUS_KNOWLEDGE = `
+BCA Curriculum Overview (Bharati Vidyapeeth BVDU FMS / General BCA):
+- Semester 1 Subjects:
+  1. Algorithms & Program Design using C (Course Code 101):
+     - Algorithms, Flowcharts, Problem Solving
+     - C Tokens, Data Types, Variables, Operators, Header files
+     - Control Structures: if-else, switch-case, while, for, do-while, break, continue
+     - Functions: Declaration, Definition, Call by Value, Recursion
+     - Pointers: Pointer arithmetic, Call by Reference, Pointers with arrays
+     - Arrays (1D & 2D), Strings (string.h functions), Structures & Unions
+  2. Foundations of Computing (Course Code 103):
+     - Computer Fundamentals, Generations, Block diagram, Hardware vs Software
+     - Input/Output Devices: Keyboard, Mouse, Scanner, MICR, OMR, VDU, Printers
+     - Memory Hierarchy: RAM, ROM, Cache, Virtual memory, Secondary storage
+     - System & Application Software, Computer Networks, Data Transmission Media
+     - MS Office: Word, Excel, PowerPoint, Access
+  3. Communication Skills (Course Code 104):
+     - Concept & Process of Communication, Types, Barriers to Communication
+     - Verbal & Non-verbal Communication, Body Language
+     - Language Skills: Listening, Reading, Speaking, Writing (LSRW)
+  4. Client-Side Web Technologies (Course Code 105):
+     - HTML & HTML5: Tags, Text formatting, Tables, Lists, Forms, Multimedia
+     - CSS: Inline/Internal/External, Selectors, Box Model, Flexbox, Positioning
+     - JavaScript Basics: Data types, Operators, Functions, Dialog boxes, Window objects
+     - DOM Manipulation, Event Handling, Client-side Form Validation
+
+- Semester 2 Subjects:
+  1. Database Management Systems (DBMS - 201):
+     - DBMS Architecture, ER Modeling, Relational Model, Keys, Normalization (1NF, 2NF, 3NF, BCNF)
+     - SQL: DDL, DML, DQL, Joins, Subqueries, Aggregate functions, Views, Transactions (ACID)
+  2. Object Oriented Programming with Java (202):
+     - OOP Concepts: Encapsulation, Inheritance, Polymorphism, Abstraction
+     - Classes, Objects, Constructors, 'this' and 'super', Packages, Interfaces
+     - Exception Handling (try-catch-finally, throw, throws), Multithreading
+  3. Operating Systems (203):
+     - OS Functions, Process Management, CPU Scheduling (FCFS, SJF, RR, Priority)
+     - Process Synchronization, Deadlocks (Prevention, Avoidance, Banker's Algorithm)
+     - Memory Management: Paging, Segmentation, Virtual Memory
+  4. Python Programming (204):
+     - Syntax, Control flow, Functions, Lists, Tuples, Dictionaries, Sets, File I/O
+  5. Cyber Security (205) & Environmental Studies (206)
+`;
+
+function buildSystemPrompt(
+  studentProfile: { name: string; course: string; semester: number | null; email: string } | null,
+  activeBundles: string[],
+  accessibleNotes: Array<{ title: string; subject: string | null; semester: number | null }>
+): string {
+  let contextSection = "";
+  if (studentProfile) {
+    contextSection = `
+AUTHENTICATED STUDENT PROFILE:
+- Name: ${studentProfile.name}
+- Enrolled Course: ${studentProfile.course || "BCA"}
+- Current Semester: ${studentProfile.semester ? `Semester ${studentProfile.semester}` : "BCA Student"}
+- Active Subscribed Bundles: ${activeBundles.length > 0 ? activeBundles.join(", ") : "Standard Access"}
+- Accessible Study Notes in BCA Vault:
+${accessibleNotes.length > 0 ? accessibleNotes.map((n) => `  * ${n.title} (Subject: ${n.subject || "Theory"}, Sem ${n.semester || 1})`).join("\n") : "  * All preview notes and syllabus materials"}
+`;
+  } else {
+    contextSection = `
+VISITOR STATUS:
+- Public guest visitor exploring BCA Vault platform and syllabus previews.
+`;
+  }
+
+  return `You are the official AI Learning Assistant for BCA Vault (bcavault.in), the premier educational platform for Bachelor of Computer Applications (BCA) students (especially Bharati Vidyapeeth BVDU curriculum).
+
+${contextSection}
+
+${SYLLABUS_KNOWLEDGE}
+
+CORE CAPABILITIES & PEDAGOGICAL MODES:
+1. EXPLAIN MODE:
+   - Provide clear, simple, step-by-step conceptual breakdowns.
+   - For beginners: Use simple English, analogies, and real-world intuition.
+   - For code: Provide clean, commented C / Java / Python / JavaScript snippets.
+
+2. REVISION & SUMMARY MODE:
+   - Provide high-yield summaries, key definitions, formulas, and comparison tables (e.g. Call by Value vs Call by Reference, Structure vs Union, Process vs Thread).
+
+3. EXAM PREPARATION MODE:
+   - Provide standard 5-mark and 10-mark exam questions, structured answers, and PYQ trends.
+
+4. INTERACTIVE QUIZ MODE:
+   - When a student wants to practice or test themselves, present 1 Multiple Choice Question at a time with 4 options (A, B, C, D).
+   - Once the student answers, evaluate their response, explain the underlying concept, and offer the next question.
+
+5. 7-DAY STUDY PLAN MODE:
+   - Create a realistic day-by-day timetable tailored to the student's semester and subjects.
+
+STRICT BEHAVIORAL RULES:
+- Address the student warmly and encouragingly (use their name if available).
+- Prioritize BCA Vault's curriculum and note topics. If a topic is part of their notes or syllabus (e.g., C Programming, DBMS, OOP), reference the subject naturally.
+- If a concept is outside BCA Vault notes, explain it using general computer science knowledge while clearly noting: "Your BCA Vault notes don't have this specific topic, but here is a clear explanation...".
+- NEVER invent false prices, fake discount codes, or hallucinate unauthorized files.
+- Official support email: bcavault07@gmail.com | WhatsApp: +919326342123
+- Active coupon code: BUDMS400 (₹400 OFF, final price ₹499) | WINNER150 (₹349)
+- Do NOT generate or execute arbitrary SQL queries. Keep output safe, educational, and formatting clean using Markdown.`;
+}
+
+// Educational Fallback Engine for offline / quota fallback
+function generateEducationalFallback(
+  message: string,
+  studentName?: string,
+  semester?: number | null
+): string {
   const q = message.toLowerCase();
-  if (q.includes("coupon") || q.includes("discount") || q.includes("offer") || q.includes("promo") || q.includes("budms400") || q.includes("winner150")) {
-    return "You can use the coupon code **BUDMS400** at checkout to get ₹400 OFF on the Complete Theory Bundle (bringing the price down to just **₹499**). Top-3 quiz winners can also use coupon **WINNER150** for ₹349 access!";
+  const greeting = studentName ? `Hello **${studentName}**!` : "Hello!";
+
+  // 1. C Pointers / Memory
+  if (q.includes("pointer") || q.includes("address")) {
+    return `${greeting} Here is a beginner-friendly explanation of **Pointers in C** (Covered in BCA Semester 1):
+
+### 1. What is a Pointer?
+A **pointer** is a special variable in C that stores the **memory address** of another variable rather than storing a direct data value.
+
+### 2. Syntax & Operators
+- \`&\` (Address-of Operator): Returns the memory address of a variable.
+- \`*\` (Dereference Operator): Accesses the value stored at the memory address pointed by the pointer.
+
+\`\`\`c
+#include <stdio.h>
+
+int main() {
+    int num = 25;
+    int *ptr = &num; // ptr stores the address of num
+
+    printf("Value of num: %d\\n", num);       // 25
+    printf("Address of num: %p\\n", &num);    // Memory address (e.g. 0x7ffd...)
+    printf("Value using ptr: %d\\n", *ptr);   // 25 (Dereferencing)
+
+    return 0;
+}
+\`\`\`
+
+### 3. Key Exam Points:
+1. **Memory Allocation**: Used for dynamic memory allocation (\`malloc\`, \`calloc\`, \`free\`).
+2. **Call by Reference**: Enables functions to modify original arguments passed from the caller.
+3. **Arrays and Strings**: Array names act as constant pointers to their first element.
+
+*Would you like to practice a quiz question on Pointers, or see Call by Reference examples?*`;
   }
-  if (q.includes("payment") || q.includes("upi") || q.includes("utr") || q.includes("buy") || q.includes("purchase")) {
-    return "To purchase a course bundle on BCA Vault:\n1. Go to **Pricing** or **Purchase** page.\n2. Apply coupon **BUDMS400** to get the ₹499 rate.\n3. Complete the transfer using any UPI app and save the screenshot & 12-digit UTR number.\n4. Submit your payment evidence on the form. Our admin team will verify it and activate your notes in your Student Dashboard!";
+
+  // 2. Recursion in C
+  if (q.includes("recursion") || q.includes("recursive")) {
+    return `${greeting} Here is an easy explanation of **Recursion**:
+
+### 1. Definition
+**Recursion** is a programming technique where a function calls itself directly or indirectly to solve a smaller sub-problem of the same type.
+
+### 2. Crucial Components:
+1. **Base Case**: The stopping condition that terminates recursion. Without it, the program causes a **Stack Overflow**.
+2. **Recursive Case**: The step where the function calls itself with modified arguments.
+
+\`\`\`c
+// Factorial using recursion in C
+int factorial(int n) {
+    if (n <= 1) return 1; // Base case
+    return n * factorial(n - 1); // Recursive case
+}
+\`\`\`
+
+### 3. Exam Tip:
+In exams, always draw the **activation stack diagram** showing function frames being pushed and popped!`;
   }
-  if (q.includes("support") || q.includes("contact") || q.includes("help") || q.includes("email") || q.includes("whatsapp") || q.includes("phone")) {
-    return "You can reach the BCA Vault administrative team directly at **bcavault07@gmail.com** or on WhatsApp at **+91 93263 42123**. We typically respond within a few hours to assist with access, verification, or questions.";
+
+  // 3. OOP Concepts (Java / C++)
+  if (q.includes("oop") || q.includes("object oriented") || q.includes("polymorphism") || q.includes("inheritance")) {
+    return `${greeting} Here are the **4 Pillars of Object-Oriented Programming (OOP)** (BCA Semester 2):
+
+1. **Encapsulation**: Wrapping data (variables) and methods into a single unit (Class) and restricting direct access using private access specifiers with getters/setters.
+2. **Abstraction**: Hiding complex internal implementation details and showing only the essential features to the user (e.g., using Abstract Classes & Interfaces in Java).
+3. **Inheritance**: The mechanism by which one class inherits properties and behaviors from a parent class (\`extends\` in Java), promoting code reusability.
+4. **Polymorphism**: The ability of a message or function to be processed in more than one form:
+   - *Compile-time (Static)*: Method Overloading
+   - *Runtime (Dynamic)*: Method Overriding
+
+*Would you like code examples in Java or practice MCQs on OOP?*`;
   }
-  if (q.includes("semester") || q.includes("sem 1") || q.includes("sem 2") || q.includes("sem 3") || q.includes("sem 4") || q.includes("sem 5") || q.includes("sem 6")) {
-    return "BCA Vault covers BCA curriculum across Semesters 1 to 6, including Core Programming (C, C++, Java, Python), Web Technologies, DBMS, Computer Networks, and Software Engineering with solved PYQs. Check the **Notes** page to explore available units!";
+
+  // 4. Syllabus / Semester inquiry
+  if (q.includes("syllabus") || q.includes("subject") || q.includes("semester 1") || q.includes("sem 1")) {
+    return `${greeting} Here is the official **BCA Semester 1 Theory Curriculum** (Syllabus 2026–27):
+
+1. **Course 101: Algorithms & Program Design using C**
+   - Problem solving, Flowcharts, C fundamentals, Decision making, Loops, Functions, Pointers, Arrays, Strings, Structures & Unions.
+2. **Course 103: Foundations of Computing**
+   - Computer hardware, I/O devices, Memory hierarchy (RAM/ROM/Cache), OS basics, Networks, MS Office tools.
+3. **Course 104: Communication Skills**
+   - Communication process, Verbal & Non-verbal language, LSRW skills, Corporate communication.
+4. **Course 105: Client-Side Web Technologies**
+   - HTML5, CSS3, Responsive Design, JavaScript core syntax, DOM, Form Validation.
+
+*All notes, unit breakdowns, and solved PYQs are available in your BCA Vault Library!*`;
   }
-  if (q.includes("free") || q.includes("preview") || q.includes("demo")) {
-    return "You can explore the syllabus breakdown, subject previews, and sample PYQ analysis directly on the **Notes** and **PYQ** sections without logging in!";
+
+  // 5. Quiz / Test Request
+  if (q.includes("quiz") || q.includes("mcq") || q.includes("test")) {
+    return `${greeting} Let's do a quick quiz! Here is Question 1:
+
+**Q1: In C programming, which operator is used to access the memory address of a variable?**
+- **A)** \`*\`
+- **B)** \`&\`
+- **C)** \`->\`
+- **D)** \`%\`
+
+*Reply with your option (A, B, C, or D) to check your answer!*`;
   }
-  return "Hello! I am the BCA Vault AI Assistant. I can help you with questions regarding BCA study notes, PYQ solutions, semester bundles, coupon codes (BUDMS400), payment verification, and platform navigation. How can I help you today?";
+
+  // 6. Study Plan
+  if (q.includes("study plan") || q.includes("7 day") || q.includes("prepare") || q.includes("plan")) {
+    return `${greeting} Here is a structured **7-Day BCA Revision Plan**:
+
+- **Day 1–2 (C Programming)**: Focus on Functions, Call by Value vs Reference, Pointers, and 1D/2D Arrays.
+- **Day 3 (Foundations of Computing)**: Memory hierarchy, RAM vs ROM, Computer generations, and Network topologies.
+- **Day 4 (Web Technologies)**: HTML5 form elements, CSS Box model, and basic JavaScript DOM event handling.
+- **Day 5 (Communication Skills)**: Communication barriers, 7 Cs of effective communication, and business email writing.
+- **Day 6 (PYQ Solving)**: Solve at least 3 previous year papers (2022–2025) from the BCA Vault PYQ section.
+- **Day 7 (Quick Revision)**: Review definitions, syntax, and most repeated questions.
+
+*What topic would you like to review first?*`;
+  }
+
+  // 7. General fallback
+  return `${greeting} I am your **BCA Vault AI Learning Assistant**!
+
+I can help you with:
+- 💡 **Conceptual Explanations**: C Programming, Foundations of Computing, Web Tech, Java, DBMS, and OS.
+- 📝 **Revision & Summaries**: Key definitions, formulas, and comparison tables.
+- 🎯 **Interactive Quizzes & MCQs**: Practice unit-wise questions.
+- 📋 **Exam Prep**: 5-mark / 10-mark model answers and important PYQs.
+- 📅 **Custom Study Plans**: Structured timetables for your semester exams.
+
+What topic or question would you like to explore?`;
 }
 
 Deno.serve(async (request: Request) => {
@@ -82,6 +307,81 @@ Deno.serve(async (request: Request) => {
   }
 
   try {
+    const clientIp = request.headers.get("x-forwarded-for") || "anonymous";
+    const authHeader = request.headers.get("Authorization") || "";
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+
+    // Authenticate user if token is provided
+    let studentProfile: { name: string; course: string; semester: number | null; email: string } | null = null;
+    let activeBundles: string[] = [];
+    let accessibleNotes: Array<{ title: string; subject: string | null; semester: number | null }> = [];
+    let userId: string | null = null;
+
+    if (token) {
+      const { data: authData } = await admin.auth.getUser(token);
+      if (authData?.user) {
+        userId = authData.user.id;
+
+        // Fetch student profile
+        const { data: profile } = await admin
+          .from("profiles")
+          .select("full_name, email, course, semester, status")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (profile) {
+          studentProfile = {
+            name: profile.full_name || authData.user.email?.split("@")[0] || "Student",
+            course: profile.course || "BCA",
+            semester: profile.semester || 1,
+            email: profile.email || authData.user.email || "",
+          };
+        }
+
+        // Fetch student's active bundles and notes
+        const { data: permissions } = await admin
+          .from("access_permissions")
+          .select("bundle_id, bundles(title, published)")
+          .eq("user_id", userId)
+          .eq("status", "active");
+
+        if (permissions && permissions.length > 0) {
+          const bundleIds: string[] = [];
+          for (const p of permissions as any[]) {
+            if (p.bundles?.published) {
+              activeBundles.push(p.bundles.title);
+              bundleIds.push(p.bundle_id);
+            }
+          }
+
+          if (bundleIds.length > 0) {
+            const { data: notesData } = await admin
+              .from("notes")
+              .select("title, subject, semester")
+              .in("bundle_id", bundleIds)
+              .eq("published", true)
+              .limit(15);
+
+            if (notesData) {
+              accessibleNotes = notesData;
+            }
+          }
+        }
+      }
+    }
+
+    // Rate limit check
+    const rateLimitKey = userId || clientIp;
+    if (!checkRateLimit(rateLimitKey)) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "You have reached the AI learning assistant limit. Please wait a few moments and try again.",
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const body = await request.json().catch(() => ({}));
     const userMessage = String(body.message || "").trim();
     const history = Array.isArray(body.history) ? body.history : [];
@@ -93,21 +393,50 @@ Deno.serve(async (request: Request) => {
       );
     }
 
+    if (userMessage.length > 1500) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Message exceeds maximum allowed length of 1500 characters." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Log student learning question
+    if (userId) {
+      try {
+        await admin.from("activity_logs").insert({
+          actor_id: userId,
+          action: "ai_question_asked",
+          target_type: "ai_assistant",
+          metadata: {
+            preview: userMessage.slice(0, 100),
+            semester: studentProfile?.semester,
+          },
+        });
+      } catch (logErr) {
+        console.warn("AI activity log warning:", logErr);
+      }
+    }
+
     const geminiKey = Deno.env.get("GEMINI_API_KEY") || Deno.env.get("GOOGLE_API_KEY");
+    const systemPrompt = buildSystemPrompt(studentProfile, activeBundles, accessibleNotes);
 
     if (!geminiKey) {
-      // Return intelligent rule-based answer if key is not yet set in Supabase secrets
-      const reply = generateRuleBasedAnswer(userMessage);
+      // Fallback educational engine
+      const reply = generateEducationalFallback(
+        userMessage,
+        studentProfile?.name,
+        studentProfile?.semester
+      );
       return new Response(
-        JSON.stringify({ success: true, reply, source: "rules" }),
+        JSON.stringify({ success: true, reply, source: "rules_learning_engine" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Format conversation for Gemini generateContent API
+    // Format conversation history for Gemini API
     const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
 
-    for (const item of history.slice(-6)) {
+    for (const item of history.slice(-8)) {
       if (item && item.content && (item.role === "user" || item.role === "model")) {
         contents.push({
           role: item.role,
@@ -128,22 +457,26 @@ Deno.serve(async (request: Request) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         system_instruction: {
-          parts: [{ text: SYSTEM_INSTRUCTION }],
+          parts: [{ text: systemPrompt }],
         },
         contents,
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 500,
+          maxOutputTokens: 800,
           topP: 0.9,
         },
       }),
     });
 
     if (!geminiRes.ok) {
-      console.warn("Gemini API error, falling back to rule engine:", await geminiRes.text());
-      const fallbackReply = generateRuleBasedAnswer(userMessage);
+      console.warn("Gemini API error, activating educational fallback:", await geminiRes.text());
+      const fallbackReply = generateEducationalFallback(
+        userMessage,
+        studentProfile?.name,
+        studentProfile?.semester
+      );
       return new Response(
-        JSON.stringify({ success: true, reply: fallbackReply, source: "rules_fallback" }),
+        JSON.stringify({ success: true, reply: fallbackReply, source: "rules_learning_fallback" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -151,10 +484,10 @@ Deno.serve(async (request: Request) => {
     const geminiData = await geminiRes.json();
     const replyText =
       geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      generateRuleBasedAnswer(userMessage);
+      generateEducationalFallback(userMessage, studentProfile?.name, studentProfile?.semester);
 
     return new Response(
-      JSON.stringify({ success: true, reply: replyText, source: "gemini" }),
+      JSON.stringify({ success: true, reply: replyText, source: "gemini_learning_assistant" }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
@@ -162,7 +495,7 @@ Deno.serve(async (request: Request) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || "Unable to generate AI response.",
+        error: error.message || "Unable to generate learning assistant response.",
       }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

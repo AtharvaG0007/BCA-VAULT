@@ -9,12 +9,19 @@ import {
   User,
   Loader2,
   ChevronDown,
-  ExternalLink,
   BookOpen,
-  CreditCard,
-  Mail,
+  HelpCircle,
+  RotateCcw,
+  Copy,
+  Check,
+  GraduationCap,
+  FileQuestion,
+  Calendar,
+  CheckCircle2,
+  ExternalLink,
 } from "lucide-react";
-import { supabaseUrl, publicAnonKey } from "@/lib/supabase/client";
+import { supabase, supabaseUrl, publicAnonKey } from "@/lib/supabase/client";
+import { useAuth } from "../auth/AuthContext";
 
 interface Message {
   id: string;
@@ -23,27 +30,66 @@ interface Message {
   timestamp: string;
 }
 
-const QUICK_PROMPTS = [
-  { label: "₹499 Coupon Offer", icon: Sparkles, query: "What coupon code can I use to get a discount on BCA Vault?" },
-  { label: "How to purchase bundles?", icon: CreditCard, query: "How do I purchase a course bundle on BCA Vault?" },
-  { label: "Semester syllabus", icon: BookOpen, query: "What subjects and semesters are available on BCA Vault?" },
-  { label: "Contact Support", icon: Mail, query: "How can I contact BCA Vault support team?" },
+const LEARNING_PROMPTS = [
+  {
+    label: "💡 Explain Concept",
+    icon: Sparkles,
+    query: "Explain Pointers in C with a simple beginner-friendly example and real-world analogy.",
+  },
+  {
+    label: "📝 Revision Summary",
+    icon: BookOpen,
+    query: "Give me a concise revision summary of Functions and Recursion in C.",
+  },
+  {
+    label: "🎯 Quiz Me (MCQs)",
+    icon: FileQuestion,
+    query: "Start an interactive quiz for BCA Semester 1. Ask me Question 1 with 4 options.",
+  },
+  {
+    label: "📋 Exam Questions",
+    icon: CheckCircle2,
+    query: "What are the most important 5-mark and 10-mark exam questions for Foundations of Computing?",
+  },
+  {
+    label: "📅 7-Day Study Plan",
+    icon: Calendar,
+    query: "Create a realistic 7-day study plan to prepare for my BCA semester exams.",
+  },
+  {
+    label: "📖 Syllabus Guide",
+    icon: GraduationCap,
+    query: "What is my complete BCA Semester 1 syllabus breakdown and core subjects?",
+  },
 ];
 
 export function AIChatbot() {
+  const { user, appUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "welcome",
-      role: "model",
-      content:
-        "Hi there! 👋 I am the **BCA Vault AI Assistant**. How can I assist you with BCA study notes, PYQs, semester bundles, or payments today?",
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const studentName = appUser?.name || user?.user_metadata?.full_name || null;
+  const semester = appUser?.semester || 1;
+
+  // Initialize personalized welcome message
+  useEffect(() => {
+    const welcomeText = studentName
+      ? `Hello **${studentName}**! 🎓 Welcome to your **BCA Vault AI Learning Assistant**.\n\nI have access to your **BCA Semester ${semester}** curriculum and notes. I can help you with:\n- 💡 **Step-by-step topic explanations**\n- 📝 **Chapter summaries & revision**\n- 🎯 **Interactive practice quizzes**\n- 📋 **Exam-oriented answers & PYQ trends**\n- 📅 **Custom study plans**\n\nWhat would you like to learn or revise today?`
+      : `Hi there! 👋 I am the **BCA Vault AI Learning Assistant**.\n\nI can help you understand BCA theory concepts, explain C programming, DBMS, and Web Tech, generate practice MCQs, or assist with syllabus questions.\n\nHow can I help your learning today?`;
+
+    setMessages([
+      {
+        id: "welcome",
+        role: "model",
+        content: welcomeText,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      },
+    ]);
+  }, [studentName, semester]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -54,6 +100,26 @@ export function AIChatbot() {
       scrollToBottom();
     }
   }, [messages, isOpen]);
+
+  const handleCopy = async (id: string, text: string) => {
+    await navigator.clipboard.writeText(text).catch(() => undefined);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleClearChat = () => {
+    const initialText = studentName
+      ? `Chat cleared! How can I assist you with your **Semester ${semester}** studies?`
+      : "Chat cleared! How can I assist you today?";
+    setMessages([
+      {
+        id: `m-${Date.now()}`,
+        role: "model",
+        content: initialText,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      },
+    ]);
+  };
 
   async function handleSend(textToSend?: string) {
     const text = (textToSend || input).trim();
@@ -71,17 +137,27 @@ export function AIChatbot() {
     setLoading(true);
 
     try {
-      const history = messages.slice(-6).map((m) => ({
+      // Get current auth session for personalized context
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token || "";
+
+      const history = messages.slice(-8).map((m) => ({
         role: m.role,
         content: m.content,
       }));
 
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        apikey: publicAnonKey,
+      };
+
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const res = await fetch(`${supabaseUrl}/functions/v1/gemini-chat`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: publicAnonKey,
-        },
+        headers,
         body: JSON.stringify({
           message: text,
           history,
@@ -91,7 +167,7 @@ export function AIChatbot() {
       const data = await res.json().catch(() => ({}));
       const reply =
         data?.reply ||
-        "I'm currently unable to connect to the assistant server. Please check back shortly or email bcavault07@gmail.com for assistance.";
+        "I'm currently unable to reach the AI engine. You can ask syllabus questions or contact support at **bcavault07@gmail.com**.";
 
       const botMsg: Message = {
         id: `m-${Date.now()}`,
@@ -106,7 +182,8 @@ export function AIChatbot() {
       const errMsg: Message = {
         id: `err-${Date.now()}`,
         role: "model",
-        content: "Sorry, I ran into a connection issue. You can reach out to our team at **bcavault07@gmail.com** for direct support.",
+        content:
+          "Sorry, I encountered a temporary connection issue. Please try again or reach out at **bcavault07@gmail.com**.",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => [...prev, errMsg]);
@@ -131,47 +208,62 @@ export function AIChatbot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="mb-4 flex h-[520px] w-[92vw] max-w-[390px] flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden sm:w-[380px]"
+            className="mb-4 flex h-[570px] w-[94vw] max-w-[420px] flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden sm:w-[410px]"
           >
             {/* Header */}
-            <div className="flex items-center justify-between bg-gradient-to-r from-blue-700 via-indigo-700 to-indigo-800 px-5 py-4 text-white shadow-sm">
+            <div className="flex items-center justify-between bg-gradient-to-r from-blue-700 via-indigo-700 to-indigo-900 px-5 py-3.5 text-white shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="relative grid h-10 w-10 place-items-center rounded-2xl bg-white/15 backdrop-blur-md">
-                  <Sparkles className="h-5 w-5 text-amber-300" />
+                  <GraduationCap className="h-5 w-5 text-amber-300" />
                   <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-indigo-900" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold leading-tight">BCA Vault AI</h3>
-                  <p className="text-[11px] text-blue-200">BVDU & BCA Study Assistant</p>
+                  <h3 className="text-sm font-bold leading-tight flex items-center gap-1.5">
+                    <span>BCA AI Learning Assistant</span>
+                  </h3>
+                  <p className="text-[11px] text-blue-200">
+                    {studentName ? `${studentName} • Sem ${semester}` : "BVDU BCA Study Companion"}
+                  </p>
                 </div>
               </div>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="grid h-8 w-8 place-items-center rounded-xl bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition"
-                aria-label="Close chat"
-              >
-                <ChevronDown className="h-5 w-5" />
-              </button>
+
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handleClearChat}
+                  className="grid h-8 w-8 place-items-center rounded-xl bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition"
+                  title="Clear conversation"
+                  aria-label="Clear chat"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="grid h-8 w-8 place-items-center rounded-xl bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition"
+                  aria-label="Close chat"
+                >
+                  <ChevronDown className="h-5 w-5" />
+                </button>
+              </div>
             </div>
 
-            {/* Quick action chips */}
-            <div className="flex gap-2 overflow-x-auto border-b border-slate-100 bg-slate-50/80 px-4 py-2.5 scrollbar-none">
-              {QUICK_PROMPTS.map((item, idx) => {
+            {/* Quick Action Learning Mode Chips */}
+            <div className="flex gap-2 overflow-x-auto border-b border-slate-100 bg-slate-50/90 px-4 py-2.5 scrollbar-none">
+              {LEARNING_PROMPTS.map((item, idx) => {
                 const Icon = item.icon;
                 return (
                   <button
                     key={idx}
                     onClick={() => void handleSend(item.query)}
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700 hover:border-indigo-300 hover:bg-indigo-50/50 hover:text-indigo-700 transition"
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700 hover:border-indigo-300 hover:bg-indigo-50/60 hover:text-indigo-700 transition shadow-2xs"
                   >
-                    <Icon className="h-3 w-3 text-indigo-500" />
+                    <Icon className="h-3 w-3 text-indigo-600" />
                     {item.label}
                   </button>
                 );
               })}
             </div>
 
-            {/* Messages body */}
+            {/* Messages Body */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50/40">
               {messages.map((m) => {
                 const isBot = m.role === "model";
@@ -186,20 +278,43 @@ export function AIChatbot() {
                       </div>
                     )}
                     <div
-                      className={`max-w-[82%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm ${
+                      className={`group relative max-w-[84%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm ${
                         isBot
                           ? "bg-white text-slate-800 border border-slate-100 rounded-bl-sm"
                           : "bg-indigo-600 text-white rounded-br-sm"
                       }`}
                     >
-                      <p className="whitespace-pre-wrap">{m.content}</p>
-                      <span
-                        className={`mt-1 block text-[9px] ${
-                          isBot ? "text-slate-400" : "text-indigo-200 text-right"
-                        }`}
-                      >
-                        {m.timestamp}
-                      </span>
+                      <div className="whitespace-pre-wrap font-sans">{m.content}</div>
+
+                      <div className="mt-1.5 flex items-center justify-between gap-2 border-t border-slate-100/40 pt-1">
+                        <span
+                          className={`text-[9px] ${
+                            isBot ? "text-slate-400" : "text-indigo-200"
+                          }`}
+                        >
+                          {m.timestamp}
+                        </span>
+
+                        {isBot && (
+                          <button
+                            onClick={() => handleCopy(m.id, m.content)}
+                            className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-indigo-600 transition text-[10px] flex items-center gap-1"
+                            title="Copy text"
+                          >
+                            {copiedId === m.id ? (
+                              <>
+                                <Check className="h-3 w-3 text-emerald-600" />
+                                <span className="text-emerald-600">Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3 w-3" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
                     </div>
                     {!isBot && (
                       <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-indigo-600 text-white text-xs">
@@ -217,14 +332,16 @@ export function AIChatbot() {
                   </div>
                   <div className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-100 bg-white px-3.5 py-2 shadow-sm">
                     <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600" />
-                    <span className="text-[11px] text-slate-500 font-medium">Assistant is typing…</span>
+                    <span className="text-[11px] text-slate-500 font-medium">
+                      AI is generating your explanation…
+                    </span>
                   </div>
                 </div>
               )}
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input area */}
+            {/* Input Area */}
             <div className="border-t border-slate-200 bg-white p-3">
               <div className="flex items-center gap-2">
                 <input
@@ -232,7 +349,7 @@ export function AIChatbot() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask a question about BCA notes, PYQs..."
+                  placeholder="Ask a question, topic, code, or test request..."
                   className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none transition"
                 />
                 <button
@@ -245,29 +362,31 @@ export function AIChatbot() {
                 </button>
               </div>
               <p className="mt-1.5 text-center text-[10px] text-slate-400">
-                Official BCA Vault Assistant • AI-generated responses
+                Official BCA Vault Assistant • Powered by Gemini AI
               </p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Floating trigger button */}
+      {/* Floating Launcher Button */}
       {!isOpen && (
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsOpen(true)}
-          className="group relative flex items-center gap-2.5 rounded-full bg-gradient-to-r from-blue-700 via-indigo-600 to-indigo-700 px-4 py-3 text-white shadow-xl shadow-indigo-600/30 hover:shadow-indigo-600/40 transition"
+          className="group relative flex items-center gap-2.5 rounded-full bg-gradient-to-r from-blue-700 via-indigo-600 to-indigo-800 px-4 py-3 text-white shadow-xl shadow-indigo-600/30 hover:shadow-indigo-600/40 transition"
         >
           <div className="relative">
-            <Sparkles className="h-5 w-5 text-amber-300" />
+            <GraduationCap className="h-5 w-5 text-amber-300" />
             <span className="absolute -top-1 -right-1 flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
             </span>
           </div>
-          <span className="text-xs font-bold tracking-wide">Ask BCA Assistant</span>
+          <span className="text-xs font-bold tracking-wide">
+            {studentName ? "AI Study Assistant" : "Ask BCA Assistant"}
+          </span>
         </motion.button>
       )}
     </div>
