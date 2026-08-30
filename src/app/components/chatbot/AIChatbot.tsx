@@ -24,6 +24,7 @@ interface Message {
 }
 
 const QUICK_PROMPTS = [
+  { label: "₹499 Coupon Offer", icon: Sparkles, query: "What coupon code can I use to get a discount on BCA Vault?" },
   { label: "How to purchase bundles?", icon: CreditCard, query: "How do I purchase a course bundle on BCA Vault?" },
   { label: "Semester syllabus", icon: BookOpen, query: "What subjects and semesters are available on BCA Vault?" },
   { label: "Contact Support", icon: Mail, query: "How can I contact BCA Vault support team?" },

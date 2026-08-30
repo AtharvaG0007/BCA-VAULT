@@ -46,15 +46,15 @@ export function Footer() {
             <div className="space-y-2 text-sm text-gray-400">
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-[#4F46E5]" />
-                <span>support@bcavault.in</span>
+                <a href="mailto:bcavault07@gmail.com" className="hover:text-white transition">bcavault07@gmail.com</a>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-[#4F46E5]" />
-                <span>+91 98765 43210</span>
+                <a href="https://wa.me/919326342123" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">+91 93263 42123</a>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-[#4F46E5]" />
-                <span>Mumbai, Maharashtra, India</span>
+                <span>Pune, Maharashtra, India</span>
               </div>
             </div>
             <div className="flex items-center gap-3 mt-6">
@@ -118,7 +118,7 @@ export function Footer() {
               <div className="w-5 h-3 rounded-sm bg-gradient-to-r from-orange-500 via-white to-green-500 border border-white/20" />
               <span className="text-xs text-gray-500">India</span>
             </div>
-            <span className="text-xs text-gray-500">Payments powered by Razorpay</span>
+            <span className="text-xs text-gray-500">Secure Direct UPI Payments</span>
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@ import { motion } from "motion/react";
 import { CheckCircle2, Mail, Phone, Clock, ArrowLeft } from "lucide-react";
 import { Link } from "react-router";
 
-const SUPPORT_EMAIL = "gogawaleatharva26@gmail.com";
+const SUPPORT_EMAIL = "bcavault07@gmail.com";
 const SUPPORT_PHONE = "9326342123";
 
 export function SuccessPage() {

@@ -97,11 +97,15 @@ export function PricingPage() {
 
             {/* Price */}
             <div className="text-center mb-8 py-6 border-y border-gray-100">
-              <div className="flex items-baseline justify-center gap-1">
-                <span className="text-2xl font-bold text-gray-500">₹</span>
-                <span className="text-6xl font-black text-gray-900" style={{ fontFamily: "var(--font-mono)" }}>899</span>
+              <div className="flex items-baseline justify-center gap-2">
+                <span className="text-2xl font-bold text-slate-400">₹</span>
+                <span className="text-5xl sm:text-6xl font-black text-gray-900" style={{ fontFamily: "var(--font-mono)" }}>499</span>
+                <span className="text-lg font-bold text-gray-400 line-through">₹899</span>
               </div>
-              <p className="text-sm text-gray-400 mt-1">One-time payment · Lifetime access</p>
+              <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
+                <span>Use coupon code <strong>BUDMS400</strong> at checkout</span>
+              </div>
+              <p className="text-xs text-gray-400 mt-2">One-time payment · Semester 1 & 2 Complete Access</p>
             </div>
 
             {/* Includes */}

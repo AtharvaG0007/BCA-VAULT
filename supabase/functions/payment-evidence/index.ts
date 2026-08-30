@@ -5,6 +5,8 @@ const ALLOWED_ORIGINS = [
   "http://127.0.0.1:5173",
   "http://localhost:3000",
   "http://localhost:4173",
+  "https://bca-vault-bay.vercel.app",
+  "https://bca-vault-atharv-0700s-projects.vercel.app",
   "https://bcavault.in",
   "https://www.bcavault.in",
 ];

@@ -27,7 +27,7 @@ const HOW_IT_WORKS = [
   { icon: BadgeCheck,    step: "04", label: "Access Granted",     desc: "Bundle appears in My Library" },
 ];
 
-const SUPPORT_EMAIL = "gogawaleatharva26@gmail.com";
+const SUPPORT_EMAIL = "bcavault07@gmail.com";
 const SUPPORT_PHONE = "9326342123";
 
 export function BundlesPage() {
@@ -117,12 +117,14 @@ export function BundlesPage() {
 
               {/* Price + CTA */}
               <div className="flex flex-col items-center justify-center sm:w-52 shrink-0">
-                <div className="w-full bg-[#1E40AF]/5 border border-[#1E40AF]/20 rounded-2xl p-6 text-center mb-4">
-                  <div className="flex items-baseline justify-center gap-0.5 mb-1">
+                <div className="w-full bg-[#1E40AF]/5 border border-[#1E40AF]/20 rounded-2xl p-5 text-center mb-4">
+                  <div className="flex items-baseline justify-center gap-1.5 mb-1">
                     <span className="text-xl font-bold text-gray-500">₹</span>
-                    <span className="text-5xl font-black text-gray-900" style={{ fontFamily: "var(--font-mono)" }}>899</span>
+                    <span className="text-4xl sm:text-5xl font-black text-gray-900" style={{ fontFamily: "var(--font-mono)" }}>499</span>
+                    <span className="text-sm font-bold text-gray-400 line-through">₹899</span>
                   </div>
-                  <p className="text-xs text-gray-400">One-time · Lifetime access</p>
+                  <p className="text-[11px] font-bold text-emerald-700">With coupon BUDMS400</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">One-time · Lifetime access</p>
                 </div>
 
                 <button

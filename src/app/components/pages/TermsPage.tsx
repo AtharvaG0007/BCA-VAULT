@@ -201,9 +201,8 @@ export function TermsPage() {
               <h2 className="text-xl font-bold text-gray-900 mb-3" style={{ fontFamily: "var(--font-display)" }}>15. Contact Information</h2>
               <p className="text-gray-600 leading-relaxed mb-3">For any questions, concerns, or requests related to these Terms, please contact us:</p>
               <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 text-sm text-gray-600 space-y-1">
-                <p><strong>General:</strong> <a href="mailto:contact@bcavault.in" className="text-[#1E40AF]">contact@bcavault.in</a></p>
-                <p><strong>Legal / DMCA:</strong> <a href="mailto:legal@bcavault.in" className="text-[#1E40AF]">legal@bcavault.in</a></p>
-                <p><strong>Privacy:</strong> <a href="mailto:privacy@bcavault.in" className="text-[#1E40AF]">privacy@bcavault.in</a></p>
+                <p><strong>General Support & Queries:</strong> <a href="mailto:bcavault07@gmail.com" className="text-[#1E40AF]">bcavault07@gmail.com</a></p>
+                <p><strong>WhatsApp Support:</strong> <a href="https://wa.me/919326342123" target="_blank" rel="noopener noreferrer" className="text-[#1E40AF]">+91 93263 42123</a></p>
                 <p className="pt-2 text-gray-400 text-xs">BCA Vault is an independent student startup. Not affiliated with Bharati Vidyapeeth University.</p>
               </div>
             </section>
