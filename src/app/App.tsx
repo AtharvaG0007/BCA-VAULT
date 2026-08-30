@@ -98,6 +98,9 @@ function AppLayout() {
   const hideNav = noNavRoutes.some((p) =>
     location.pathname.startsWith(p),
   );
+  const isAdminRoute =
+    location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/admin-root");
   const showDisclaimer =
     !hasAccepted &&
     !noDisclaimerRoutes.some((p) =>
@@ -350,8 +353,8 @@ function AppLayout() {
         </AnimatePresence>
       </div>
       {!hideNav && <Footer />}
-      {!hideNav && <WhatsAppFloatingButton />}
-      <AIChatbot />
+      {!isAdminRoute && <WhatsAppFloatingButton />}
+      {!isAdminRoute && <AIChatbot />}
       <Toaster />
     </div>
   );
