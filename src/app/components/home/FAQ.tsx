@@ -29,7 +29,7 @@ const faqs = [
   },
   {
     q: "What if I have a problem after purchase?",
-    a: "Contact us at gogawaleatharva26@gmail.com or call 9326342123. We'll resolve any access issues promptly.",
+    a: "Contact us at bcavault07@gmail.com or WhatsApp +91 93263 42123. We'll resolve any access issues promptly.",
   },
   {
     q: "Is there a refund policy?",

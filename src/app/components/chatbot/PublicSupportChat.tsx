@@ -351,12 +351,12 @@ export function PublicSupportChat() {
         >
           <button
             onClick={() => setIsOpen(true)}
-            aria-label="BCA Support"
-            title="BCA Support"
+            aria-label="AI Support Assistant"
+            title="AI Support Assistant"
             className="group relative flex h-12 w-12 sm:h-13 sm:w-13 md:h-14 md:w-14 items-center justify-center rounded-full bg-gradient-to-tr from-teal-600 via-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-600/30 hover:from-teal-500 hover:via-emerald-400 hover:to-emerald-500 hover:shadow-xl hover:shadow-emerald-600/40 hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2"
           >
-            <MessageCircle className="h-6 w-6 sm:h-7 sm:w-7" />
-            <span className="sr-only">BCA Support</span>
+            <Bot className="h-6 w-6 sm:h-7 sm:w-7" />
+            <span className="sr-only">AI Support Assistant</span>
 
             {/* Dot indicator */}
             <span className="absolute top-0.5 right-0.5 flex h-3 w-3">

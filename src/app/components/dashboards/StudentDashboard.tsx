@@ -78,19 +78,36 @@ export function StudentDashboard() {
   async function openNote(note: NoteItem) {
     setOpeningId(note.id);
     setMessage(null);
+
+    // 1. Immediately open a new tab on click to avoid popup blocker
+    let pdfWindow: Window | null = null;
+    try {
+      pdfWindow = window.open("about:blank", "_blank");
+    } catch {
+      // ignore if popups blocked
+    }
+
     try {
       const res = await adminApi.getStudentSignedNoteUrl(note.id);
       if (res?.signedUrl) {
-        setActiveViewer({
-          url: res.signedUrl,
-          title: note.title,
-          subject: note.subject ?? undefined,
-          semester: note.semester ?? undefined,
-        });
+        if (pdfWindow && !pdfWindow.closed) {
+          pdfWindow.location.href = res.signedUrl;
+        } else {
+          // Fallback to in-app modal if window popup failed
+          setActiveViewer({
+            url: res.signedUrl,
+            title: note.title,
+            subject: note.subject ?? undefined,
+            semester: note.semester ?? undefined,
+          });
+        }
         return;
       }
       throw new Error("Signed URL not returned");
     } catch (err: any) {
+      if (pdfWindow && !pdfWindow.closed) {
+        pdfWindow.close();
+      }
       console.error("Open note error:", err);
       setMessage({
         text: err.message || "This note is currently unavailable. Please verify your course access.",

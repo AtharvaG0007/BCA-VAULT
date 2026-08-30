@@ -5,6 +5,7 @@ const ALLOWED_ORIGINS = [
   "http://127.0.0.1:5173",
   "http://localhost:3000",
   "http://localhost:4173",
+  "https://bca-vault.portalbcavault.workers.dev",
   "https://bca-vault-bay.vercel.app",
   "https://bca-vault-atharv-0700s-projects.vercel.app",
   "https://bcavault.in",
@@ -15,15 +16,17 @@ function getCorsHeaders(req: Request) {
   const origin = req.headers.get("Origin") || "";
   const isAllowed =
     ALLOWED_ORIGINS.includes(origin) ||
+    origin.endsWith(".workers.dev") ||
     origin.endsWith(".vercel.app") ||
-    origin.endsWith(".figma.site");
-  const allowOrigin = isAllowed ? origin : (origin || "*");
+    origin.endsWith(".figma.site") ||
+    /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+  const allowOrigin = isAllowed ? origin : (origin || ALLOWED_ORIGINS[0]);
 
   return {
     "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Headers":
-      "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "authorization, x-client-info, apikey, content-type, x-requested-with",
+    "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
     "Access-Control-Max-Age": "86400",
   };
 }
