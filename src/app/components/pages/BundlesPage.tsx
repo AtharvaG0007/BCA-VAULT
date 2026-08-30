@@ -1,8 +1,8 @@
 import { motion } from "motion/react";
 import { useNavigate } from "react-router";
 import {
-  BookOpen, Check, X as XIcon, Star, Shield,
-  BadgeCheck, RefreshCw, QrCode, ClipboardList,
+  BookOpen, Check, X as XIcon, Shield,
+  BadgeCheck, RefreshCw, QrCode, ClipboardList, Sparkles, Trophy
 } from "lucide-react";
 
 // Single fixed product — no DB fetch required
@@ -21,10 +21,10 @@ const INCLUDES = [
 const EXCLUDES = ["Mathematics", "Lab / Practical Subjects", "Projects"];
 
 const HOW_IT_WORKS = [
-  { icon: QrCode,        step: "01", label: "Pay via UPI",        desc: "Scan QR or use UPI ID · Pay exactly ₹899" },
-  { icon: ClipboardList, step: "02", label: "Submit Payment Evidence", desc: "Enter email, UTR & upload screenshot" },
-  { icon: Shield,        step: "03", label: "Admin Verifies",     desc: "Payment verified within a few hours" },
-  { icon: BadgeCheck,    step: "04", label: "Access Granted",     desc: "Bundle appears in My Library" },
+  { icon: BookOpen,      step: "01", label: "Choose Bundle",   desc: "Select the BCA Vault theory bundle" },
+  { icon: QrCode,        step: "02", label: "Make Payment",    desc: "Pay using official BCA Vault UPI" },
+  { icon: ClipboardList, step: "03", label: "Submit Evidence", desc: "Submit UTR and payment screenshot" },
+  { icon: BadgeCheck,    step: "04", label: "Get Access",      desc: "Appears in My Library after verification" },
 ];
 
 const SUPPORT_EMAIL = "bcavault07@gmail.com";
@@ -38,18 +38,18 @@ export function BundlesPage() {
       {/* Hero */}
       <div className="text-center px-4 pt-16 pb-12">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-[#1E40AF]/10 text-[#1E40AF] mb-5">
-            <BookOpen className="w-3.5 h-3.5" /> One Bundle. Complete Theory Preparation.
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-full bg-[#1E40AF]/10 text-[#1E40AF] mb-5 uppercase tracking-wider">
+            <Sparkles className="w-3.5 h-3.5" /> First-Batch Student Edition
           </div>
           <h1 className="text-4xl lg:text-5xl font-black text-gray-900 mb-4" style={{ fontFamily: "var(--font-display)" }}>
-            BCA Vault Complete<br className="hidden sm:block" /> Theory Bundle
+            First-Batch Student Offer
           </h1>
-          <p className="text-gray-500 max-w-xl mx-auto text-base lg:text-lg mb-5">
-            Everything you need to ace your BCA theory exams — notes, PYQs, analysis, and most repeated questions.
+          <p className="text-gray-600 max-w-xl mx-auto text-base lg:text-lg mb-5 leading-relaxed">
+            Complete theory preparation bundle for eligible Semester 1 & Semester 2 theory subjects.
           </p>
           <div className="flex flex-wrap justify-center gap-2">
             {["Theory Notes", "PYQ Papers", "Most Repeated Qs", "Semester 1 & 2"].map((tag) => (
-              <span key={tag} className="flex items-center gap-1 text-xs bg-white border border-gray-200 text-gray-600 px-3 py-1 rounded-full shadow-sm">
+              <span key={tag} className="flex items-center gap-1 text-xs bg-white border border-gray-200 text-gray-700 px-3 py-1 rounded-full shadow-sm font-medium">
                 <Check className="w-3 h-3 text-emerald-500" /> {tag}
               </span>
             ))}
@@ -73,18 +73,13 @@ export function BundlesPage() {
                 Complete Theory Bundle
               </p>
             </div>
-            <div className="text-right">
-              <div className="flex items-center justify-end gap-0.5 mb-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
-                ))}
-              </div>
-              <p className="text-white/70 text-xs">4.9 · 2,400+ students</p>
+            <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full border border-white/20">
+              <span className="text-white text-xs font-bold">First Batch</span>
             </div>
           </div>
 
           <div className="p-8">
-            <p className="text-sm text-gray-500 mb-7">
+            <p className="text-sm text-gray-600 mb-7 leading-relaxed">
               Theory Notes + PYQs + Most Repeated Questions for eligible Semester 1 and Semester 2 theory subjects.
             </p>
 
@@ -113,6 +108,12 @@ export function BundlesPage() {
                     ))}
                   </div>
                 </div>
+
+                {/* Quiz winner banner */}
+                <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 px-3.5 py-2 text-xs font-medium text-amber-900">
+                  <Trophy className="h-4 w-4 text-amber-600 shrink-0" />
+                  <span>Top 3 Quiz Winners → <strong>₹349</strong> with code WINNER150</span>
+                </div>
               </div>
 
               {/* Price + CTA */}
@@ -123,16 +124,16 @@ export function BundlesPage() {
                     <span className="text-4xl sm:text-5xl font-black text-gray-900" style={{ fontFamily: "var(--font-mono)" }}>499</span>
                     <span className="text-sm font-bold text-gray-400 line-through">₹899</span>
                   </div>
-                  <p className="text-[11px] font-bold text-emerald-700">With coupon BUDMS400</p>
+                  <p className="text-[11px] font-bold text-emerald-700">First-Batch Offer (BUDMS400)</p>
                   <p className="text-[10px] text-gray-400 mt-0.5">One-time · Lifetime access</p>
                 </div>
 
                 <button
                   onClick={() => navigate("/purchase")}
-                  className="w-full py-4 bg-[#1E40AF] hover:bg-[#1E3A8A] text-white font-black rounded-2xl transition-all active:scale-95 shadow-lg shadow-blue-200 tracking-wide"
+                  className="w-full py-4 bg-[#1E40AF] hover:bg-[#1E3A8A] text-white font-bold rounded-2xl transition-all active:scale-95 shadow-lg shadow-blue-200 tracking-wide text-xs uppercase"
                   style={{ fontFamily: "var(--font-display)" }}
                 >
-                  GET COMPLETE BUNDLE
+                  Get First-Batch Access
                 </button>
 
                 <div className="flex flex-col gap-1.5 mt-4 w-full">
@@ -182,9 +183,9 @@ export function BundlesPage() {
           <a href={`mailto:${SUPPORT_EMAIL}`} className="text-[#1E40AF] hover:underline font-medium">
             {SUPPORT_EMAIL}
           </a>{" "}
-          or call{" "}
-          <a href={`tel:+91${SUPPORT_PHONE}`} className="text-[#1E40AF] hover:underline font-medium">
-            {SUPPORT_PHONE}
+          or WhatsApp{" "}
+          <a href={`https://wa.me/91${SUPPORT_PHONE}`} className="text-[#1E40AF] hover:underline font-medium">
+            +91 {SUPPORT_PHONE}
           </a>
         </div>
       </div>

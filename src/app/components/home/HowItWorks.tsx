@@ -1,28 +1,28 @@
 import { motion } from "motion/react";
-import { BookOpen, QrCode, ClipboardList, BadgeCheck } from "lucide-react";
+import { BookOpen, QrCode, ClipboardList, BadgeCheck, MessageCircle } from "lucide-react";
 
 const steps = [
   {
     step: "01",
     icon: BookOpen,
     title: "Choose Your Bundle",
-    description: "Visit the Bundles page and click Get Complete Bundle to start the purchase process.",
+    description: "Select the BCA Vault theory bundle.",
     iconBg: "bg-[#1E40AF]/10",
     iconColor: "text-[#1E40AF]",
   },
   {
     step: "02",
     icon: QrCode,
-    title: "Pay via UPI",
-    description: "Scan the QR code or copy the UPI ID. Pay exactly ₹899 and take a screenshot of the confirmation.",
+    title: "Make Payment",
+    description: "Pay using the official BCA Vault UPI option.",
     iconBg: "bg-[#4F46E5]/10",
     iconColor: "text-[#4F46E5]",
   },
   {
     step: "03",
     icon: ClipboardList,
-    title: "Submit the Form",
-    description: "Submit payment evidence in BCA Vault with your registered email, transaction ID, and payment screenshot.",
+    title: "Submit Payment Evidence",
+    description: "Submit your UTR/transaction details and payment screenshot.",
     iconBg: "bg-emerald-100",
     iconColor: "text-[#10B981]",
   },
@@ -30,7 +30,7 @@ const steps = [
     step: "04",
     icon: BadgeCheck,
     title: "Get Access",
-    description: "Our admin verifies your payment and authorizes your bundle. Access appears in My Library within 24 hours.",
+    description: "After manual verification, your bundle appears in your Student Dashboard / My Library.",
     iconBg: "bg-amber-100",
     iconColor: "text-amber-600",
   },
@@ -46,12 +46,12 @@ export function HowItWorks() {
           viewport={{ once: true }}
           className="text-center mb-14"
         >
-          <p className="text-sm font-semibold text-[#4F46E5] uppercase tracking-wider mb-3">How It Works</p>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#4F46E5] mb-3">Simple 4-Step Process</p>
           <h2 className="text-3xl sm:text-4xl font-black text-[#111827] mb-4" style={{ fontFamily: "var(--font-display)" }}>
-            From payment to access in 4 steps
+            How It Works
           </h2>
-          <p className="text-lg text-gray-500 max-w-xl mx-auto">
-            Simple, manual, and transparent. No payment gateway complexity.
+          <p className="text-base text-gray-500 max-w-xl mx-auto leading-relaxed">
+            From payment to verified access in 4 clear, transparent steps.
           </p>
         </motion.div>
 
@@ -83,6 +83,19 @@ export function HowItWorks() {
               </div>
             </motion.div>
           ))}
+        </div>
+
+        {/* Support Help Line */}
+        <div className="mt-12 text-center">
+          <a
+            href="https://wa.me/919326342123"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[#1E40AF] hover:text-[#1E3A8A] transition"
+          >
+            <MessageCircle className="w-4 h-4 text-[#25D366]" />
+            Need help? Contact BCA Vault support on WhatsApp (+91 93263 42123)
+          </a>
         </div>
       </div>
     </section>

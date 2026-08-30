@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";
-import { ArrowRight, BookOpen, Check, X as XIcon, Star, Zap, FileText } from "lucide-react";
+import { ArrowRight, BookOpen, Check, X as XIcon, Zap, FileText, Sparkles, Trophy } from "lucide-react";
 import { Button } from "../ui/button";
 
 const INCLUDES = [
@@ -28,12 +28,14 @@ export function PopularBundles() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <p className="text-sm font-semibold text-[#4F46E5] uppercase tracking-wider mb-3">The Only Bundle You Need</p>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-[#1E40AF] text-xs font-bold uppercase tracking-wider mb-3">
+            <Sparkles className="w-3.5 h-3.5" /> Introductory Student Access
+          </div>
           <h2 className="text-3xl sm:text-4xl font-black text-[#111827] mb-3" style={{ fontFamily: "var(--font-display)" }}>
-            One Bundle. Complete Theory.
+            First-Batch Student Offer
           </h2>
-          <p className="text-gray-500 max-w-xl mx-auto">
-            Everything covered. One price. No complicated tiers.
+          <p className="text-gray-600 max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
+            Complete theory preparation bundle for eligible Semester 1 & Semester 2 theory subjects.
           </p>
         </motion.div>
 
@@ -52,13 +54,8 @@ export function PopularBundles() {
                   Complete Theory Bundle
                 </p>
               </div>
-              <div className="flex flex-col items-end">
-                <div className="flex items-center gap-1 mb-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
-                  ))}
-                </div>
-                <p className="text-white/70 text-xs">4.9 · 2,400+ students</p>
+              <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full border border-white/20">
+                <span className="text-white text-xs font-bold">First Batch</span>
               </div>
             </div>
 
@@ -90,6 +87,12 @@ export function PopularBundles() {
                     ))}
                   </div>
                 </div>
+
+                {/* Quiz winner banner */}
+                <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 px-3.5 py-2 text-xs font-medium text-amber-900">
+                  <Trophy className="h-4 w-4 text-amber-600 shrink-0" />
+                  <span>Top 3 Quiz Winners → <strong>₹349</strong> with code WINNER150</span>
+                </div>
               </div>
 
               {/* Right: Price + CTA */}
@@ -109,18 +112,20 @@ export function PopularBundles() {
                 </div>
 
                 <div className="text-center mb-6">
-                  <div className="flex items-baseline justify-center gap-1 mb-1">
+                  <div className="flex items-baseline justify-center gap-1.5 mb-1">
                     <span className="text-lg font-bold text-gray-500">₹</span>
-                    <span className="text-5xl font-black text-gray-900" style={{ fontFamily: "var(--font-mono)" }}>899</span>
+                    <span className="text-5xl font-black text-gray-900" style={{ fontFamily: "var(--font-mono)" }}>499</span>
+                    <span className="text-sm font-bold text-gray-400 line-through">₹899</span>
                   </div>
-                  <p className="text-xs text-gray-400">One-time · Lifetime access</p>
+                  <p className="text-xs font-bold text-emerald-700">First-Batch Offer (BUDMS400)</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">One-time · Lifetime access</p>
                 </div>
 
                 <Button
-                  onClick={() => navigate("/bundles")}
-                  className="w-full h-12 bg-[#1E40AF] hover:bg-[#1E3A8A] text-white rounded-2xl gap-2"
+                  onClick={() => navigate("/purchase")}
+                  className="w-full h-12 bg-[#1E40AF] hover:bg-[#1E3A8A] text-white rounded-2xl gap-2 shadow-md shadow-blue-200"
                 >
-                  Get Bundle <ArrowRight className="w-4 h-4" />
+                  Get First-Batch Access <ArrowRight className="w-4 h-4" />
                 </Button>
 
                 <p className="text-xs text-gray-400 mt-2 text-center">Manual verification · Access within 24h</p>

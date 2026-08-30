@@ -4,36 +4,32 @@ import { Plus, Minus } from "lucide-react";
 
 const faqs = [
   {
-    q: "What is BCA Vault Complete Theory Bundle?",
-    a: "It's a one-time purchase that gives you access to complete theory notes, PYQs, PYQ analysis, and most repeated questions across all eligible BCA theory subjects and semesters.",
+    q: "What is included in the BCA Vault bundle?",
+    a: "The bundle includes eligible Semester 1 and Semester 2 theory notes, unit-wise/topic-wise material, previous year questions, PYQ analysis, most repeated questions and important exam topics.",
   },
   {
-    q: "Which subjects are included?",
-    a: "Eligible theory subjects from Semester 1 and Semester 2 under BCA Syllabus 2026–27. Mathematics, labs, practicals and project work are excluded; Semesters 3–8 are Coming Soon.",
+    q: "Are Mathematics, labs and projects included?",
+    a: "No. Mathematics, lab/practical subjects and projects are currently excluded unless specifically stated for a particular bundle.",
   },
   {
-    q: "How does payment work?",
-    a: "You pay via UPI (any app — GPay, PhonePe, Paytm, etc.) to our UPI ID. Then submit payment evidence in BCA Vault with your name, registered email, transaction ID, and payment screenshot. Our admin verifies and grants access.",
+    q: "How do I get access?",
+    a: "Create/login to your account, complete payment, submit your payment evidence and wait for manual verification. Once approved, your content will appear in My Library.",
   },
   {
-    q: "How long does access take after payment?",
-    a: "Usually within a few hours. Maximum 24 hours. Once authorized, the bundle appears in your My Library section on your dashboard.",
+    q: "Can I download the notes?",
+    a: "Access is provided through the BCA Vault learning experience. Content availability and download permissions depend on the specific material and platform policy.",
   },
   {
-    q: "Will the content be updated?",
-    a: "Yes. We regularly add new notes and update existing content. Your one-time purchase includes all future updates to the bundle.",
+    q: "Who is BCA Vault?",
+    a: "BCA Vault is an independent student-focused platform providing organised BCA study resources.",
   },
   {
-    q: "Are the notes and PYQs accurate?",
-    a: "Yes. All materials are prepared by BCA university toppers and verified for accuracy. PYQ papers are sourced from actual university exam records.",
+    q: "Is BCA Vault officially affiliated with the university?",
+    a: "No. BCA Vault is an independent student startup project and is not sponsored, owned, operated, endorsed or affiliated with Bharati Vidyapeeth University, its faculty, departments or administration.",
   },
   {
     q: "What if I have a problem after purchase?",
     a: "Contact us at bcavault07@gmail.com or WhatsApp +91 93263 42123. We'll resolve any access issues promptly.",
-  },
-  {
-    q: "Is there a refund policy?",
-    a: "Due to the digital nature of our content, we don't offer refunds after access has been granted. If you received incorrect content, contact us within 48 hours and we'll make it right.",
   },
 ];
 

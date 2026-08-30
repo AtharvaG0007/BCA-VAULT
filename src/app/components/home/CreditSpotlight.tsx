@@ -1,27 +1,41 @@
-import { useNavigate } from "react-router";
 import { motion } from "motion/react";
-import { QrCode, CheckCircle, ArrowRight, ShieldCheck, Clock, BookOpen } from "lucide-react";
+import { Share2, Users, Gift, ShieldCheck, ArrowRight, MessageCircle } from "lucide-react";
 import { Button } from "../ui/button";
 
-const steps = [
-  { icon: BookOpen,     label: "Pick the Bundle",    desc: "Click Get Complete Bundle on the bundles page" },
-  { icon: QrCode,       label: "Pay via UPI",         desc: "Scan the QR code or use UPI ID to pay ₹899" },
-  { icon: CheckCircle,  label: "Submit Payment Evidence",  desc: "Enter your email, UPI ref, and upload screenshot" },
-  { icon: ShieldCheck,  label: "Admin Verifies",      desc: "Our team verifies your payment within a few hours" },
-  { icon: Clock,        label: "Access Granted",      desc: "Bundle appears in My Library within 24 hours" },
+const referralPillars = [
+  {
+    icon: Users,
+    title: "1. Tell Your Classmates",
+    desc: "Share BCA Vault with friends who want organised notes and PYQ analysis.",
+  },
+  {
+    icon: Share2,
+    title: "2. Share Your Experience",
+    desc: "Help them discover unit-wise materials and exam-focused preparation.",
+  },
+  {
+    icon: Gift,
+    title: "3. Earn Student Rewards",
+    desc: "Receive referral rewards according to current student referral terms.",
+  },
 ];
 
 export function CreditSpotlight() {
-  const navigate = useNavigate();
+  const handleShareClick = () => {
+    const text = encodeURIComponent(
+      "Hey! Check out BCA Vault for our BCA theory exam preparation. It has unit-wise notes, PYQs, and repeated questions in one place: https://bca-vault.portalbcavault.workers.dev"
+    );
+    window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
+  };
 
   return (
-    <section className="py-20 bg-[#111827] relative overflow-hidden">
+    <section className="py-20 bg-[#0B132B] relative overflow-hidden">
       <div className="absolute inset-0">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#1E40AF]/15 rounded-full blur-[120px]" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-900/30 rounded-full blur-[100px]" />
       </div>
 
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -29,54 +43,58 @@ export function CreditSpotlight() {
           className="text-center mb-14"
         >
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#1E40AF]/20 border border-[#1E40AF]/30 rounded-full mb-6">
-            <ShieldCheck className="w-4 h-4 text-blue-400" />
-            <span className="text-sm font-semibold text-blue-300">Simple Manual Payment — No Gateway</span>
+            <Gift className="w-4 h-4 text-blue-400" />
+            <span className="text-xs font-bold uppercase tracking-wider text-blue-300">Student Referral Program</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-black text-white mb-4" style={{ fontFamily: "var(--font-display)" }}>
-            How to Get Your Bundle
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4" style={{ fontFamily: "var(--font-display)" }}>
+            Help Your Classmates. Earn Student Rewards.
           </h2>
-          <p className="text-gray-400 text-lg max-w-xl mx-auto">
-            Pay via UPI, fill a quick form, and our admin will authorize your access within 24 hours.
+          <p className="text-slate-300 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
+            Know a classmate who is preparing for BCA exams? Share BCA Vault with them.
+          </p>
+          <p className="text-slate-400 text-sm max-w-lg mx-auto mt-2 leading-relaxed">
+            Students who successfully refer classmates can receive a referral reward according to the current referral terms.
           </p>
         </motion.div>
 
-        <div className="grid sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-12">
-          {steps.map((step, i) => (
-            <motion.div
-              key={step.label}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="relative"
-            >
-              {i < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-7 left-full w-full h-px bg-gradient-to-r from-white/20 to-transparent z-0" />
-              )}
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center relative z-10">
-                <div className="w-10 h-10 rounded-full bg-[#1E40AF] flex items-center justify-center mx-auto mb-3">
-                  <step.icon className="w-5 h-5 text-white" />
+        <div className="grid sm:grid-cols-3 gap-5 mb-12">
+          {referralPillars.map((p, i) => {
+            const Icon = p.icon;
+            return (
+              <motion.div
+                key={p.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center"
+              >
+                <div className="w-12 h-12 rounded-xl bg-[#1E40AF] flex items-center justify-center mx-auto mb-4 shadow-md shadow-blue-900/40">
+                  <Icon className="w-6 h-6 text-white" />
                 </div>
-                <p className="text-xs font-bold text-white/60 mb-1">{String(i + 1).padStart(2, "0")}</p>
-                <p className="text-sm font-bold text-white mb-1.5" style={{ fontFamily: "var(--font-display)" }}>
-                  {step.label}
-                </p>
-                <p className="text-xs text-gray-400 leading-relaxed">{step.desc}</p>
-              </div>
-            </motion.div>
-          ))}
+                <h3 className="text-base font-bold text-white mb-2" style={{ fontFamily: "var(--font-display)" }}>
+                  {p.title}
+                </h3>
+                <p className="text-xs text-slate-400 leading-relaxed">{p.desc}</p>
+              </motion.div>
+            );
+          })}
         </div>
 
         <div className="text-center">
           <Button
             size="lg"
-            className="bg-[#1E40AF] hover:bg-[#1E3A8A] text-white px-10 h-13 rounded-2xl"
-            onClick={() => navigate("/bundles")}
+            className="bg-[#25D366] hover:bg-[#20bd5a] text-slate-950 font-bold px-10 h-13 rounded-2xl gap-2 shadow-lg shadow-emerald-950/40"
+            onClick={handleShareClick}
           >
-            Get Complete Bundle — ₹899
-            <ArrowRight className="w-4 h-4" />
+            <MessageCircle className="w-5 h-5 text-slate-950" />
+            Share BCA Vault on WhatsApp
+            <ArrowRight className="w-4 h-4 text-slate-950" />
           </Button>
-          <p className="text-gray-500 text-sm mt-3">No payment gateway · Manual UPI verification · 24h access</p>
+          <p className="text-slate-400 text-xs mt-3 flex items-center justify-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            Referrals subject to standard student verification terms
+          </p>
         </div>
       </div>
     </section>

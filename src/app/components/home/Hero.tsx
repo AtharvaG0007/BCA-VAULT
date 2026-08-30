@@ -34,30 +34,33 @@ export function Hero() {
           >
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100 mb-6">
               <Sparkles className="w-3.5 h-3.5 text-[#1E40AF]" />
-              <span className="text-xs font-semibold text-[#1E40AF]">India's #1 BCA Study Marketplace</span>
+              <span className="text-xs font-semibold text-[#1E40AF]">First-Batch Student Edition</span>
             </div>
 
             <h1
               className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#111827] leading-[1.1] mb-6"
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              Score Better.{" "}
+              Your BCA Exam Preparation,{" "}
               <span className="relative">
-                <span className="text-[#1E40AF]">Study</span>
-              </span>{" "}
-              Smarter.
+                <span className="text-[#1E40AF]">In One Place.</span>
+              </span>
             </h1>
 
-            <p className="text-lg text-[#6B7280] leading-relaxed mb-6 max-w-lg">
-              Study smarter with the latest BCA syllabus. Complete theory-focused preparation for Semester 1 & Semester 2.
+            <p className="text-lg text-[#4B5563] leading-relaxed mb-4 max-w-lg font-medium">
+              Notes + PYQs + PYQ Analysis + Most Repeated Questions — organised to help you prepare smarter for your BCA theory exams.
+            </p>
+
+            <p className="text-sm text-[#6B7280] leading-relaxed mb-6 max-w-lg">
+              Built for BCA students, with exam-focused material designed around real student preparation needs.
             </p>
 
             {/* Mini feature list */}
             <div className="flex flex-col gap-2 mb-8">
               {[
-                "Theory Notes for Semester 1 & 2",
-                "Previous Year Questions + PYQ Analysis",
-                "Most Repeated Questions & Important Topics",
+                "Complete Theory Notes for Semester 1 & 2",
+                "Previous Year Questions + Pattern Analysis",
+                "Most Repeated Questions & Key Topics",
               ].map((f) => (
                 <div key={f} className="flex items-center gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
@@ -72,9 +75,9 @@ export function Hero() {
               <Button
                 size="lg"
                 className="bg-[#1E40AF] hover:bg-[#1E3A8A] text-white px-8 h-12 rounded-xl shadow-lg shadow-blue-200"
-                onClick={() => navigate("/bundles")}
+                onClick={() => navigate("/purchase")}
               >
-                Get Complete Bundle — ₹899
+                Get First-Batch Access
                 <ArrowRight className="w-4 h-4" />
               </Button>
               <Button
@@ -83,31 +86,27 @@ export function Hero() {
                 className="border-gray-200 text-gray-700 hover:bg-gray-50 h-12 rounded-xl"
                 onClick={() => navigate("/pricing")}
               >
-                Learn More
+                Explore What’s Included
               </Button>
             </div>
 
             {/* Trust Bar */}
             <div className="flex flex-wrap items-center gap-6 pt-6 border-t border-gray-100">
               <div className="flex items-center gap-2">
-                <div className="flex">
-                  {[1,2,3,4,5].map(i => (
-                    <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />
-                  ))}
-                </div>
-                <span className="text-sm font-semibold text-gray-700">4.9/5</span>
-                <span className="text-sm text-gray-500">from 2,400+ students</span>
+                <BadgeCheck className="w-4 h-4 text-[#1E40AF]" />
+                <span className="text-sm font-semibold text-gray-700">Exam-Oriented</span>
+                <span className="text-sm text-gray-500">curriculum</span>
               </div>
               <div className="w-px h-5 bg-gray-200" />
               <div className="flex items-center gap-1.5">
                 <FileText className="w-4 h-4 text-[#1E40AF]" />
-                <span className="text-sm font-semibold text-gray-700">1,200+</span>
-                <span className="text-sm text-gray-500">notes</span>
+                <span className="text-sm font-semibold text-gray-700">Semester 1 & 2</span>
+                <span className="text-sm text-gray-500">theory notes</span>
               </div>
               <div className="w-px h-5 bg-gray-200" />
               <div className="flex items-center gap-1.5">
                 <Shield className="w-4 h-4 text-[#10B981]" />
-                <span className="text-sm text-gray-500">Secure downloads</span>
+                <span className="text-sm text-gray-500">Manual verification</span>
               </div>
             </div>
           </motion.div>
@@ -132,12 +131,12 @@ export function Hero() {
                   <BookOpen className="w-10 h-10 text-white" />
                 </div>
                 <p className="text-2xl font-bold mb-1" style={{ fontFamily: 'var(--font-display)' }}>BCA Vault</p>
-                <p className="text-blue-200 text-sm mb-6">Your exam success partner</p>
+                <p className="text-blue-200 text-sm mb-6">First-Batch Student Edition</p>
                 <div className="grid grid-cols-3 gap-4 w-full">
                   {[
-                    { label: "Available Semesters", value: "2" },
-                    { label: "Students", value: "2,400+" },
-                    { label: "Downloads", value: "18K+" },
+                    { label: "Semesters", value: "1 & 2" },
+                    { label: "First Batch", value: "Open" },
+                    { label: "Offer Price", value: "₹499" },
                   ].map((stat) => (
                     <div key={stat.label} className="bg-white/10 rounded-xl p-3">
                       <p className="text-lg font-bold" style={{ fontFamily: 'var(--font-mono)' }}>{stat.value}</p>
@@ -164,11 +163,7 @@ export function Hero() {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
+                <span className="text-xs text-slate-500 font-medium">Unit-wise & Topic-wise</span>
                 <span className="text-xs text-emerald-600 font-semibold">Included</span>
               </div>
             </motion.div>
@@ -207,13 +202,13 @@ export function Hero() {
                   <BadgeCheck className="w-4 h-4 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-gray-900">Access Granted!</p>
-                  <p className="text-xs text-emerald-600 font-bold">Bundle Authorized</p>
+                  <p className="text-xs font-semibold text-gray-900">Introductory Offer</p>
+                  <p className="text-xs text-emerald-600 font-bold">₹499 (BUDMS400)</p>
                 </div>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-gray-400">
                 <Zap className="w-3 h-3 text-amber-400" />
-                Priya from Pune
+                First-Batch Access
               </div>
             </motion.div>
           </motion.div>
