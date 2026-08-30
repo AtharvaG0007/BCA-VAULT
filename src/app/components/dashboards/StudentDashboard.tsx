@@ -3,6 +3,7 @@ import { BookOpen, Download, FileText, Loader2, LogOut, Package, RefreshCw, Shie
 import { useAuth } from "../auth/AuthContext";
 import { supabase } from "@/lib/supabase/client";
 import { adminApi } from "@/lib/supabase/adminService";
+import { SecurePDFViewer } from "../viewer/SecurePDFViewer";
 
 interface AccessItem {
   id: string;
@@ -27,6 +28,12 @@ export function StudentDashboard() {
   const [notes, setNotes] = useState<NoteItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [activeViewer, setActiveViewer] = useState<{
+    url: string;
+    title: string;
+    subject?: string;
+    semester?: number;
+  } | null>(null);
   const [message, setMessage] = useState<{ text: string; type: "error" | "info" } | null>(null);
 
   async function loadData() {
@@ -71,21 +78,19 @@ export function StudentDashboard() {
   async function openNote(note: NoteItem) {
     setOpeningId(note.id);
     setMessage(null);
-    const newTab = window.open("about:blank", "_blank");
     try {
-      const bucket = note.storage_bucket || "Bca_notes";
-      const res = await adminApi.getStudentSignedNoteUrl(bucket, note.storage_path);
+      const res = await adminApi.getStudentSignedNoteUrl(note.id);
       if (res?.signedUrl) {
-        if (newTab) {
-          newTab.location.href = res.signedUrl;
-        } else {
-          window.open(res.signedUrl, "_blank", "noopener,noreferrer");
-        }
+        setActiveViewer({
+          url: res.signedUrl,
+          title: note.title,
+          subject: note.subject ?? undefined,
+          semester: note.semester ?? undefined,
+        });
         return;
       }
       throw new Error("Signed URL not returned");
     } catch (err: any) {
-      if (newTab) newTab.close();
       console.error("Open note error:", err);
       setMessage({
         text: err.message || "This note is currently unavailable. Please verify your course access.",
@@ -271,6 +276,16 @@ export function StudentDashboard() {
           )}
         </section>
       </div>
+
+      {activeViewer && (
+        <SecurePDFViewer
+          url={activeViewer.url}
+          title={activeViewer.title}
+          subject={activeViewer.subject}
+          semester={activeViewer.semester}
+          onClose={() => setActiveViewer(null)}
+        />
+      )}
     </main>
   );
 }

@@ -79,11 +79,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return adminUser;
       }
 
-      const { data: profile } = await supabase
+      let { data: profile } = await supabase
         .from("profiles")
         .select("*")
         .eq("user_id", nextUser.id)
         .maybeSingle();
+
+      // Auto-repair missing student profile in profiles table
+      if (!profile) {
+        try {
+          const newProfile = {
+            user_id: nextUser.id,
+            full_name: nextUser.user_metadata?.full_name || nextUser.email?.split("@")[0] || "Student",
+            email: nextUser.email || "",
+            status: "active",
+          };
+          const { data: inserted, error: insertErr } = await supabase
+            .from("profiles")
+            .upsert(newProfile, { onConflict: "user_id" })
+            .select()
+            .maybeSingle();
+          if (!insertErr && inserted) {
+            profile = inserted;
+          }
+        } catch (repairErr) {
+          console.warn("[AuthContext] Auto-repair profiles catch:", repairErr);
+        }
+      }
 
       const studentUser = profile ? mapStudent(profile) : {
         uid: nextUser.id,

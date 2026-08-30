@@ -35,6 +35,7 @@ import { PaymentPage } from "./components/pages/PaymentPage";
 import { AdminLoginPage } from "./components/pages/AdminLoginPage";
 import { AdminAuthProvider } from "@/app/components/auth/AdminAuthContext";
 import { AdminProtectedRoute } from "./components/guards/AdminProtectedRoute";
+import { AIChatbot } from "./components/chatbot/AIChatbot";
 
 function PageWrapper({
   children,
@@ -348,6 +349,7 @@ function AppLayout() {
         </AnimatePresence>
       </div>
       {!hideNav && <Footer />}
+      <AIChatbot />
       <Toaster />
     </div>
   );

@@ -164,12 +164,28 @@ export const adminApi = {
   },
   createStudent: (data: unknown) => adminFn<{ student: { user_id: string } }>("/students", data),
   
-  // Student‑authorized signed URL generation using server downloads endpoint
-  getStudentSignedNoteUrl: (bucket: string, storagePath: string) =>
-    studentFn<{ download: unknown; signedUrl: string }>("/downloads", {
-      bucket: bucket || "Bca_notes",
-      fileRef: storagePath,
-    }),
+  // Student‑authorized signed URL generation using student-note-signed-url edge function
+  getStudentSignedNoteUrl: async (noteId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token ?? "";
+    if (!token) throw new Error("Authentication required. Please sign in again.");
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/student-note-signed-url`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": publicAnonKey,
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({ noteId }),
+    });
+
+    const json = await response.json().catch(() => ({}));
+    if (!response.ok || !json.success || !json.signedUrl) {
+      throw new Error(json.error || "Failed to generate secure note access link.");
+    }
+    return { signedUrl: json.signedUrl as string, note: json.note };
+  },
 
   reviewPayment: (id: string, status: "approved" | "rejected", note = "") =>
     adminFn<{ success: boolean; payment: unknown }>("/payments/review", { id, status, note }),

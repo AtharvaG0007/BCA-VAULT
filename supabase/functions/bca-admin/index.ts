@@ -59,7 +59,10 @@ Deno.serve(async (request) => {
 
   const access = await requireSuperadmin(request, corsHeaders);
   if (access.error) return access.error;
-  const pathname = new URL(request.url).pathname.replace(/^\/bca-admin/, "");
+  const rawPath = new URL(request.url).pathname;
+  const pathname = rawPath
+    .replace(/^\/functions\/v1\/bca-admin/, "")
+    .replace(/^\/bca-admin/, "") || "/";
 
   try {
     if (request.method === "POST" && pathname === "/students") {
