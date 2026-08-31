@@ -115,23 +115,51 @@ Deno.serve(async (request) => {
     }
 
     if (request.method === "POST" && pathname === "/notes/upload-url") {
-      const { fileName, contentType } = await request.json().catch(() => ({}));
+      const { fileName, contentType, semester = 1 } = await request.json().catch(() => ({}));
       if (contentType !== "application/pdf") return respond({ success: false, error: "Only PDF files are allowed." }, 400, corsHeaders);
-      const safeName = String(fileName ?? "note.pdf").replace(/[^a-zA-Z0-9._-]/g, "-");
-      const path = `notes/${crypto.randomUUID()}-${safeName}`;
-      const { data, error } = await admin.storage.from("bca-notes").createSignedUploadUrl(path);
-      if (error) return respond({ success: false, error: error.message }, 400, corsHeaders);
-      return respond({ success: true, bucket: "bca-notes", path, token: data.token, signed_url: data.signedUrl }, 200, corsHeaders);
+      
+      const rawName = String(fileName ?? "note.pdf").trim();
+      // Clean name preserving dot and basic safe chars
+      const safeName = rawName.replace(/[^a-zA-Z0-9._\-\s]/g, "").replace(/\s+/g, "_");
+      const semNum = Number(semester) === 2 ? 2 : 1;
+      const path = `BCA SEM${semNum}/${safeName}`;
+
+      // Try primary "Bca_notes" bucket with fallback to "bca-notes"
+      let bucket = "Bca_notes";
+      let uploadResult = await admin.storage.from(bucket).createSignedUploadUrl(path);
+
+      if (uploadResult.error) {
+        // Try fallback bucket name
+        bucket = "bca-notes";
+        uploadResult = await admin.storage.from(bucket).createSignedUploadUrl(path);
+      }
+
+      if (uploadResult.error || !uploadResult.data) {
+        console.error("Storage signed upload error:", uploadResult.error);
+        return respond({ success: false, error: uploadResult.error?.message || "Failed to create upload authorization." }, 400, corsHeaders);
+      }
+
+      return respond({
+        success: true,
+        bucket,
+        path,
+        token: uploadResult.data.token,
+        signed_url: uploadResult.data.signedUrl
+      }, 200, corsHeaders);
     }
 
     if (request.method === "POST" && pathname === "/notes/delete") {
       const { id } = await request.json().catch(() => ({}));
       const { data: note, error: lookupError } = await admin.from("notes").select("id,storage_bucket,storage_path").eq("id", id).single();
       if (lookupError || !note) return respond({ success: false, error: "Note not found." }, 404, corsHeaders);
-      const { error: storageError } = await admin.storage.from(note.storage_bucket).remove([note.storage_path]);
-      if (storageError) return respond({ success: false, error: storageError.message }, 400, corsHeaders);
+      
+      const bucket = note.storage_bucket || "Bca_notes";
+      // Remove from storage
+      await admin.storage.from(bucket).remove([note.storage_path]);
+      
       const { error: deleteError } = await admin.from("notes").delete().eq("id", id);
       if (deleteError) return respond({ success: false, error: deleteError.message }, 400, corsHeaders);
+      
       await log(access.user.id, "note_deleted", "note", id);
       return respond({ success: true, ok: true }, 200, corsHeaders);
     }
