@@ -36,7 +36,6 @@ import { AdminLoginPage } from "./components/pages/AdminLoginPage";
 import { AdminAuthProvider } from "@/app/components/auth/AdminAuthContext";
 import { AdminProtectedRoute } from "./components/guards/AdminProtectedRoute";
 import { PublicSupportChat } from "./components/chatbot/PublicSupportChat";
-import { StudentLearningChat } from "./components/chatbot/StudentLearningChat";
 import { WhatsAppFloatingButton } from "./components/support/WhatsAppFloatingButton";
 
 function PageWrapper({
@@ -82,7 +81,7 @@ const noNavRoutes = [
   "/admin-root",
   "/admin-root-login",
   "/admin-login",
-  "/app/dashboard",
+  "/app",
   "/legal-consent",
 ];
 
@@ -99,7 +98,7 @@ function AppLayout() {
   const hideNav = noNavRoutes.some((p) =>
     location.pathname.startsWith(p),
   );
-  const isStudentRoute = location.pathname.startsWith("/app/");
+  const isStudentRoute = location.pathname.startsWith("/app");
   const isAdminRoute =
     location.pathname.startsWith("/admin") ||
     location.pathname.startsWith("/admin-root");
@@ -356,9 +355,8 @@ function AppLayout() {
       </div>
       {!hideNav && <Footer />}
       {!isAdminRoute && <WhatsAppFloatingButton />}
-      {/* Public pages → Support AI | Student dashboard → Learning AI | Admin → none */}
+      {/* Public pages → Support AI | Admin & Student → none */}
       {!isAdminRoute && !isStudentRoute && <PublicSupportChat />}
-      {isStudentRoute && <StudentLearningChat />}
       <Toaster />
     </div>
   );
