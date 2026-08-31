@@ -55,7 +55,53 @@ export const adminApi = {
     return { data: access.map((row) => ({ ...row, profiles: profilesByUserId.get(row.user_id) ?? null })), error: null };
   },
   listBundles: () => adminSupabase.from("bundles").select("id,title,description,price,published,created_at,notes(count),access_permissions(count)").order("created_at", { ascending: false }).range(0, 99),
-  listNotes: () => adminSupabase.from("notes").select("id,title,description,subject,semester,bundle_id,storage_bucket,storage_path,published,created_at,bundles(title)").order("created_at", { ascending: false }).range(0, 99),
+  listNotes: () => adminSupabase.from("notes").select("id,title,description,subject,semester,bundle_id,storage_bucket,storage_path,published,priority,status,subject_id,unit_id,topic_id,created_at,bundles(title),subjects(title,code),units(title,unit_number),topics(title)").order("created_at", { ascending: false }).range(0, 99),
+  listSubjects: (semester?: number) => {
+    let q = adminSupabase.from("subjects").select("id,code,title,short_title,semester,course_type,description,status,created_at,units(count),topics(count),notes(count)").order("semester", { ascending: true }).order("code", { ascending: true });
+    if (semester) q = q.eq("semester", semester);
+    return q;
+  },
+  saveSubject: async (payload: { id?: string; code: string; title: string; short_title?: string; semester: number; course_type: string; description?: string; status: string }) => {
+    const { id, ...data } = payload;
+    const q = id ? adminSupabase.from("subjects").update(data).eq("id", id) : adminSupabase.from("subjects").insert(data);
+    const result = await q;
+    if (result.error) throw result.error;
+  },
+  deleteSubject: async (id: string) => {
+    const result = await adminSupabase.from("subjects").delete().eq("id", id);
+    if (result.error) throw result.error;
+  },
+  listUnits: (subjectId?: string) => {
+    let q = adminSupabase.from("units").select("id,subject_id,unit_number,title,description,status,created_at,subjects(title,code,semester),topics(count)").order("unit_number", { ascending: true });
+    if (subjectId) q = q.eq("subject_id", subjectId);
+    return q;
+  },
+  saveUnit: async (payload: { id?: string; subject_id: string; unit_number: number; title: string; description?: string; status: string }) => {
+    const { id, ...data } = payload;
+    const q = id ? adminSupabase.from("units").update(data).eq("id", id) : adminSupabase.from("units").insert(data);
+    const result = await q;
+    if (result.error) throw result.error;
+  },
+  deleteUnit: async (id: string) => {
+    const result = await adminSupabase.from("units").delete().eq("id", id);
+    if (result.error) throw result.error;
+  },
+  listTopics: (subjectId?: string, unitId?: string) => {
+    let q = adminSupabase.from("topics").select("id,subject_id,unit_id,title,description,priority,status,created_at,subjects(title,code),units(title,unit_number)").order("created_at", { ascending: false });
+    if (subjectId) q = q.eq("subject_id", subjectId);
+    if (unitId) q = q.eq("unit_id", unitId);
+    return q;
+  },
+  saveTopic: async (payload: { id?: string; subject_id: string; unit_id: string; title: string; description?: string; priority: string; status: string }) => {
+    const { id, ...data } = payload;
+    const q = id ? adminSupabase.from("topics").update(data).eq("id", id) : adminSupabase.from("topics").insert(data);
+    const result = await q;
+    if (result.error) throw result.error;
+  },
+  deleteTopic: async (id: string) => {
+    const result = await adminSupabase.from("topics").delete().eq("id", id);
+    if (result.error) throw result.error;
+  },
   listActivity: () => adminSupabase.from("activity_logs").select("id,action,target_type,target_id,metadata,created_at,actor_id").order("created_at", { ascending: false }).range(0, 99),
   
   // Delete a bundle and all associated data

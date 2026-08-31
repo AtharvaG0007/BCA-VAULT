@@ -39,6 +39,8 @@ const PAGES = [
   { key: "payments", label: "Payment CRM", icon: ShieldCheck },
   { key: "students", label: "Students", icon: Users },
   { key: "access", label: "Access Control", icon: KeyRound },
+  { key: "subjects", label: "Subjects & Units", icon: Layers },
+  { key: "topics", label: "Topics CMS", icon: FileText },
   { key: "notes", label: "Study Notes", icon: BookOpen },
   { key: "bundles", label: "Bundles", icon: Package },
   { key: "activity", label: "Activity Logs", icon: Clock },
@@ -54,14 +56,14 @@ const formatMoney = (v: any) =>
 
 function StatusBadge({ status }: { status: string }) {
   const s = String(status || "").toLowerCase();
-  if (s === "approved" || s === "active") {
+  if (s === "approved" || s === "active" || s === "published") {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 border border-emerald-200">
         <CheckCircle2 className="h-3 w-3" /> {status}
       </span>
     );
   }
-  if (s === "pending") {
+  if (s === "pending" || s === "review" || s === "draft") {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700 border border-amber-200">
         <Clock className="h-3 w-3" /> {status}
@@ -71,6 +73,36 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-bold text-rose-700 border border-rose-200">
       <XCircle className="h-3 w-3" /> {status}
+    </span>
+  );
+}
+
+function PriorityBadge({ priority }: { priority?: string }) {
+  const p = String(priority || "medium").toLowerCase();
+  if (p === "very_high") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md bg-red-950/70 border border-red-800/80 px-2 py-0.5 text-[10px] font-black uppercase text-red-400">
+        🔥 Very High
+      </span>
+    );
+  }
+  if (p === "high") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md bg-amber-950/70 border border-amber-800/80 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-400">
+        ⚡ High
+      </span>
+    );
+  }
+  if (p === "low") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md bg-slate-800 border border-slate-700 px-2 py-0.5 text-[10px] font-medium text-slate-400">
+        Low
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded-md bg-blue-950/70 border border-blue-800/80 px-2 py-0.5 text-[10px] font-semibold text-blue-300">
+      Medium
     </span>
   );
 }
@@ -85,6 +117,8 @@ export function SuperAdminDashboard() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [paymentFilter, setPaymentFilter] = useState("all");
+  const [subjectSemesterFilter, setSubjectSemesterFilter] = useState<number | 0>(0);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>("");
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState<any>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -93,16 +127,19 @@ export function SuperAdminDashboard() {
     setLoading(true);
     setError("");
     try {
-      const [p, s, a, b, n, l] = await Promise.all([
+      const [p, s, a, b, n, l, subj, unts, tpcs] = await Promise.all([
         adminApi.listPayments(paymentFilter, search),
         adminApi.listStudents(activeTab === "students" ? search : ""),
         adminApi.listAccess(),
         adminApi.listBundles(),
         adminApi.listNotes(),
         adminApi.listActivity(),
+        adminApi.listSubjects(subjectSemesterFilter || undefined),
+        adminApi.listUnits(selectedSubjectId || undefined),
+        adminApi.listTopics(selectedSubjectId || undefined),
       ]);
 
-      const errors = [p.error, s.error, a.error, b.error, n.error, l.error].filter(Boolean);
+      const errors = [p.error, s.error, a.error, b.error, n.error, l.error, subj.error, unts.error, tpcs.error].filter(Boolean);
       if (errors.length > 0) {
         throw errors[0];
       }
@@ -114,6 +151,9 @@ export function SuperAdminDashboard() {
         bundles: b.data || [],
         notes: n.data || [],
         activity: l.data || [],
+        subjects: subj.data || [],
+        units: unts.data || [],
+        topics: tpcs.data || [],
       });
     } catch (err: any) {
       console.error("[SuperAdmin] load error:", err);
@@ -125,7 +165,7 @@ export function SuperAdminDashboard() {
 
   useEffect(() => {
     void loadData();
-  }, [activeTab, paymentFilter]);
+  }, [activeTab, paymentFilter, subjectSemesterFilter, selectedSubjectId]);
 
   const payments = data.payments || [];
   const students = data.students || [];
@@ -133,6 +173,9 @@ export function SuperAdminDashboard() {
   const bundles = data.bundles || [];
   const notes = data.notes || [];
   const activity = data.activity || [];
+  const subjects = data.subjects || [];
+  const units = data.units || [];
+  const topics = data.topics || [];
 
   const approvedPayments = payments.filter((x) => x.status === "approved");
   const totalRevenue = approvedPayments.reduce((acc, x) => acc + Number(x.amount || 0), 0);
@@ -184,6 +227,36 @@ export function SuperAdminDashboard() {
           price: Number(f.get("price")),
           published: f.get("published") === "on",
         });
+      } else if (modal.kind === "create_subject" || modal.kind === "edit_subject") {
+        await adminApi.saveSubject({
+          id: modal.subject?.id,
+          code: String(f.get("code")).trim(),
+          title: String(f.get("title")).trim(),
+          short_title: String(f.get("short_title") || "").trim() || undefined,
+          semester: Number(f.get("semester")),
+          course_type: String(f.get("course_type") || "Core Course"),
+          description: String(f.get("description") || "").trim() || undefined,
+          status: String(f.get("status") || "published"),
+        });
+      } else if (modal.kind === "create_unit" || modal.kind === "edit_unit") {
+        await adminApi.saveUnit({
+          id: modal.unit?.id,
+          subject_id: String(f.get("subject_id")),
+          unit_number: Number(f.get("unit_number")),
+          title: String(f.get("title")).trim(),
+          description: String(f.get("description") || "").trim() || undefined,
+          status: String(f.get("status") || "published"),
+        });
+      } else if (modal.kind === "create_topic" || modal.kind === "edit_topic") {
+        await adminApi.saveTopic({
+          id: modal.topic?.id,
+          subject_id: String(f.get("subject_id")),
+          unit_id: String(f.get("unit_id")),
+          title: String(f.get("title")).trim(),
+          description: String(f.get("description") || "").trim() || undefined,
+          priority: String(f.get("priority") || "medium"),
+          status: String(f.get("status") || "published"),
+        });
       } else if (modal.kind === "upload_note") {
         const file = f.get("file") as File;
         if (!file || file.type !== "application/pdf") {
@@ -197,15 +270,25 @@ export function SuperAdminDashboard() {
           });
         if (uploadError) throw uploadError;
 
+        const subjectId = String(f.get("subject_id") || "") || null;
+        const unitId = String(f.get("unit_id") || "") || null;
+        const topicId = String(f.get("topic_id") || "") || null;
+        const chosenSubject = subjects.find((s) => s.id === subjectId);
+
         await adminApi.saveNote({
           title: f.get("title"),
           description: f.get("description") || "",
-          subject: f.get("subject") || null,
-          semester: Number(f.get("semester")),
+          subject: chosenSubject?.title || f.get("subject") || null,
+          subject_id: subjectId,
+          unit_id: unitId,
+          topic_id: topicId,
+          priority: String(f.get("priority") || "medium"),
+          semester: Number(f.get("semester") || chosenSubject?.semester || 1),
           bundle_id: f.get("bundle_id"),
           storage_bucket: uploadAuth.bucket,
           storage_path: uploadAuth.path,
-          published: f.get("published") === "on",
+          published: f.get("status") === "published" || f.get("published") === "on",
+          status: String(f.get("status") || "published"),
         });
       }
       setModal(null);
@@ -662,6 +745,289 @@ export function SuperAdminDashboard() {
               </div>
             )}
 
+            {/* Subjects & Units Tab */}
+            {activeTab === "subjects" && (
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setSubjectSemesterFilter(0)}
+                      className={`rounded-xl px-3 py-1.5 text-xs font-bold transition ${
+                        subjectSemesterFilter === 0
+                          ? "bg-indigo-600 text-white"
+                          : "border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700"
+                      }`}
+                    >
+                      All Semesters
+                    </button>
+                    {[1, 2, 3, 4, 5, 6].map((sem) => (
+                      <button
+                        key={sem}
+                        onClick={() => setSubjectSemesterFilter(sem)}
+                        className={`rounded-xl px-3 py-1.5 text-xs font-bold transition ${
+                          subjectSemesterFilter === sem
+                            ? "bg-indigo-600 text-white"
+                            : "border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700"
+                        }`}
+                      >
+                        Sem {sem}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setModal({ kind: "create_subject" })}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-500 transition"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Add Subject
+                    </button>
+                    <button
+                      onClick={() => setModal({ kind: "create_unit" })}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-xs font-bold text-slate-200 hover:bg-slate-700 transition"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Add Unit
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid gap-6 lg:grid-cols-3">
+                  {/* Subjects List */}
+                  <div className="lg:col-span-2 rounded-2xl border border-slate-800 bg-slate-950 p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-base font-bold text-white">Curriculum Subjects</h3>
+                      <span className="text-xs text-slate-500">{subjects.length} subjects</span>
+                    </div>
+
+                    {subjects.length === 0 ? (
+                      <div className="py-12 text-center text-xs text-slate-500">No subjects created yet.</div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs">
+                          <thead>
+                            <tr className="border-b border-slate-800 text-slate-400 font-semibold">
+                              <th className="pb-3">Code</th>
+                              <th className="pb-3">Title</th>
+                              <th className="pb-3">Sem</th>
+                              <th className="pb-3">Type</th>
+                              <th className="pb-3">Units</th>
+                              <th className="pb-3">Status</th>
+                              <th className="pb-3 text-right">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                            {subjects.map((subj) => (
+                              <tr
+                                key={subj.id}
+                                onClick={() => setSelectedSubjectId(selectedSubjectId === subj.id ? "" : subj.id)}
+                                className={`cursor-pointer hover:bg-slate-900/60 transition ${
+                                  selectedSubjectId === subj.id ? "bg-indigo-950/40 border-l-2 border-indigo-500" : ""
+                                }`}
+                              >
+                                <td className="py-3 font-mono font-bold text-indigo-400">{subj.code}</td>
+                                <td className="py-3 font-bold text-white">
+                                  {subj.title}
+                                  {subj.short_title && (
+                                    <span className="block text-[10px] text-slate-400 font-normal">
+                                      {subj.short_title}
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="py-3 text-slate-300">Sem {subj.semester}</td>
+                                <td className="py-3 text-slate-400 text-[11px]">{subj.course_type}</td>
+                                <td className="py-3 text-slate-300 font-semibold">{subj.units?.[0]?.count ?? 0}</td>
+                                <td className="py-3">
+                                  <StatusBadge status={subj.status} />
+                                </td>
+                                <td className="py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                                  <div className="inline-flex items-center gap-1.5">
+                                    <button
+                                      onClick={() => setModal({ kind: "edit_subject", subject: subj })}
+                                      className="rounded-lg bg-slate-800 px-2 py-1 text-xs font-bold text-slate-300 hover:bg-slate-700"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={async () => {
+                                        if (confirm(`Delete subject "${subj.title}" and its units?`)) {
+                                          await adminApi.deleteSubject(subj.id);
+                                          await loadData();
+                                        }
+                                      }}
+                                      className="rounded-lg p-1 text-slate-400 hover:text-rose-400"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Units Panel */}
+                  <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="text-base font-bold text-white">Syllabus Units</h3>
+                        <p className="text-[11px] text-slate-400">
+                          {selectedSubjectId
+                            ? subjects.find((s) => s.id === selectedSubjectId)?.title || "Selected Subject"
+                            : "Showing all units"}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setModal({ kind: "create_unit", defaultSubjectId: selectedSubjectId })}
+                        className="rounded-xl bg-slate-800 p-1.5 text-slate-300 hover:bg-indigo-600 hover:text-white"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    {units.length === 0 ? (
+                      <div className="py-12 text-center text-xs text-slate-500">
+                        No units defined for this subject.
+                      </div>
+                    ) : (
+                      <div className="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+                        {units.map((u) => (
+                          <div
+                            key={u.id}
+                            className="rounded-xl border border-slate-800/80 bg-slate-900/70 p-3 flex items-start justify-between gap-2"
+                          >
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="rounded bg-indigo-950 text-indigo-300 px-1.5 py-0.5 text-[10px] font-mono font-bold">
+                                  Unit {u.unit_number}
+                                </span>
+                                <StatusBadge status={u.status} />
+                              </div>
+                              <h4 className="mt-1 font-bold text-xs text-white">{u.title}</h4>
+                              <p className="mt-0.5 text-[10px] text-slate-400">
+                                {u.subjects?.title} · {u.topics?.[0]?.count ?? 0} topics
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => setModal({ kind: "edit_unit", unit: u })}
+                                className="rounded p-1 text-slate-400 hover:text-slate-200"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  if (confirm(`Delete unit "${u.title}"?`)) {
+                                    await adminApi.deleteUnit(u.id);
+                                    await loadData();
+                                  }
+                                }}
+                                className="rounded p-1 text-slate-400 hover:text-rose-400"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Topics CMS Tab */}
+            {activeTab === "topics" && (
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={selectedSubjectId}
+                      onChange={(e) => setSelectedSubjectId(e.target.value)}
+                      className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs text-white outline-none focus:border-indigo-500"
+                    >
+                      <option value="">All Subjects</option>
+                      {subjects.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.code} - {s.title} (Sem {s.semester})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <button
+                    onClick={() => setModal({ kind: "create_topic", defaultSubjectId: selectedSubjectId })}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-500 transition"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add Topic
+                  </button>
+                </div>
+
+                <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
+                  {topics.length === 0 ? (
+                    <div className="py-12 text-center text-xs text-slate-500">No topics found.</div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="border-b border-slate-800 text-slate-400 font-semibold">
+                            <th className="pb-3">Topic Title</th>
+                            <th className="pb-3">Subject</th>
+                            <th className="pb-3">Unit</th>
+                            <th className="pb-3">Exam Priority</th>
+                            <th className="pb-3">Status</th>
+                            <th className="pb-3 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                          {topics.map((t) => (
+                            <tr key={t.id} className="hover:bg-slate-900/50">
+                              <td className="py-3 font-bold text-white">{t.title}</td>
+                              <td className="py-3 text-indigo-300 font-medium">
+                                {t.subjects?.title || "—"}
+                              </td>
+                              <td className="py-3 text-slate-400">
+                                {t.units ? `Unit ${t.units.unit_number}: ${t.units.title}` : "—"}
+                              </td>
+                              <td className="py-3">
+                                <PriorityBadge priority={t.priority} />
+                              </td>
+                              <td className="py-3">
+                                <StatusBadge status={t.status} />
+                              </td>
+                              <td className="py-3 text-right">
+                                <div className="inline-flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => setModal({ kind: "edit_topic", topic: t })}
+                                    className="rounded-lg bg-slate-800 px-2.5 py-1 text-xs font-bold text-slate-300 hover:bg-slate-700"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={async () => {
+                                      if (confirm(`Delete topic "${t.title}"?`)) {
+                                        await adminApi.deleteTopic(t.id);
+                                        await loadData();
+                                      }
+                                    }}
+                                    className="rounded-lg p-1 text-slate-400 hover:text-rose-400"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Notes Tab */}
             {activeTab === "notes" && (
               <div className="space-y-4">
@@ -683,28 +1049,38 @@ export function SuperAdminDashboard() {
                         <thead>
                           <tr className="border-b border-slate-800 text-slate-400 font-semibold">
                             <th className="pb-3">Title</th>
-                            <th className="pb-3">Subject</th>
-                            <th className="pb-3">Semester</th>
+                            <th className="pb-3">Subject / Unit</th>
+                            <th className="pb-3">Priority</th>
                             <th className="pb-3">Linked Bundle</th>
-                            <th className="pb-3">Published</th>
+                            <th className="pb-3">Lifecycle</th>
                             <th className="pb-3 text-right">Actions</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/60 text-slate-300">
                           {notes.map((n) => (
                             <tr key={n.id} className="hover:bg-slate-900/50">
-                              <td className="py-3 font-bold text-white">{n.title}</td>
-                              <td className="py-3 text-slate-300">{n.subject || "—"}</td>
-                              <td className="py-3 text-slate-400">Sem {n.semester}</td>
-                              <td className="py-3 text-indigo-400">{n.bundles?.title || "—"}</td>
+                              <td className="py-3 font-bold text-white">
+                                {n.title}
+                                {n.topics?.title && (
+                                  <span className="block text-[10px] text-slate-400 font-normal">
+                                    Topic: {n.topics.title}
+                                  </span>
+                                )}
+                              </td>
                               <td className="py-3">
-                                <span
-                                  className={`rounded px-2 py-0.5 text-[10px] font-bold ${
-                                    n.published ? "bg-emerald-950 text-emerald-400" : "bg-slate-800 text-slate-400"
-                                  }`}
-                                >
-                                  {n.published ? "Published" : "Draft"}
-                                </span>
+                                <p className="font-semibold text-slate-200">
+                                  {n.subjects?.title || n.subject || "—"}
+                                </p>
+                                <p className="text-[10px] text-slate-400">
+                                  {n.units ? `Unit ${n.units.unit_number}: ${n.units.title}` : `Sem ${n.semester}`}
+                                </p>
+                              </td>
+                              <td className="py-3">
+                                <PriorityBadge priority={n.priority} />
+                              </td>
+                              <td className="py-3 text-indigo-400 font-medium">{n.bundles?.title || "—"}</td>
+                              <td className="py-3">
+                                <StatusBadge status={n.status || (n.published ? "published" : "draft")} />
                               </td>
                               <td className="py-3 text-right">
                                 <button
@@ -1063,6 +1439,242 @@ export function SuperAdminDashboard() {
                     </>
                   )}
 
+                  {(modal.kind === "create_subject" || modal.kind === "edit_subject") && (
+                    <>
+                      <div className="grid grid-cols-2 gap-3">
+                        <label className="block">
+                          <span className="text-slate-400 font-bold">Course Code</span>
+                          <input
+                            required
+                            name="code"
+                            defaultValue={modal.subject?.code || ""}
+                            placeholder="e.g. 101"
+                            className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 font-mono text-white outline-none focus:border-indigo-500"
+                          />
+                        </label>
+                        <label className="block">
+                          <span className="text-slate-400 font-bold">Semester (1-6)</span>
+                          <input
+                            required
+                            name="semester"
+                            type="number"
+                            min={1}
+                            max={6}
+                            defaultValue={modal.subject?.semester || 1}
+                            className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                          />
+                        </label>
+                      </div>
+                      <label className="block">
+                        <span className="text-slate-400 font-bold">Official Title</span>
+                        <input
+                          required
+                          name="title"
+                          defaultValue={modal.subject?.title || ""}
+                          placeholder="e.g. Algorithms and Program Design using C"
+                          className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                        />
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <label className="block">
+                          <span className="text-slate-400 font-bold">Short Display Title (Optional)</span>
+                          <input
+                            name="short_title"
+                            defaultValue={modal.subject?.short_title || ""}
+                            placeholder="e.g. C Programming"
+                            className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                          />
+                        </label>
+                        <label className="block">
+                          <span className="text-slate-400 font-bold">Course Type</span>
+                          <select
+                            name="course_type"
+                            defaultValue={modal.subject?.course_type || "Core Course"}
+                            className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                          >
+                            <option value="Core Course">Core Course</option>
+                            <option value="AEC">AEC (Ability Enhancement)</option>
+                            <option value="VAC">VAC (Value Added)</option>
+                            <option value="SEC">SEC (Skill Enhancement)</option>
+                          </select>
+                        </label>
+                      </div>
+                      <label className="block">
+                        <span className="text-slate-400 font-bold">Description (Optional)</span>
+                        <textarea
+                          name="description"
+                          defaultValue={modal.subject?.description || ""}
+                          rows={2}
+                          placeholder="Overview of syllabus scope..."
+                          className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="text-slate-400 font-bold">Status</span>
+                        <select
+                          name="status"
+                          defaultValue={modal.subject?.status || "published"}
+                          className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                        >
+                          <option value="published">Published</option>
+                          <option value="review">Review</option>
+                          <option value="draft">Draft</option>
+                          <option value="archived">Archived</option>
+                        </select>
+                      </label>
+                    </>
+                  )}
+
+                  {(modal.kind === "create_unit" || modal.kind === "edit_unit") && (
+                    <>
+                      <label className="block">
+                        <span className="text-slate-400 font-bold">Parent Subject</span>
+                        <select
+                          required
+                          name="subject_id"
+                          defaultValue={modal.unit?.subject_id || modal.defaultSubjectId || subjects[0]?.id}
+                          className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                        >
+                          {subjects.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.code} - {s.title} (Sem {s.semester})
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <div className="grid grid-cols-3 gap-3">
+                        <label className="block col-span-1">
+                          <span className="text-slate-400 font-bold">Unit Number</span>
+                          <input
+                            required
+                            name="unit_number"
+                            type="number"
+                            min={1}
+                            max={10}
+                            defaultValue={modal.unit?.unit_number || 1}
+                            className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                          />
+                        </label>
+                        <label className="block col-span-2">
+                          <span className="text-slate-400 font-bold">Unit Title</span>
+                          <input
+                            required
+                            name="title"
+                            defaultValue={modal.unit?.title || ""}
+                            placeholder="e.g. Introduction to Algorithm"
+                            className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                          />
+                        </label>
+                      </div>
+                      <label className="block">
+                        <span className="text-slate-400 font-bold">Description (Optional)</span>
+                        <textarea
+                          name="description"
+                          defaultValue={modal.unit?.description || ""}
+                          rows={2}
+                          placeholder="Key objectives..."
+                          className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="text-slate-400 font-bold">Status</span>
+                        <select
+                          name="status"
+                          defaultValue={modal.unit?.status || "published"}
+                          className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                        >
+                          <option value="published">Published</option>
+                          <option value="review">Review</option>
+                          <option value="draft">Draft</option>
+                          <option value="archived">Archived</option>
+                        </select>
+                      </label>
+                    </>
+                  )}
+
+                  {(modal.kind === "create_topic" || modal.kind === "edit_topic") && (
+                    <>
+                      <label className="block">
+                        <span className="text-slate-400 font-bold">Subject</span>
+                        <select
+                          required
+                          name="subject_id"
+                          defaultValue={modal.topic?.subject_id || modal.defaultSubjectId || subjects[0]?.id}
+                          className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                        >
+                          {subjects.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.code} - {s.title} (Sem {s.semester})
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="block">
+                        <span className="text-slate-400 font-bold">Unit</span>
+                        <select
+                          required
+                          name="unit_id"
+                          defaultValue={modal.topic?.unit_id || units[0]?.id}
+                          className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                        >
+                          {units.map((u) => (
+                            <option key={u.id} value={u.id}>
+                              Unit {u.unit_number}: {u.title} ({u.subjects?.title})
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="block">
+                        <span className="text-slate-400 font-bold">Topic Title</span>
+                        <input
+                          required
+                          name="title"
+                          defaultValue={modal.topic?.title || ""}
+                          placeholder="e.g. Flow-Charts & Decision Making"
+                          className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                        />
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <label className="block">
+                          <span className="text-slate-400 font-bold">Exam Priority</span>
+                          <select
+                            name="priority"
+                            defaultValue={modal.topic?.priority || "medium"}
+                            className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                          >
+                            <option value="very_high">🔥 Very High (Repeated in PYQs)</option>
+                            <option value="high">⚡ High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                          </select>
+                        </label>
+                        <label className="block">
+                          <span className="text-slate-400 font-bold">Status</span>
+                          <select
+                            name="status"
+                            defaultValue={modal.topic?.status || "published"}
+                            className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                          >
+                            <option value="published">Published</option>
+                            <option value="review">Review</option>
+                            <option value="draft">Draft</option>
+                            <option value="archived">Archived</option>
+                          </select>
+                        </label>
+                      </div>
+                      <label className="block">
+                        <span className="text-slate-400 font-bold">Description / Key Notes (Optional)</span>
+                        <textarea
+                          name="description"
+                          defaultValue={modal.topic?.description || ""}
+                          rows={2}
+                          placeholder="Core conceptual notes for AI and study..."
+                          className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                        />
+                      </label>
+                    </>
+                  )}
+
                   {modal.kind === "upload_note" && (
                     <>
                       <label className="block">
@@ -1070,46 +1682,98 @@ export function SuperAdminDashboard() {
                         <input
                           required
                           name="title"
-                          placeholder="e.g. Unit 1 Data Structures Notes"
+                          placeholder="e.g. Unit 1 Algorithm & Program Design Theory Notes"
                           className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
                         />
                       </label>
                       <div className="grid grid-cols-2 gap-3">
                         <label className="block">
-                          <span className="text-slate-400 font-bold">Subject</span>
-                          <input
-                            name="subject"
-                            placeholder="e.g. Data Structures"
+                          <span className="text-slate-400 font-bold">Subject (Curriculum Relational)</span>
+                          <select
+                            name="subject_id"
                             className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
-                          />
+                          >
+                            <option value="">-- Select Subject (Recommended) --</option>
+                            {subjects.map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.code} - {s.title} (Sem {s.semester})
+                              </option>
+                            ))}
+                          </select>
                         </label>
                         <label className="block">
-                          <span className="text-slate-400 font-bold">Semester</span>
-                          <input
-                            required
-                            name="semester"
-                            type="number"
-                            min={1}
-                            max={6}
-                            defaultValue={1}
+                          <span className="text-slate-400 font-bold">Unit</span>
+                          <select
+                            name="unit_id"
                             className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
-                          />
+                          >
+                            <option value="">-- Select Unit (Optional) --</option>
+                            {units.map((u) => (
+                              <option key={u.id} value={u.id}>
+                                Unit {u.unit_number}: {u.title}
+                              </option>
+                            ))}
+                          </select>
                         </label>
                       </div>
-                      <label className="block">
-                        <span className="text-slate-400 font-bold">Linked Bundle</span>
-                        <select
-                          required
-                          name="bundle_id"
-                          className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
-                        >
-                          {bundles.map((b) => (
-                            <option key={b.id} value={b.id}>
-                              {b.title}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <label className="block">
+                          <span className="text-slate-400 font-bold">Topic (Optional)</span>
+                          <select
+                            name="topic_id"
+                            className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                          >
+                            <option value="">-- Select Topic (Optional) --</option>
+                            {topics.map((t) => (
+                              <option key={t.id} value={t.id}>
+                                {t.title}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="block">
+                          <span className="text-slate-400 font-bold">Priority</span>
+                          <select
+                            name="priority"
+                            defaultValue="medium"
+                            className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                          >
+                            <option value="very_high">🔥 Very High</option>
+                            <option value="high">⚡ High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                          </select>
+                        </label>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <label className="block">
+                          <span className="text-slate-400 font-bold">Linked Bundle</span>
+                          <select
+                            required
+                            name="bundle_id"
+                            className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                          >
+                            {bundles.map((b) => (
+                              <option key={b.id} value={b.id}>
+                                {b.title}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="block">
+                          <span className="text-slate-400 font-bold">Status</span>
+                          <select
+                            name="status"
+                            defaultValue="published"
+                            className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                          >
+                            <option value="published">Published</option>
+                            <option value="review">Review</option>
+                            <option value="draft">Draft</option>
+                            <option value="archived">Archived</option>
+                          </select>
+                        </label>
+                      </div>
                       <label className="block">
                         <span className="text-slate-400 font-bold">PDF Document File</span>
                         <input
@@ -1119,15 +1783,6 @@ export function SuperAdminDashboard() {
                           accept="application/pdf"
                           className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white"
                         />
-                      </label>
-                      <label className="flex items-center gap-2 pt-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          name="published"
-                          defaultChecked
-                          className="h-4 w-4 rounded accent-indigo-600"
-                        />
-                        <span className="text-slate-300 font-bold">Publish immediately</span>
                       </label>
                     </>
                   )}
