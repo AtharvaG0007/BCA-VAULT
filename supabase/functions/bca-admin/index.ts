@@ -78,16 +78,43 @@ Deno.serve(async (request) => {
       const body = await request.json().catch(() => ({}));
       const fullName = String(body.full_name ?? "").trim();
       const email = String(body.email ?? "").trim().toLowerCase();
-      const semester = Number(body.semester);
-      if (!fullName || !email || !Number.isInteger(semester) || semester < 1 || semester > 6) {
-        return respond({ success: false, error: "Name, email, and a semester from 1 to 6 are required." }, 400, corsHeaders);
+      const phone = body.phone || null;
+      const course = body.course || "BCA";
+      const semester = Number(body.semester) || 1;
+      // Accept optional password; generate strong random if not provided
+      let password = body.password;
+      if (!password) {
+        // Generate a URL-safe base64 password of length ~12 characters
+        const array = new Uint8Array(9);
+        crypto.getRandomValues(array);
+        password = Array.from(array, (b) => b.toString(36).padStart(2, "0")).join("");
       }
-      const { data, error } = await admin.auth.admin.inviteUserByEmail(email, { data: { full_name: fullName } });
-      if (error || !data.user) return respond({ success: false, error: error?.message ?? "Unable to invite the student." }, 400, corsHeaders);
-      const { error: profileError } = await admin.from("profiles").insert({ user_id: data.user.id, email, full_name: fullName, phone: body.phone || null, course: body.course || "BCA", semester, status: "active" });
-      if (profileError) return respond({ success: false, error: profileError.message }, 400, corsHeaders);
-      await log(access.user.id, "student_created", "profile", data.user.id, { email });
-      return respond({ success: true, student: { user_id: data.user.id, email, full_name: fullName } }, 201, corsHeaders);
+      if (!fullName || !email) {
+        return respond({ success: false, error: "Name and email are required." }, 400, corsHeaders);
+      }
+      // Create Auth user with password (service role)
+      const { data, error } = await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        phone,
+        user_metadata: { full_name: fullName, course, semester },
+        app_metadata: { role: 'student' },
+      });
+      if (error || !data.user) return respond({ success: false, error: error?.message ?? "Unable to create student account." }, 500, corsHeaders);
+      const { error: profileError } = await admin.from("profiles").insert({
+        user_id: data.user.id,
+        email,
+        full_name: fullName,
+        phone: phone || null,
+        course: course || null,
+        semester: semester || null,
+        status: "active",
+      });
+      if (profileError) return respond({ success: false, error: profileError.message }, 500, corsHeaders);
+      await log(access.user.id, "student_created", "profile", data.user.id, { email, temporary_password: password });
+      // Return the temporary password for UI display (do NOT store)
+      return respond({ success: true, student: { user_id: data.user.id, email, temporary_password: password } }, 201, corsHeaders);
     }
 
     if (request.method === "POST" && pathname === "/students/reset-password") {
