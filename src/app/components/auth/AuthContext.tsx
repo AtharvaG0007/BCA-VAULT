@@ -179,9 +179,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
       });
       if (error || !data.user) {
-        throw Object.assign(new Error("Invalid email or password."), {
-          code: error?.code || "invalid_credentials",
-        });
+        const message = error?.message || "Invalid email or password.";
+        const err = new Error(message);
+        (err as any).code = error?.code || "invalid_credentials";
+        throw err;
       }
       setUser(data.user);
       await loadProfile(data.user);

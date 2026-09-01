@@ -78,43 +78,127 @@ Deno.serve(async (request) => {
       const body = await request.json().catch(() => ({}));
       const fullName = String(body.full_name ?? "").trim();
       const email = String(body.email ?? "").trim().toLowerCase();
-      const phone = body.phone || null;
+      const phone = body.phone ? String(body.phone).trim() : null;
       const course = body.course || "BCA";
       const semester = Number(body.semester) || 1;
-      // Accept optional password; generate strong random if not provided
-      let password = body.password;
+
+      // Accept password or generate strong 16-char temporary password
+      let password = body.password ? String(body.password).trim() : "";
       if (!password) {
-        // Generate a URL-safe base64 password of length ~12 characters
-        const array = new Uint8Array(9);
+        const charset = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*";
+        const array = new Uint8Array(16);
         crypto.getRandomValues(array);
-        password = Array.from(array, (b) => b.toString(36).padStart(2, "0")).join("");
+        password = Array.from(array, (b) => charset[b % charset.length]).join("");
       }
+
       if (!fullName || !email) {
         return respond({ success: false, error: "Name and email are required." }, 400, corsHeaders);
       }
-      // Create Auth user with password (service role)
-      const { data, error } = await admin.auth.admin.createUser({
+      if (password.length < 6) {
+        return respond({ success: false, error: "Password must be at least 6 characters." }, 400, corsHeaders);
+      }
+
+      // Check if profile already exists
+      const { data: existingProfile } = await admin
+        .from("profiles")
+        .select("user_id")
+        .eq("email", email)
+        .maybeSingle();
+
+      let userId: string;
+
+      // 1. Create Auth user with password and confirmed email (service role)
+      const { data: createData, error: createError } = await admin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
-        phone,
         user_metadata: { full_name: fullName, course, semester },
-        app_metadata: { role: 'student' },
+        app_metadata: { role: "student" },
       });
-      if (error || !data.user) return respond({ success: false, error: error?.message ?? "Unable to create student account." }, 500, corsHeaders);
-      const { error: profileError } = await admin.from("profiles").insert({
-        user_id: data.user.id,
+
+      if (createError) {
+        const isExisting =
+          createError.message?.toLowerCase().includes("already") ||
+          createError.message?.toLowerCase().includes("exists") ||
+          Boolean(existingProfile?.user_id);
+
+        if (isExisting) {
+          let targetUserId = existingProfile?.user_id;
+          if (!targetUserId) {
+            const { data: userList } = await admin.auth.admin.listUsers({ perPage: 1000 });
+            const foundUser = userList?.users?.find(
+              (u) => u.email?.toLowerCase() === email
+            );
+            targetUserId = foundUser?.id;
+          }
+
+          if (targetUserId) {
+            const { error: updateError } = await admin.auth.admin.updateUserById(targetUserId, {
+              password,
+              email_confirm: true,
+              user_metadata: { full_name: fullName, course, semester },
+              app_metadata: { role: "student" },
+            });
+            if (updateError) {
+              return respond(
+                { success: false, error: `Failed to update existing student: ${updateError.message}` },
+                400,
+                corsHeaders
+              );
+            }
+            userId = targetUserId;
+          } else {
+            return respond(
+              { success: false, error: "A user with this email address already exists." },
+              409,
+              corsHeaders
+            );
+          }
+        } else {
+          return respond(
+            { success: false, error: createError.message || "Unable to create student account." },
+            400,
+            corsHeaders
+          );
+        }
+      } else {
+        if (!createData?.user) {
+          return respond({ success: false, error: "Auth user creation failed." }, 500, corsHeaders);
+        }
+        userId = createData.user.id;
+      }
+
+      // 2. Insert or update profile row linked to Auth user UUID
+      const { error: profileError } = await admin.from("profiles").upsert({
+        user_id: userId,
         email,
         full_name: fullName,
         phone: phone || null,
         course: course || null,
         semester: semester || null,
         status: "active",
-      });
-      if (profileError) return respond({ success: false, error: profileError.message }, 500, corsHeaders);
-      await log(access.user.id, "student_created", "profile", data.user.id, { email, temporary_password: password });
-      // Return the temporary password for UI display (do NOT store)
-      return respond({ success: true, student: { user_id: data.user.id, email, temporary_password: password } }, 201, corsHeaders);
+      }, { onConflict: "user_id" });
+
+      if (profileError) {
+        return respond({ success: false, error: profileError.message }, 500, corsHeaders);
+      }
+
+      // 3. Log event (never store plaintext password in database)
+      await log(access.user.id, "student_created", "profile", userId, { email });
+
+      // 4. Return the temporary password for one-time UI display to admin
+      return respond(
+        {
+          success: true,
+          student: {
+            user_id: userId,
+            email,
+            temporary_password: password,
+          },
+        },
+        201,
+        corsHeaders
+      );
     }
 
     if (request.method === "POST" && pathname === "/students/reset-password") {

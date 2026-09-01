@@ -37,43 +37,59 @@ export const handler = async (event: any) => {
     // ----- Parse and validate payload -----
     const payload = JSON.parse(event.body || '{}');
     const { full_name, email, phone, course, semester, notes } = payload;
+    let password = payload.password ? String(payload.password).trim() : "";
+    if (!password) {
+      const charset = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*";
+      const array = new Uint8Array(16);
+      crypto.getRandomValues(array);
+      password = Array.from(array, (b) => charset[b % charset.length]).join("");
+    }
+
     if (!full_name || !email) {
       return { statusCode: 400, body: JSON.stringify({ error: 'full_name and email are required' }) };
     }
 
-    // ----- Check if user already exists -----
-    const { data: existingUser } = await supabaseAdmin.auth.api.getUserByEmail(email).catch(() => ({ data: null }));
-    if (existingUser) {
-      return { statusCode: 409, body: JSON.stringify({ error: 'User already exists' }) };
-    }
-
-    // ----- Create the auth user (invitation) -----
+    // ----- Create or update the auth user with password -----
     const { data: newUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
       email,
+      password,
       email_confirm: true,
-      phone,
       user_metadata: { full_name, course, semester, notes: notes || '' },
       app_metadata: { role: 'student' },
     });
+
+    let userId: string;
     if (createErr) {
-      return { statusCode: 500, body: JSON.stringify({ error: createErr.message }) };
+      const { data: existingProfile } = await supabaseAdmin.from('profiles').select('user_id').eq('email', email).maybeSingle();
+      if (existingProfile?.user_id) {
+        await supabaseAdmin.auth.admin.updateUserById(existingProfile.user_id, {
+          password,
+          email_confirm: true,
+          user_metadata: { full_name, course, semester, notes: notes || '' },
+        });
+        userId = existingProfile.user_id;
+      } else {
+        return { statusCode: 400, body: JSON.stringify({ error: createErr.message }) };
+      }
+    } else {
+      userId = newUser.user.id;
     }
 
     // ----- Insert/Update profile row -----
-    const { error: profileErr } = await supabaseAdmin.from('profiles').insert({
-      user_id: newUser.id,
+    const { error: profileErr } = await supabaseAdmin.from('profiles').upsert({
+      user_id: userId,
       full_name,
       email,
       phone: phone || null,
       course: course || null,
       semester: semester || null,
       status: 'active',
-    });
+    }, { onConflict: 'user_id' });
     if (profileErr) {
       return { statusCode: 500, body: JSON.stringify({ error: profileErr.message }) };
     }
 
-    return { statusCode: 200, body: JSON.stringify({ userId: newUser.id, email }) };
+    return { statusCode: 200, body: JSON.stringify({ userId, email, temporary_password: password }) };
   } catch (e: any) {
     return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
   }

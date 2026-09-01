@@ -239,20 +239,36 @@ export function LoginPage() {
   );
 }
 
-function friendlyError(code: string): string {
-  switch (code) {
-    case "auth/user-not-found":
-      return "No account found with this email.";
-    case "auth/wrong-password":
-      return "Incorrect password. Please try again.";
-    case "auth/invalid-email":
-      return "Please enter a valid email address.";
-    case "auth/too-many-requests":
-      return "Too many failed attempts. Please try again later.";
-    case "auth/invalid-credential":
-      return "Invalid email or password.";
-    default:
-      return code || "Sign in failed. Please check your credentials.";
+function friendlyError(codeOrMsg: string): string {
+  const text = String(codeOrMsg || "").trim();
+  const lower = text.toLowerCase();
+
+  if (
+    lower.includes("invalid login credentials") ||
+    lower.includes("invalid_credentials") ||
+    lower.includes("invalid_grant") ||
+    lower === "auth/invalid-credential" ||
+    lower === "auth/wrong-password"
+  ) {
+    return "Invalid email or password. Please verify your credentials.";
   }
+  if (lower.includes("email not confirmed") || lower.includes("email_not_confirmed")) {
+    return "Your email has not been confirmed yet. Please contact administration.";
+  }
+  if (lower.includes("user not found") || lower === "auth/user-not-found") {
+    return "No student account found with this email. Please contact administration.";
+  }
+  if (
+    lower.includes("too many requests") ||
+    lower.includes("rate limit") ||
+    lower === "auth/too-many-requests" ||
+    lower.includes("over_request_rate_limit")
+  ) {
+    return "Too many sign-in attempts. Please wait a moment and try again.";
+  }
+  if (lower.includes("invalid email") || lower === "auth/invalid-email") {
+    return "Please enter a valid email address.";
+  }
+  return text || "Sign in failed. Please check your credentials.";
 }
 

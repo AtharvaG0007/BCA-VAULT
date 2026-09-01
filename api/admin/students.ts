@@ -25,28 +25,67 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     if (req.method === "POST") {
       const email = text(req.body?.email).toLowerCase();
-      const fullName = text(req.body?.fullName);
-      const course = text(req.body?.course);
-      const semester = Number(req.body?.semester);
-      const bundleId = text(req.body?.bundleId);
-      const paymentId = text(req.body?.paymentId);
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || fullName.length < 2 || !course || !Number.isInteger(semester) || semester < 1 || semester > 6 || !bundleId) return res.status(400).json({ error: "Valid email, name, course, semester, and bundle are required." });
+      const fullName = text(req.body?.fullName || req.body?.full_name);
+      const course = text(req.body?.course) || "BCA";
+      const semester = Number(req.body?.semester) || 1;
+      const bundleId = text(req.body?.bundleId || req.body?.bundle_id);
+      const paymentId = text(req.body?.paymentId || req.body?.payment_id);
+      const phone = text(req.body?.phone) || null;
+      const password = text(req.body?.password);
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || fullName.length < 2 || !course || !Number.isInteger(semester) || semester < 1 || semester > 6) {
+        return res.status(400).json({ error: "Valid email, name, course, and semester are required." });
+      }
+
       const { data: existing } = await client.from("profiles").select("user_id").eq("email", email).maybeSingle();
       let userId = existing?.user_id;
+
       if (!userId) {
-        const { data, error } = await client.auth.admin.inviteUserByEmail(email, { data: { full_name: fullName }, redirectTo: process.env.APP_URL ? `${process.env.APP_URL}/auth/update-password` : undefined });
-        if (error || !data.user) throw error ?? new Error("Unable to create student account.");
-        userId = data.user.id;
-        const { error: profileError } = await client.from("profiles").insert({ user_id: userId, email, full_name: fullName, course, semester, status: "active" });
+        if (password && password.length >= 6) {
+          const { data: authData, error: createError } = await client.auth.admin.createUser({
+            email,
+            password,
+            email_confirm: true,
+            user_metadata: { full_name: fullName, course, semester },
+            app_metadata: { role: "student" },
+          });
+          if (createError || !authData?.user) throw createError ?? new Error("Unable to create student account.");
+          userId = authData.user.id;
+        } else {
+          const { data, error } = await client.auth.admin.inviteUserByEmail(email, {
+            data: { full_name: fullName },
+            redirectTo: process.env.APP_URL ? `${process.env.APP_URL}/auth/update-password` : undefined,
+          });
+          if (error || !data.user) throw error ?? new Error("Unable to create student account.");
+          userId = data.user.id;
+        }
+        const { error: profileError } = await client.from("profiles").upsert(
+          { user_id: userId, email, full_name: fullName, phone, course, semester, status: "active" },
+          { onConflict: "user_id" }
+        );
         if (profileError) throw profileError;
       } else {
-        const { error } = await client.from("profiles").update({ full_name: fullName, course, semester, status: "active" }).eq("user_id", userId);
+        if (password && password.length >= 6) {
+          await client.auth.admin.updateUserById(userId, {
+            password,
+            email_confirm: true,
+            user_metadata: { full_name: fullName, course, semester },
+          });
+        }
+        const { error } = await client.from("profiles").update({ full_name: fullName, phone, course, semester, status: "active" }).eq("user_id", userId);
         if (error) throw error;
       }
-      const { error: accessError } = await client.from("access_permissions").upsert({ user_id: userId, bundle_id: bundleId, status: "active", granted_at: new Date().toISOString(), granted_by: caller.user.id }, { onConflict: "user_id,bundle_id" });
-      if (accessError) throw accessError;
+
+      if (bundleId) {
+        const { error: accessError } = await client.from("access_permissions").upsert(
+          { user_id: userId, bundle_id: bundleId, status: "active", granted_at: new Date().toISOString(), granted_by: caller.user.id },
+          { onConflict: "user_id,bundle_id" }
+        );
+        if (accessError) throw accessError;
+      }
+
       if (paymentId) await client.from("payment_submissions").update({ user_id: userId }).eq("id", paymentId);
-      await client.from("activity_logs").insert({ actor_id: caller.user.id, action: "student_provisioned", target_type: "profile", target_id: userId });
+      await client.from("activity_logs").insert({ actor_id: caller.user.id, action: "student_provisioned", target_type: "profile", target_id: userId, metadata: { email } });
       return res.status(201).json({ userId });
     }
     if (req.method !== "PATCH") return res.status(405).json({ error: "Method not allowed" });
