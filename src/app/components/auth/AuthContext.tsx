@@ -23,6 +23,7 @@ interface AuthContextValue {
   role: UserRole | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -189,6 +190,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function signInWithGoogle() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+    if (error) throw error;
+  }
+
   async function logout() {
     await supabase.auth.signOut();
     setUser(null);
@@ -210,6 +221,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: appUser?.role ?? null,
         loading,
         signIn,
+        signInWithGoogle,
         logout,
         resetPassword,
         refreshProfile,

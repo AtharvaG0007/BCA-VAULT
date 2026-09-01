@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link, useLocation } from "react-router";
 import {
   AlertCircle,
@@ -7,6 +7,10 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock,
+  ClipboardCheck,
+  Copy,
+  Eye,
+  EyeOff,
   KeyRound,
   Loader2,
   LogOut,
@@ -25,6 +29,14 @@ import { adminApi } from "@/lib/supabase/adminService";
 import { supabase } from "@/lib/supabase/client";
 import { useAdminAuth } from "../auth/AdminAuthContext";
 import { availableSubjects } from "../../data/syllabus";
+
+/** Generate a cryptographically strong random password (16 chars, mixed case + digits + symbols). */
+function generateStrongPassword(): string {
+  const charset = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*";
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return Array.from(array, (b) => charset[b % charset.length]).join("");
+}
 
 type Row = Record<string, any>;
 
@@ -82,6 +94,38 @@ export function SuperAdminDashboard() {
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState<any>(null);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // --- Create Student form state ---
+  const [csPassword, setCsPassword] = useState("");
+  const [csShowPassword, setCsShowPassword] = useState(false);
+  const [csCopied, setCsCopied] = useState(false);
+  const [csSuccess, setCsSuccess] = useState<{ email: string; password: string } | null>(null);
+  const [csError, setCsError] = useState<string | null>(null);
+
+  const handleGeneratePassword = useCallback(() => {
+    const pw = generateStrongPassword();
+    setCsPassword(pw);
+    setCsShowPassword(true);
+    setCsCopied(false);
+  }, []);
+
+  const handleCopyPassword = useCallback(async (pw: string) => {
+    try {
+      await navigator.clipboard.writeText(pw);
+      setCsCopied(true);
+      setTimeout(() => setCsCopied(false), 2000);
+    } catch { /* clipboard permission denied */ }
+  }, []);
+
+  // Reset create-student state when modal opens/closes
+  const openCreateStudentModal = useCallback(() => {
+    setCsPassword("");
+    setCsShowPassword(false);
+    setCsCopied(false);
+    setCsSuccess(null);
+    setCsError(null);
+    setModal({ kind: "create_student" });
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -157,15 +201,42 @@ export function SuperAdminDashboard() {
     setModal({ kind: "payment_details", payment: x, imageUrl });
   };
 
+  const handleCreateStudentSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setCsError(null);
+    if (!csPassword || csPassword.length < 6) {
+      setCsError("Password must be at least 6 characters.");
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const f = new FormData(e.currentTarget);
+      const payload = {
+        full_name: String(f.get("full_name") || "").trim(),
+        email: String(f.get("email") || "").trim().toLowerCase(),
+        phone: String(f.get("phone") || "").trim(),
+        course: String(f.get("course") || "BCA").trim(),
+        semester: Number(f.get("semester") || 1),
+        password: csPassword,
+      };
+      const result = await adminApi.createStudent(payload);
+      setCsSuccess({ email: payload.email, password: result.student.temporary_password || csPassword });
+      await loadData();
+    } catch (err: any) {
+      const msg = err.message || "Failed to create student.";
+      setCsError(msg.includes("already") ? "A user with this email already exists." : msg);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleModalSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setActionLoading(true);
     setError("");
     const f = new FormData(e.currentTarget);
     try {
-      if (modal.kind === "create_student") {
-        await adminApi.createStudent(Object.fromEntries(f));
-      } else if (modal.kind === "grant_access") {
+      if (modal.kind === "grant_access") {
         await adminApi.grantAccess(
           String(f.get("user_id")),
           String(f.get("bundle_id")),
@@ -543,7 +614,7 @@ export function SuperAdminDashboard() {
                     className="rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-1.5 text-xs text-white placeholder-slate-500 outline-none focus:border-indigo-500"
                   />
                   <button
-                    onClick={() => setModal({ kind: "create_student" })}
+                    onClick={openCreateStudentModal}
                     className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-500 transition"
                   >
                     <Plus className="h-3.5 w-3.5" /> Add Student
@@ -881,7 +952,7 @@ export function SuperAdminDashboard() {
                 </div>
               )}
 
-              {modal.kind === "payment_details" ? (
+              {modal.kind === "payment_details" && (
                 <div className="space-y-4 text-xs">
                   <div className="grid grid-cols-2 gap-3 bg-slate-900 p-4 rounded-2xl border border-slate-800">
                     <div>
@@ -965,59 +1036,184 @@ export function SuperAdminDashboard() {
                     </div>
                   )}
                 </div>
-              ) : (
-                <form onSubmit={handleModalSubmit} className="space-y-4 text-xs">
-                  {modal.kind === "create_student" && (
-                    <>
-                      <label className="block">
-                        <span className="text-slate-400 font-bold">Full Name</span>
-                        <input
-                          required
-                          name="full_name"
-                          className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
-                        />
-                      </label>
-                      <label className="block">
-                        <span className="text-slate-400 font-bold">Email Address</span>
-                        <input
-                          required
-                          name="email"
-                          type="email"
-                          className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
-                        />
-                      </label>
-                      <label className="block">
-                        <span className="text-slate-400 font-bold">Phone</span>
-                        <input
-                          name="phone"
-                          className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
-                        />
-                      </label>
-                      <div className="grid grid-cols-2 gap-3">
-                        <label className="block">
-                          <span className="text-slate-400 font-bold">Course</span>
-                          <input
-                            name="course"
-                            defaultValue="BCA"
-                            className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
-                          />
-                        </label>
-                        <label className="block">
-                          <span className="text-slate-400 font-bold">Semester (1-6)</span>
-                          <input
-                            required
-                            name="semester"
-                            type="number"
-                            min={1}
-                            max={6}
-                            defaultValue={1}
-                            className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
-                          />
-                        </label>
-                      </div>
-                    </>
-                  )}
+              )}
 
+              {modal.kind === "create_student" && (
+                csSuccess ? (
+                  /* ── Success view ── */
+                  <div className="space-y-5 text-xs">
+                    <div className="flex flex-col items-center gap-3 py-4">
+                      <div className="grid h-14 w-14 place-items-center rounded-full bg-emerald-950/60 border border-emerald-800">
+                        <CheckCircle2 className="h-7 w-7 text-emerald-400" />
+                      </div>
+                      <h4 className="text-base font-bold text-white">Student Created Successfully</h4>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4 space-y-3">
+                      <div>
+                        <p className="text-slate-500 font-semibold text-[11px]">Email Address</p>
+                        <p className="font-bold text-white mt-0.5">{csSuccess.email}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500 font-semibold text-[11px]">Temporary Password</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <code className="flex-1 rounded-lg bg-slate-950 border border-slate-800 px-3 py-2 font-mono text-sm text-indigo-300 select-all break-all">{csSuccess.password}</code>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyPassword(csSuccess.password)}
+                            className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-xs font-bold text-slate-200 hover:bg-slate-700 transition"
+                          >
+                            {csCopied ? <ClipboardCheck className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                            {csCopied ? "Copied" : "Copy"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2 rounded-xl bg-amber-950/40 border border-amber-800/60 px-3 py-2.5 text-amber-300">
+                      <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                      <p className="leading-relaxed">This is a <strong>temporary password</strong>. Instruct the student to change it immediately after their first sign-in.</p>
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-800 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => { setCsSuccess(null); setModal(null); }}
+                        className="rounded-xl bg-indigo-600 px-5 py-2 text-xs font-bold text-white hover:bg-indigo-500 transition"
+                      >
+                        Done
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* ── Create student form with password ── */
+                  <form onSubmit={handleCreateStudentSubmit} className="space-y-4 text-xs">
+                    {csError && (
+                      <div className="flex items-center gap-2 rounded-xl bg-rose-950/60 border border-rose-800 px-3 py-2.5 text-rose-300 text-xs">
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                        <span>{csError}</span>
+                      </div>
+                    )}
+
+                    <label className="block">
+                      <span className="text-slate-400 font-bold">Full Name</span>
+                      <input
+                        required
+                        name="full_name"
+                        className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="text-slate-400 font-bold">Email Address</span>
+                      <input
+                        required
+                        name="email"
+                        type="email"
+                        className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                      />
+                    </label>
+
+                    {/* ── Password Section ── */}
+                    <div className="block">
+                      <span className="text-slate-400 font-bold">Password</span>
+                      <div className="relative mt-1">
+                        <input
+                          required
+                          type={csShowPassword ? "text" : "password"}
+                          value={csPassword}
+                          onChange={(e) => { setCsPassword(e.target.value); setCsCopied(false); }}
+                          placeholder="Enter or generate a password"
+                          minLength={6}
+                          className="w-full rounded-xl border border-slate-800 bg-slate-900 p-3 pr-10 text-white outline-none focus:border-indigo-500 font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setCsShowPassword(!csShowPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition"
+                          tabIndex={-1}
+                        >
+                          {csShowPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2 mt-2">
+                        <button
+                          type="button"
+                          onClick={handleGeneratePassword}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600/20 border border-indigo-500/40 px-3 py-1.5 text-xs font-bold text-indigo-300 hover:bg-indigo-600/30 transition"
+                        >
+                          <KeyRound className="h-3 w-3" /> Generate Password
+                        </button>
+                        {csPassword && (
+                          <button
+                            type="button"
+                            onClick={() => handleCopyPassword(csPassword)}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-800 border border-slate-700 px-3 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-700 transition"
+                          >
+                            {csCopied ? <ClipboardCheck className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                            {csCopied ? "Copied!" : "Copy"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <label className="block">
+                      <span className="text-slate-400 font-bold">Phone</span>
+                      <input
+                        name="phone"
+                        className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                      />
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="block">
+                        <span className="text-slate-400 font-bold">Course</span>
+                        <input
+                          name="course"
+                          defaultValue="BCA"
+                          className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="text-slate-400 font-bold">Semester (1-6)</span>
+                        <input
+                          required
+                          name="semester"
+                          type="number"
+                          min={1}
+                          max={6}
+                          defaultValue={1}
+                          className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none focus:border-indigo-500"
+                        />
+                      </label>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-800 flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setModal(null)}
+                        className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-bold text-slate-300 hover:bg-slate-700"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={actionLoading || !csPassword}
+                        className="rounded-xl bg-indigo-600 px-5 py-2 text-xs font-bold text-white hover:bg-indigo-500 disabled:opacity-50 transition"
+                      >
+                        {actionLoading ? (
+                          <span className="flex items-center gap-2">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Creating…
+                          </span>
+                        ) : "Save Record"}
+                      </button>
+                    </div>
+                  </form>
+                )
+              )}
+
+              {(modal.kind === "grant_access" ||
+                modal.kind === "create_bundle" ||
+                modal.kind === "upload_note") && (
+                <form onSubmit={handleModalSubmit} className="space-y-4 text-xs">
                   {modal.kind === "grant_access" && (
                     <>
                       <label className="block">

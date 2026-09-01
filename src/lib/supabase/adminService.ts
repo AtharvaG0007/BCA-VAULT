@@ -1,4 +1,5 @@
 import { supabase, adminSupabase, publicAnonKey, supabaseUrl } from "./client";
+import type { CreateStudentPayload, CreateStudentResponse } from "./types";
 
 const studentFn = async <T>(path: string, body: unknown): Promise<T> => {
   const { data: { session } } = await supabase.auth.getSession();
@@ -162,7 +163,8 @@ export const adminApi = {
     const result = await adminSupabase.from("notes").insert(payload);
     if (result.error) throw result.error;
   },
-  createStudent: (data: unknown) => adminFn<{ student: { user_id: string } }>("/students", data),
+  createStudent: (data: CreateStudentPayload | unknown) =>
+    adminFn<CreateStudentResponse>("/students", data),
   
   // Student‑authorized signed URL generation using student-note-signed-url edge function
   getStudentSignedNoteUrl: async (noteId: string) => {

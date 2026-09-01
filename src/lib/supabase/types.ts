@@ -96,3 +96,22 @@ export interface PlatformStats {
   totalOrders: number;
   totalRevenue: number;
 }
+
+export interface CreateStudentPayload {
+  full_name: string;
+  email: string;
+  phone?: string;
+  course?: string;
+  semester?: number;
+  password?: string;
+}
+
+export interface CreateStudentResponse {
+  success: boolean;
+  student: {
+    user_id: string;
+    email: string;
+    temporary_password?: string;
+  };
+}
+
