@@ -35,15 +35,71 @@ const adminFn = async <T>(path: string, body: unknown): Promise<T> => {
 
 export const adminApi = {
   listPayments: (status = "all", search = "") => {
-    let q = adminSupabase.from("payment_submissions").select("id,reference_id,user_id,full_name,email,phone,course,semester,amount,utr,screenshot_bucket,screenshot_path,status,admin_notes,verified_at,verified_by,created_at", { count: "exact" }).order("created_at", { ascending: false }).range(0, 49);
+    let q = adminSupabase
+      .from("payment_submissions")
+      .select(
+        "id,reference_id,user_id,full_name,email,phone,course,semester,amount,utr,screenshot_bucket,screenshot_path,status,admin_notes,verified_at,verified_by,created_at,bundle_id,bundles(title)",
+        { count: "exact" }
+      )
+      .order("created_at", { ascending: false })
+      .range(0, 99);
     if (status !== "all") q = q.eq("status", status);
-    if (search) q = q.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,utr.ilike.%${search}%`);
+    if (search)
+      q = q.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,utr.ilike.%${search}%,reference_id.ilike.%${search}%`);
     return q;
   },
-  listStudents: (search = "") => {
-    let q = adminSupabase.from("profiles").select("user_id,full_name,email,phone,course,semester,status,created_at", { count: "exact" }).order("created_at", { ascending: false }).range(0, 49);
-    if (search) q = q.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
-    return q;
+  listStudents: async (search = "") => {
+    let q = adminSupabase
+      .from("profiles")
+      .select("user_id,full_name,email,phone,course,semester,status,created_at,updated_at", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range(0, 99);
+
+    if (search) {
+      q = q.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
+    }
+
+    const { data: students, error: studentsErr, count } = await q;
+    if (studentsErr || !students?.length) {
+      return { data: students ?? [], error: studentsErr, count };
+    }
+
+    const userIds = students.map((s) => s.user_id);
+    const [accessRes, paymentsRes] = await Promise.all([
+      adminSupabase
+        .from("access_permissions")
+        .select("user_id,bundle_id,status,bundles(title)")
+        .in("user_id", userIds)
+        .eq("status", "active"),
+      adminSupabase
+        .from("payment_submissions")
+        .select("user_id,status,created_at")
+        .in("user_id", userIds)
+        .order("created_at", { ascending: false }),
+    ]);
+
+    const accessByUserId = new Map<string, string[]>();
+    (accessRes.data || []).forEach((row: any) => {
+      const title = row.bundles?.title || "Active Bundle";
+      const list = accessByUserId.get(row.user_id) || [];
+      list.push(title);
+      accessByUserId.set(row.user_id, list);
+    });
+
+    const paymentByUserId = new Map<string, string>();
+    (paymentsRes.data || []).forEach((row: any) => {
+      if (!paymentByUserId.has(row.user_id)) {
+        paymentByUserId.set(row.user_id, row.status);
+      }
+    });
+
+    const enriched = students.map((s) => ({
+      ...s,
+      assigned_bundles: accessByUserId.get(s.user_id) || [],
+      payment_status: paymentByUserId.get(s.user_id) || "unpaid",
+    }));
+
+    return { data: enriched, error: null, count };
   },
   listAccess: async () => {
     const { data: access, error: accessError } = await adminSupabase.from("access_permissions").select("id,user_id,bundle_id,status,granted_at,granted_by,expires_at,bundles(title)").order("granted_at", { ascending: false }).range(0, 99);

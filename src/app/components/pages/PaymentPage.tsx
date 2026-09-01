@@ -14,6 +14,7 @@ import {
   Sparkles,
   AlertCircle,
 } from "lucide-react";
+import { PaymentEvidenceForm } from "../payment/PaymentEvidenceForm";
 
 export const GOOGLE_PAYMENT_FORM_URL =
   "https://docs.google.com/forms/d/e/1FAIpQLSfKie4-l2VIcbkQ8cej2Wuq0BYQInPb6EfobEiQeZiu8bPbLg/viewform?usp=dialog";
@@ -51,6 +52,7 @@ export function PaymentPage() {
   const [couponInput, setCouponInput] = useState("BUDMS400");
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>("BUDMS400");
   const [couponError, setCouponError] = useState<string | null>(null);
+  const [showEvidenceModal, setShowEvidenceModal] = useState(false);
 
   // Marketing countdown timer: 3 minutes 50 seconds (230 seconds)
   const [secondsRemaining, setSecondsRemaining] = useState(230);
@@ -276,37 +278,55 @@ export function PaymentPage() {
               </div>
             </article>
 
-            {/* Step 2: Google Form Redirection */}
+            {/* Step 2: Evidence Submission */}
             <article className="rounded-3xl border border-indigo-100 bg-indigo-50/50 p-6 sm:p-8">
               <div className="flex items-start gap-3">
                 <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-600 text-white">
-                  <ExternalLink className="h-5 w-5" />
+                  <ShieldCheck className="h-5 w-5" />
                 </div>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">
                     Step 2 · Submit evidence
                   </p>
-                  <h2 className="mt-1 text-2xl font-bold text-slate-950">Submit Payment Form</h2>
+                  <h2 className="mt-1 text-2xl font-bold text-slate-950">Submit Payment Evidence</h2>
                   <p className="mt-2 text-xs leading-5 text-slate-600">
-                    After completing payment, submit your transaction ID (UTR) and screenshot via our official Google Form or in-app verification.
+                    After transferring ₹{currentPrice} via UPI, submit your 12-digit UTR and payment screenshot for instant verification queue.
                   </p>
                 </div>
               </div>
 
-              <a
-                href={GOOGLE_PAYMENT_FORM_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-4 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700"
-              >
-                Submit Payment Form <ExternalLink className="h-4 w-4" />
-              </a>
+              <div className="mt-6 space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setShowEvidenceModal(true)}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-4 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700 active:scale-[0.99]"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  Submit Payment Evidence (In-App)
+                </button>
+
+                <div className="text-center">
+                  <span className="text-[11px] text-slate-400">or submit via </span>
+                  <a
+                    href={GOOGLE_PAYMENT_FORM_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:underline"
+                  >
+                    Official Google Form <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              </div>
 
               <div className="mt-4 flex gap-2 rounded-xl border border-indigo-100 bg-white/80 p-3 text-xs leading-5 text-slate-600">
                 <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
-                Your submission is reviewed manually by the BCA Vault administrative team.
+                Your submission is verified manually by the BCA Vault administration. Access is activated upon approval.
               </div>
             </article>
+
+            {showEvidenceModal && (
+              <PaymentEvidenceForm onClose={() => setShowEvidenceModal(false)} />
+            )}
           </div>
         </div>
       </section>

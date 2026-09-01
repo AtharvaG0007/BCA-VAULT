@@ -535,64 +535,76 @@ export function SuperAdminDashboard() {
                             <th className="pb-3">Email & Phone</th>
                             <th className="pb-3">Course / Sem</th>
                             <th className="pb-3">Amount</th>
-                            <th className="pb-3">UTR</th>
+                            <th className="pb-3">UTR / Ref</th>
+                            <th className="pb-3">Bundle</th>
                             <th className="pb-3">Status</th>
                             <th className="pb-3">Date</th>
                             <th className="pb-3 text-right">Actions</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                          {payments.map((p) => (
-                            <tr key={p.id} className="hover:bg-slate-900/50">
-                              <td className="py-3 font-bold text-white">{p.full_name}</td>
-                              <td className="py-3">
-                                <p className="text-slate-200">{p.email}</p>
-                                <p className="text-[10px] text-slate-500">{p.phone}</p>
-                              </td>
-                              <td className="py-3 text-slate-400">
-                                {p.course} · Sem {p.semester}
-                              </td>
-                              <td className="py-3 font-bold text-indigo-400">{formatMoney(p.amount)}</td>
-                              <td className="py-3 font-mono text-[11px] text-slate-400">{p.utr}</td>
-                              <td className="py-3">
-                                <StatusBadge status={p.status} />
-                              </td>
-                              <td className="py-3 text-slate-500">{formatDate(p.created_at)}</td>
-                              <td className="py-3 text-right">
-                                <div className="inline-flex items-center gap-1.5">
-                                  <button
-                                    onClick={() => showPaymentDetails(p)}
-                                    className="rounded-lg bg-slate-800 px-2.5 py-1 text-xs font-bold text-slate-200 hover:bg-slate-700"
-                                  >
-                                    Details
-                                  </button>
-                                  {p.status === "pending" && (
-                                    <>
-                                      <button
-                                        onClick={() => reviewPayment(p.id, "approved")}
-                                        disabled={actionLoading}
-                                        className="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white hover:bg-emerald-500 transition"
-                                      >
-                                        Approve
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          const notes = prompt("Reason for rejection (optional):");
-                                          if (notes !== null) {
-                                            void reviewPayment(p.id, "rejected", notes);
-                                          }
-                                        }}
-                                        disabled={actionLoading}
-                                        className="rounded-lg bg-rose-600 px-2.5 py-1 text-xs font-bold text-white hover:bg-rose-500 transition"
-                                      >
-                                        Reject
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
+                          {payments.map((p) => {
+                            const bundleTitle = p.bundles?.title || "Complete Bundle";
+                            return (
+                              <tr key={p.id} className="hover:bg-slate-900/50">
+                                <td className="py-3 font-bold text-white">{p.full_name}</td>
+                                <td className="py-3">
+                                  <p className="text-slate-200">{p.email}</p>
+                                  <p className="text-[10px] text-slate-500">{p.phone}</p>
+                                </td>
+                                <td className="py-3 text-slate-400">
+                                  {p.course} · Sem {p.semester}
+                                </td>
+                                <td className="py-3 font-bold text-indigo-400">{formatMoney(p.amount)}</td>
+                                <td className="py-3">
+                                  <p className="font-mono text-[11px] text-slate-300 font-semibold">{p.utr}</p>
+                                  <p className="font-mono text-[10px] text-slate-500">{p.reference_id}</p>
+                                </td>
+                                <td className="py-3">
+                                  <span className="inline-block max-w-[140px] truncate font-medium text-slate-300" title={bundleTitle}>
+                                    {bundleTitle}
+                                  </span>
+                                </td>
+                                <td className="py-3">
+                                  <StatusBadge status={p.status} />
+                                </td>
+                                <td className="py-3 text-slate-500">{formatDate(p.created_at)}</td>
+                                <td className="py-3 text-right">
+                                  <div className="inline-flex items-center gap-1.5">
+                                    <button
+                                      onClick={() => showPaymentDetails(p)}
+                                      className="rounded-lg bg-slate-800 px-2.5 py-1 text-xs font-bold text-slate-200 hover:bg-slate-700"
+                                    >
+                                      Details
+                                    </button>
+                                    {p.status === "pending" && (
+                                      <>
+                                        <button
+                                          onClick={() => reviewPayment(p.id, "approved")}
+                                          disabled={actionLoading}
+                                          className="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white hover:bg-emerald-500 transition"
+                                        >
+                                          Approve
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            const notes = prompt("Reason for rejection (optional):");
+                                            if (notes !== null) {
+                                              void reviewPayment(p.id, "rejected", notes);
+                                            }
+                                          }}
+                                          disabled={actionLoading}
+                                          className="rounded-lg bg-rose-600 px-2.5 py-1 text-xs font-bold text-white hover:bg-rose-500 transition"
+                                        >
+                                          Reject
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
@@ -629,57 +641,106 @@ export function SuperAdminDashboard() {
                       <table className="w-full text-left text-xs">
                         <thead>
                           <tr className="border-b border-slate-800 text-slate-400 font-semibold">
-                            <th className="pb-3">Full Name</th>
-                            <th className="pb-3">Email</th>
-                            <th className="pb-3">Phone</th>
+                            <th className="pb-3">Student Name</th>
+                            <th className="pb-3">Email & User ID</th>
                             <th className="pb-3">Course / Sem</th>
                             <th className="pb-3">Account Status</th>
-                            <th className="pb-3">Joined</th>
+                            <th className="pb-3">Payment</th>
+                            <th className="pb-3">Assigned Bundles</th>
+                            <th className="pb-3">Registered</th>
                             <th className="pb-3 text-right">Actions</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                          {students.map((s) => (
-                            <tr key={s.user_id} className="hover:bg-slate-900/50">
-                              <td className="py-3 font-bold text-white">{s.full_name}</td>
-                              <td className="py-3 text-slate-300">{s.email}</td>
-                              <td className="py-3 text-slate-400">{s.phone || "—"}</td>
-                              <td className="py-3 text-slate-400">
-                                {s.course} · Sem {s.semester}
-                              </td>
-                              <td className="py-3">
-                                <StatusBadge status={s.status} />
-                              </td>
-                              <td className="py-3 text-slate-500">{formatDate(s.created_at)}</td>
-                              <td className="py-3 text-right">
-                                <div className="inline-flex items-center gap-1.5">
-                                  <button
-                                    onClick={async () => {
-                                      await adminApi.updateProfile(
-                                        s.user_id,
-                                        s.status === "active" ? "inactive" : "active"
-                                      );
-                                      await loadData();
-                                    }}
-                                    className="rounded-lg bg-slate-800 px-2 py-1 text-xs font-bold text-slate-300 hover:bg-slate-700"
-                                  >
-                                    {s.status === "active" ? "Deactivate" : "Activate"}
-                                  </button>
-                                  <button
-                                    onClick={async () => {
-                                      if (confirm(`Send password reset email to ${s.email}?`)) {
-                                        await adminApi.resetPassword(s.email);
-                                        alert("Password reset email sent successfully.");
-                                      }
-                                    }}
-                                    className="rounded-lg bg-slate-800 px-2 py-1 text-xs font-bold text-indigo-400 hover:bg-indigo-950/50"
-                                  >
-                                    Reset PW
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
+                          {students.map((s) => {
+                            const assignedBundles: string[] = s.assigned_bundles || [];
+                            const paymentStatus = s.payment_status || "unpaid";
+                            return (
+                              <tr key={s.user_id} className="hover:bg-slate-900/50">
+                                <td className="py-3">
+                                  <p className="font-bold text-white">{s.full_name}</p>
+                                  {s.phone && <p className="text-[10px] text-slate-500">{s.phone}</p>}
+                                </td>
+                                <td className="py-3">
+                                  <p className="text-slate-300 font-medium">{s.email}</p>
+                                  <div className="flex items-center gap-1 mt-0.5">
+                                    <code className="text-[10px] font-mono text-slate-500 select-all">
+                                      {s.user_id.slice(0, 8)}...{s.user_id.slice(-4)}
+                                    </code>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleCopyPassword(s.user_id)}
+                                      title="Copy full User UUID"
+                                      className="text-slate-500 hover:text-slate-300 transition"
+                                    >
+                                      <Copy className="h-2.5 w-2.5" />
+                                    </button>
+                                  </div>
+                                </td>
+                                <td className="py-3 text-slate-400">
+                                  {s.course || "BCA"} · Sem {s.semester || 1}
+                                </td>
+                                <td className="py-3">
+                                  <StatusBadge status={s.status} />
+                                </td>
+                                <td className="py-3">
+                                  <StatusBadge status={paymentStatus} />
+                                </td>
+                                <td className="py-3">
+                                  {assignedBundles.length > 0 ? (
+                                    <div className="flex flex-wrap gap-1 max-w-[180px]">
+                                      {assignedBundles.map((bTitle, idx) => (
+                                        <span
+                                          key={idx}
+                                          className="inline-block rounded-md bg-indigo-950/80 border border-indigo-800/80 px-2 py-0.5 text-[10px] font-bold text-indigo-300 truncate max-w-[160px]"
+                                          title={bTitle}
+                                        >
+                                          {bTitle}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span className="text-slate-500 text-[11px]">No bundles</span>
+                                  )}
+                                </td>
+                                <td className="py-3 text-slate-500">{formatDate(s.created_at)}</td>
+                                <td className="py-3 text-right">
+                                  <div className="inline-flex items-center gap-1.5">
+                                    <button
+                                      onClick={async () => {
+                                        await adminApi.updateProfile(
+                                          s.user_id,
+                                          s.status === "active" ? "inactive" : "active"
+                                        );
+                                        await loadData();
+                                      }}
+                                      className="rounded-lg bg-slate-800 px-2 py-1 text-xs font-bold text-slate-300 hover:bg-slate-700 transition"
+                                    >
+                                      {s.status === "active" ? "Deactivate" : "Activate"}
+                                    </button>
+                                    <button
+                                      onClick={() => setModal({ kind: "grant_access", initialUserId: s.user_id })}
+                                      className="rounded-lg bg-indigo-950/60 border border-indigo-800/70 px-2 py-1 text-xs font-bold text-indigo-300 hover:bg-indigo-900/50 transition"
+                                      title="Grant Bundle Access"
+                                    >
+                                      + Bundle
+                                    </button>
+                                    <button
+                                      onClick={async () => {
+                                        if (confirm(`Send password reset email to ${s.email}?`)) {
+                                          await adminApi.resetPassword(s.email);
+                                          alert("Password reset email sent successfully.");
+                                        }
+                                      }}
+                                      className="rounded-lg bg-slate-800 px-2 py-1 text-xs font-bold text-indigo-400 hover:bg-indigo-950/50 transition"
+                                    >
+                                      Reset PW
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
@@ -1221,6 +1282,7 @@ export function SuperAdminDashboard() {
                         <input
                           required
                           name="user_id"
+                          defaultValue={modal.initialUserId || ""}
                           placeholder="User UUID from students list"
                           className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 font-mono text-white outline-none focus:border-indigo-500"
                         />

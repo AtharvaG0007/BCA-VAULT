@@ -23,6 +23,13 @@ interface AuthContextValue {
   role: UserRole | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string,
+    semester?: number,
+    course?: string
+  ) => Promise<{ user: User | null; session: any; needsEmailConfirmation: boolean }>;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -34,12 +41,12 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 function mapStudent(row: any): AppUser {
   return {
     uid: row.user_id,
-    name: row.full_name || row.email,
+    name: row.full_name || row.email?.split("@")[0] || "Student",
     email: row.email,
     role: "member",
     status: row.status === "active" ? "active" : "suspended",
-    semester: row.semester ?? undefined,
-    branch: row.course ?? undefined,
+    semester: row.semester ?? 1,
+    branch: row.course ?? "BCA",
     createdAt: row.created_at,
     createdBy: "system",
   };
@@ -89,11 +96,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Auto-repair missing student profile in profiles table
       if (!profile) {
         try {
+          const rawSem = nextUser.user_metadata?.semester;
+          const sem = typeof rawSem === "number" ? rawSem : Number(rawSem) || 1;
           const newProfile = {
             user_id: nextUser.id,
-            full_name: nextUser.user_metadata?.full_name || nextUser.email?.split("@")[0] || "Student",
+            full_name:
+              nextUser.user_metadata?.full_name ||
+              nextUser.user_metadata?.name ||
+              nextUser.email?.split("@")[0] ||
+              "Student",
             email: nextUser.email || "",
-            status: "active",
+            course: nextUser.user_metadata?.course || "BCA",
+            semester: sem,
+            status: "inactive",
           };
           const { data: inserted, error: insertErr } = await supabase
             .from("profiles")
@@ -108,15 +123,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      const studentUser = profile ? mapStudent(profile) : {
-        uid: nextUser.id,
-        name: nextUser.user_metadata?.full_name || nextUser.email || "Student",
-        email: nextUser.email || "",
-        role: "member" as UserRole,
-        status: "active" as const,
-        createdAt: nextUser.created_at || new Date().toISOString(),
-        createdBy: "system",
-      };
+      const rawMetaSem = nextUser.user_metadata?.semester;
+      const fallbackSem = typeof rawMetaSem === "number" ? rawMetaSem : Number(rawMetaSem) || 1;
+
+      const studentUser: AppUser = profile
+        ? mapStudent(profile)
+        : {
+            uid: nextUser.id,
+            name:
+              nextUser.user_metadata?.full_name ||
+              nextUser.user_metadata?.name ||
+              nextUser.email?.split("@")[0] ||
+              "Student",
+            email: nextUser.email || "",
+            role: "member" as UserRole,
+            status: "active" as const,
+            semester: fallbackSem,
+            branch: nextUser.user_metadata?.course || "BCA",
+            createdAt: nextUser.created_at || new Date().toISOString(),
+            createdBy: "system",
+          };
       setAppUser(studentUser);
       return studentUser;
     } catch (err) {
@@ -191,6 +217,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function signUp(
+    email: string,
+    password: string,
+    fullName: string,
+    semester?: number,
+    course?: string
+  ): Promise<{ user: User | null; session: any; needsEmailConfirmation: boolean }> {
+    setLoading(true);
+    try {
+      const sem = semester && semester >= 1 && semester <= 6 ? semester : 1;
+      const crs = course?.trim() || "BCA";
+      const name = fullName.trim();
+      const cleanEmail = email.trim().toLowerCase();
+
+      const { data, error } = await supabase.auth.signUp({
+        email: cleanEmail,
+        password,
+        options: {
+          data: {
+            full_name: name,
+            course: crs,
+            semester: sem,
+          },
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const needsEmailConfirmation = Boolean(
+        data.user &&
+          !data.session &&
+          (!data.user.confirmed_at || (data.user.identities && data.user.identities.length === 0))
+      );
+
+      if (data.user && data.session) {
+        setUser(data.user);
+        await loadProfile(data.user);
+      }
+
+      return {
+        user: data.user,
+        session: data.session,
+        needsEmailConfirmation,
+      };
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function signInWithGoogle() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -208,7 +285,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function resetPassword(email: string) {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
       redirectTo: `${window.location.origin}/auth/update-password`,
     });
     if (error) throw error;
@@ -222,6 +299,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: appUser?.role ?? null,
         loading,
         signIn,
+        signUp,
         signInWithGoogle,
         logout,
         resetPassword,
@@ -238,4 +316,5 @@ export function useAuth() {
   if (!value) throw new Error("Authentication context is unavailable.");
   return value;
 }
+
 

@@ -219,10 +219,81 @@ Deno.serve(async (request) => {
 
     if (request.method === "POST" && pathname === "/payments/review") {
       const { id, status, note = "" } = await request.json().catch(() => ({}));
-      if (!id || !["approved", "rejected"].includes(status)) return respond({ success: false, error: "A payment ID and review status are required." }, 400, corsHeaders);
-      const { data, error } = await admin.rpc("review_payment_submission", { p_payment_id: id, p_status: status, p_admin_notes: String(note), p_verified_by: access.user.id });
-      if (error) return respond({ success: false, error: error.message }, 400, corsHeaders);
-      return respond({ success: true, payment: data }, 200, corsHeaders);
+      if (!id || !["approved", "rejected"].includes(status)) {
+        return respond({ success: false, error: "A payment ID and review status are required." }, 400, corsHeaders);
+      }
+
+      // Try calling stored procedure first
+      const rpcResult = await admin.rpc("review_payment_submission", {
+        p_payment_id: id,
+        p_status: status,
+        p_admin_notes: String(note),
+        p_verified_by: access.user.id,
+      });
+
+      if (!rpcResult.error) {
+        return respond({ success: true, payment: rpcResult.data }, 200, corsHeaders);
+      }
+
+      // Direct fallback if RPC is not yet loaded in cache
+      const { data: payment, error: fetchErr } = await admin
+        .from("payment_submissions")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (fetchErr || !payment) {
+        return respond({ success: false, error: "Payment submission not found." }, 404, corsHeaders);
+      }
+
+      const { error: updateErr } = await admin
+        .from("payment_submissions")
+        .update({
+          status,
+          verified_by: access.user.id,
+          verified_at: new Date().toISOString(),
+          admin_notes: note ? String(note).trim() : null,
+        })
+        .eq("id", id);
+
+      if (updateErr) return respond({ success: false, error: updateErr.message }, 400, corsHeaders);
+
+      if (status === "approved" && payment.user_id) {
+        // Activate profile
+        await admin.from("profiles").update({ status: "active", updated_at: new Date().toISOString() }).eq("user_id", payment.user_id);
+
+        // Grant access permission
+        if (payment.bundle_id) {
+          await admin.from("access_permissions").upsert({
+            user_id: payment.user_id,
+            bundle_id: payment.bundle_id,
+            status: "active",
+            granted_by: access.user.id,
+            granted_at: new Date().toISOString(),
+            expires_at: null,
+          }, { onConflict: "user_id,bundle_id" });
+
+          // Also check for semester combo bundle granting
+          const { data: bundle } = await admin.from("bundles").select("title").eq("id", payment.bundle_id).maybeSingle();
+          if (bundle && (bundle.title.toLowerCase().includes("complete") || bundle.title.toLowerCase().includes("both"))) {
+            const { data: semBundles } = await admin.from("bundles").select("id").eq("published", true);
+            for (const sb of semBundles || []) {
+              await admin.from("access_permissions").upsert({
+                user_id: payment.user_id,
+                bundle_id: sb.id,
+                status: "active",
+                granted_by: access.user.id,
+                granted_at: new Date().toISOString(),
+                expires_at: null,
+              }, { onConflict: "user_id,bundle_id" });
+            }
+          }
+        }
+      }
+
+      await log(access.user.id, `payment_${status}`, "payment", id, { bundle_id: payment.bundle_id });
+
+      return respond({ success: true, payment: { id, status, bundle_id: payment.bundle_id } }, 200, corsHeaders);
     }
 
     if (request.method === "POST" && pathname === "/notes/upload-url") {

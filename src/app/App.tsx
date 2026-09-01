@@ -198,7 +198,22 @@ function AppLayout() {
                 </PageWrapper>
               }
             />
-            <Route path="/auth/signup" element={<Navigate to="/auth/login" replace />} />
+            <Route
+              path="/auth/signup"
+              element={
+                <PageWrapper>
+                  <LoginPage initialMode="signup" />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="/auth/register"
+              element={
+                <PageWrapper>
+                  <LoginPage initialMode="signup" />
+                </PageWrapper>
+              }
+            />
 
             {/* ── Super Admin Login (/admin-root-login) ────────────────── */}
             <Route path="/admin-root-login" element={<AdminLoginPage />} />
