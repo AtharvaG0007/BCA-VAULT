@@ -1,4 +1,5 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient, type User } from "npm:@supabase/supabase-js@2";
 
 const ALLOWED_ORIGINS = [
   "http://localhost:5173",
@@ -59,7 +60,7 @@ async function log(actorId: string, action: string, targetType?: string, targetI
   await admin.from("activity_logs").insert({ actor_id: actorId, action, target_type: targetType ?? null, target_id: targetId ?? null, metadata });
 }
 
-Deno.serve(async (request) => {
+Deno.serve(async (request: Request) => {
   const corsHeaders = getCorsHeaders(request);
 
   if (request.method === "OPTIONS") {
@@ -127,7 +128,7 @@ Deno.serve(async (request) => {
           if (!targetUserId) {
             const { data: userList } = await admin.auth.admin.listUsers({ perPage: 1000 });
             const foundUser = userList?.users?.find(
-              (u) => u.email?.toLowerCase() === email
+              (u: User) => u.email?.toLowerCase() === email
             );
             targetUserId = foundUser?.id;
           }
@@ -253,7 +254,7 @@ Deno.serve(async (request) => {
       });
 
       const authUserMap = new Map<string, { email_confirmed_at?: string | null; confirmed_at?: string | null; last_sign_in_at?: string | null }>();
-      (authUsersRes.data?.users || []).forEach((u) => {
+      (authUsersRes.data?.users || []).forEach((u: User) => {
         authUserMap.set(u.id, {
           email_confirmed_at: u.email_confirmed_at || null,
           confirmed_at: (u as any).confirmed_at || null,

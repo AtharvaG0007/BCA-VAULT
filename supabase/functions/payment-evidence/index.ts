@@ -1,3 +1,4 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const ALLOWED_ORIGINS = [
@@ -73,7 +74,7 @@ async function bundleFor(id: string) {
   return data;
 }
 
-Deno.serve(async (request) => {
+Deno.serve(async (request: Request) => {
   const corsHeaders = getCorsHeaders(request);
 
   // 1. Handle OPTIONS preflight immediately without requiring authentication
@@ -93,7 +94,7 @@ Deno.serve(async (request) => {
   if (identity.error) return identity.error;
 
   try {
-    const body = await request.json().catch(() => ({}));
+    const body = (await request.json().catch(() => ({}))) as Record<string, any>;
     const action = text(body.action);
     const bundleId = text(body.bundle_id);
 
@@ -181,7 +182,7 @@ Deno.serve(async (request) => {
       const fileName = path.slice(path.lastIndexOf("/") + 1);
 
       const { data: files, error: fileError } = await admin.storage.from(bucket).list(folder, { limit: 5 });
-      const file = files?.find((candidate) => candidate.name === fileName);
+      const file = files?.find((candidate: { name: string; metadata?: Record<string, unknown> | null }) => candidate.name === fileName);
 
       if (
         fileError ||

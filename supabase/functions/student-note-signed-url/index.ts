@@ -1,3 +1,4 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const ALLOWED_ORIGINS = [
@@ -106,7 +107,7 @@ Deno.serve(async (request: Request) => {
   try {
     let noteId = "";
     if (request.method === "POST") {
-      const body = await request.json().catch(() => ({}));
+      const body = (await request.json().catch(() => ({}))) as Record<string, any>;
       noteId = String(body.noteId || body.note_id || "").trim();
     } else {
       const parsedUrl = new URL(request.url);
