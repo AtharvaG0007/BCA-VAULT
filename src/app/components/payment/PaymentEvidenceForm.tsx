@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { AlertCircle, CheckCircle2, ImageUp, Loader2, LogIn, ShieldCheck, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, ImageUp, Loader2, ShieldCheck, X } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/app/components/auth/AuthContext";
 import { useNavigate } from "react-router";
 import { PaymentEvidenceSuccess } from "./PaymentEvidenceSuccess";
+import { PaymentAuthModal } from "./PaymentAuthModal";
 import { publicAnonKey } from "../../../../utils/supabase/info";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_FILE_SIZE = 1 * 1024 * 1024;
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://dmxegktlxqsxaysqwswa.supabase.co";
@@ -83,9 +84,11 @@ async function callPaymentFunction<T = any>(body: Record<string, unknown>): Prom
 export function PaymentEvidenceForm({
   onClose,
   initialBundleId,
+  initialPrice,
 }: {
   onClose: () => void;
   initialBundleId?: string;
+  initialPrice?: number;
 }) {
   const navigate = useNavigate();
   const { user, appUser } = useAuth();
@@ -104,7 +107,7 @@ export function PaymentEvidenceForm({
     email: user?.email || appUser?.email || "",
     course: "BCA",
     semester: appUser?.semester ? String(appUser.semester) : "1",
-    amountPaid: "899",
+    amountPaid: initialPrice ? String(initialPrice) : "899",
     utr: "",
     paymentConfirmation: false,
   });
@@ -161,7 +164,7 @@ export function PaymentEvidenceForm({
       return setError("Please upload a PNG, JPG, or WebP image.");
     }
     if (nextFile.size > MAX_FILE_SIZE) {
-      return setError("Payment screenshot must be 5 MB or smaller.");
+      return setError("Payment screenshot must be 1 MB or smaller.");
     }
     setFile(nextFile);
   }
@@ -292,22 +295,7 @@ export function PaymentEvidenceForm({
         </div>
 
         {!user ? (
-          <div className="p-8 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
-              <LogIn className="h-7 w-7" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-900">Sign in required</h3>
-            <p className="mt-2 text-sm text-slate-500 max-w-md mx-auto">
-              Please sign in or create an account with your BCA Vault registered email to link your payment.
-            </p>
-            <button
-              type="button"
-              onClick={() => navigate("/auth/login")}
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white hover:bg-indigo-700 transition"
-            >
-              Sign In to Continue
-            </button>
-          </div>
+          <PaymentAuthModal onClose={onClose} />
         ) : (
           <form onSubmit={submit} className="space-y-5 p-6 sm:p-8">
             {error && (
@@ -454,7 +442,7 @@ export function PaymentEvidenceForm({
                     {file ? file.name : "Choose a payment screenshot"}
                   </span>
                   <span className="mt-0.5 block text-xs text-slate-500">
-                    PNG, JPG, JPEG, or WebP · maximum 5 MB
+                    PNG, JPG, JPEG, or WebP · maximum 1 MB
                   </span>
                 </span>
               </button>

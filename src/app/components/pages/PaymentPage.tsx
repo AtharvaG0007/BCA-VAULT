@@ -325,7 +325,10 @@ export function PaymentPage() {
             </article>
 
             {showEvidenceModal && (
-              <PaymentEvidenceForm onClose={() => setShowEvidenceModal(false)} />
+              <PaymentEvidenceForm
+                onClose={() => setShowEvidenceModal(false)}
+                initialPrice={currentPrice}
+              />
             )}
           </div>
         </div>
