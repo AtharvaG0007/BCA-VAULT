@@ -201,6 +201,117 @@ Deno.serve(async (request) => {
       );
     }
 
+    if (request.method === "POST" && pathname === "/students/list") {
+      const { search = "" } = await request.json().catch(() => ({}));
+      let q = admin
+        .from("profiles")
+        .select("user_id,full_name,email,phone,course,semester,status,created_at,updated_at", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(0, 99);
+
+      if (search) {
+        q = q.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
+      }
+
+      const { data: students, error: studentsErr, count } = await q;
+      if (studentsErr) {
+        return respond({ success: false, error: studentsErr.message }, 400, corsHeaders);
+      }
+
+      if (!students || students.length === 0) {
+        return respond({ success: true, data: [], count: 0 }, 200, corsHeaders);
+      }
+
+      const userIds = students.map((s) => s.user_id);
+      const [accessRes, paymentsRes, authUsersRes] = await Promise.all([
+        admin
+          .from("access_permissions")
+          .select("user_id,bundle_id,status,bundles(title)")
+          .in("user_id", userIds)
+          .eq("status", "active"),
+        admin
+          .from("payment_submissions")
+          .select("user_id,status,created_at")
+          .in("user_id", userIds)
+          .order("created_at", { ascending: false }),
+        admin.auth.admin.listUsers({ perPage: 1000 }),
+      ]);
+
+      const accessByUserId = new Map<string, string[]>();
+      (accessRes.data || []).forEach((row: any) => {
+        const title = row.bundles?.title || "Active Bundle";
+        const list = accessByUserId.get(row.user_id) || [];
+        list.push(title);
+        accessByUserId.set(row.user_id, list);
+      });
+
+      const paymentByUserId = new Map<string, string>();
+      (paymentsRes.data || []).forEach((row: any) => {
+        if (!paymentByUserId.has(row.user_id)) {
+          paymentByUserId.set(row.user_id, row.status);
+        }
+      });
+
+      const authUserMap = new Map<string, { email_confirmed_at?: string | null; confirmed_at?: string | null; last_sign_in_at?: string | null }>();
+      (authUsersRes.data?.users || []).forEach((u) => {
+        authUserMap.set(u.id, {
+          email_confirmed_at: u.email_confirmed_at || null,
+          confirmed_at: (u as any).confirmed_at || null,
+          last_sign_in_at: u.last_sign_in_at || null,
+        });
+      });
+
+      const enriched = students.map((s) => {
+        const authInfo = authUserMap.get(s.user_id);
+        const emailConfirmed = Boolean(authInfo?.email_confirmed_at || authInfo?.confirmed_at);
+        return {
+          ...s,
+          assigned_bundles: accessByUserId.get(s.user_id) || [],
+          payment_status: paymentByUserId.get(s.user_id) || "unpaid",
+          email_confirmed_at: authInfo?.email_confirmed_at || authInfo?.confirmed_at || null,
+          last_sign_in_at: authInfo?.last_sign_in_at || null,
+          is_verified: emailConfirmed,
+        };
+      });
+
+      return respond({ success: true, data: enriched, count }, 200, corsHeaders);
+    }
+
+    if (request.method === "POST" && pathname === "/students/verify-email") {
+      const { userId } = await request.json().catch(() => ({}));
+      const cleanUserId = String(userId || "").trim();
+      if (!cleanUserId) {
+        return respond({ success: false, error: "Valid student user ID is required." }, 400, corsHeaders);
+      }
+
+      // 1. Check if auth user exists
+      const { data: userData, error: getUserError } = await admin.auth.admin.getUserById(cleanUserId);
+      if (getUserError || !userData?.user) {
+        return respond({ success: false, error: "Student auth account not found." }, 404, corsHeaders);
+      }
+
+      // 2. Confirm email without touching password or metadata
+      const { data: updateData, error: updateError } = await admin.auth.admin.updateUserById(cleanUserId, {
+        email_confirm: true,
+      });
+
+      if (updateError || !updateData?.user) {
+        return respond({ success: false, error: updateError?.message || "Failed to verify student email." }, 400, corsHeaders);
+      }
+
+      // 3. Log verification action
+      await log(access.user.id, "verify_student_email", "student", cleanUserId, {
+        email: userData.user.email,
+      });
+
+      return respond({
+        success: true,
+        message: "Student email verified successfully.",
+        user_id: cleanUserId,
+        email_confirmed_at: updateData.user.email_confirmed_at || (updateData.user as any).confirmed_at,
+      }, 200, corsHeaders);
+    }
+
     if (request.method === "POST" && pathname === "/students/reset-password") {
       const { email } = await request.json().catch(() => ({}));
       const { error } = await admin.auth.resetPasswordForEmail(String(email), { redirectTo: `${request.headers.get("Origin") ?? ""}/auth/update-password` });

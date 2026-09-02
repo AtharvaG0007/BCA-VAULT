@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useLocation } from "react-router";
+import { toast } from "sonner";
 import {
   AlertCircle,
   BarChart3,
@@ -77,6 +78,24 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-bold text-rose-700 border border-rose-200">
       <XCircle className="h-3 w-3" /> {status}
+    </span>
+  );
+}
+
+function AuthStatusBadge({ isVerified, confirmedAt }: { isVerified?: boolean; confirmedAt?: string | null }) {
+  const verified = Boolean(isVerified || confirmedAt);
+  if (verified) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-950/80 px-2.5 py-0.5 text-xs font-bold text-emerald-300 border border-emerald-700/80">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+        🟢 Verified
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-950/80 px-2.5 py-0.5 text-xs font-bold text-amber-300 border border-amber-700/80">
+      <span className="h-1.5 w-1.5 rounded-full bg-amber-400"></span>
+      🟡 Email Unverified
     </span>
   );
 }
@@ -183,6 +202,21 @@ export function SuperAdminDashboard() {
       await loadData();
     } catch (err: any) {
       setError(err.message || "Failed to update payment status.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleVerifyEmail = async (userId: string) => {
+    setActionLoading(true);
+    try {
+      const res = await adminApi.verifyStudentEmail(userId);
+      toast.success(res?.message || "Student email verified successfully.");
+      setModal(null);
+      await loadData();
+    } catch (err: any) {
+      console.error("Email verification error:", err);
+      toast.error(err.message || "Failed to verify student email.");
     } finally {
       setActionLoading(false);
     }
@@ -641,10 +675,11 @@ export function SuperAdminDashboard() {
                       <table className="w-full text-left text-xs">
                         <thead>
                           <tr className="border-b border-slate-800 text-slate-400 font-semibold">
-                            <th className="pb-3">Student Name</th>
+                            <th className="pb-3">Student</th>
                             <th className="pb-3">Email & User ID</th>
+                            <th className="pb-3">Authentication</th>
+                            <th className="pb-3">Account</th>
                             <th className="pb-3">Course / Sem</th>
-                            <th className="pb-3">Account Status</th>
                             <th className="pb-3">Payment</th>
                             <th className="pb-3">Assigned Bundles</th>
                             <th className="pb-3">Registered</th>
@@ -655,6 +690,7 @@ export function SuperAdminDashboard() {
                           {students.map((s) => {
                             const assignedBundles: string[] = s.assigned_bundles || [];
                             const paymentStatus = s.payment_status || "unpaid";
+                            const isVerified = Boolean(s.is_verified || s.email_confirmed_at);
                             return (
                               <tr key={s.user_id} className="hover:bg-slate-900/50">
                                 <td className="py-3">
@@ -677,11 +713,14 @@ export function SuperAdminDashboard() {
                                     </button>
                                   </div>
                                 </td>
-                                <td className="py-3 text-slate-400">
-                                  {s.course || "BCA"} · Sem {s.semester || 1}
+                                <td className="py-3">
+                                  <AuthStatusBadge isVerified={s.is_verified} confirmedAt={s.email_confirmed_at} />
                                 </td>
                                 <td className="py-3">
                                   <StatusBadge status={s.status} />
+                                </td>
+                                <td className="py-3 text-slate-400">
+                                  {s.course || "BCA"} · Sem {s.semester || 1}
                                 </td>
                                 <td className="py-3">
                                   <StatusBadge status={paymentStatus} />
@@ -706,6 +745,15 @@ export function SuperAdminDashboard() {
                                 <td className="py-3 text-slate-500">{formatDate(s.created_at)}</td>
                                 <td className="py-3 text-right">
                                   <div className="inline-flex items-center gap-1.5">
+                                    {!isVerified && (
+                                      <button
+                                        onClick={() => setModal({ kind: "verify_student_email", student: s })}
+                                        className="rounded-lg bg-emerald-950/80 border border-emerald-700/90 px-2.5 py-1 text-xs font-bold text-emerald-300 hover:bg-emerald-900/80 transition shadow-sm"
+                                        title="Verify Student Email"
+                                      >
+                                        Verify Email
+                                      </button>
+                                    )}
                                     <button
                                       onClick={async () => {
                                         await adminApi.updateProfile(
@@ -729,7 +777,7 @@ export function SuperAdminDashboard() {
                                       onClick={async () => {
                                         if (confirm(`Send password reset email to ${s.email}?`)) {
                                           await adminApi.resetPassword(s.email);
-                                          alert("Password reset email sent successfully.");
+                                          toast.success("Password reset email sent successfully.");
                                         }
                                       }}
                                       className="rounded-lg bg-slate-800 px-2 py-1 text-xs font-bold text-indigo-400 hover:bg-indigo-950/50 transition"
@@ -967,7 +1015,11 @@ export function SuperAdminDashboard() {
             <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-3xl border border-slate-800 bg-slate-950 p-6 text-white shadow-2xl">
               <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-5">
                 <h3 className="text-lg font-bold text-white capitalize">
-                  {modal.kind === "payment_details" ? "Review Payment Submission" : modal.kind.replace("_", " ")}
+                  {modal.kind === "payment_details"
+                    ? "Review Payment Submission"
+                    : modal.kind === "verify_student_email"
+                    ? "Verify Student Email"
+                    : modal.kind.replace("_", " ")}
                 </h3>
                 <button
                   onClick={() => setModal(null)}
@@ -976,6 +1028,59 @@ export function SuperAdminDashboard() {
                   <X className="h-5 w-5" />
                 </button>
               </div>
+
+              {modal.kind === "verify_student_email" && (
+                <div className="space-y-4 text-xs">
+                  <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-amber-200">
+                    <p className="font-semibold text-sm text-amber-300 mb-1">Verify this student's email?</p>
+                    <p className="text-xs text-amber-200/90 leading-relaxed">
+                      This will securely verify the student's Supabase Auth email and allow them to log in without needing email confirmation.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-2.5">
+                    <div className="flex justify-between items-center py-1 border-b border-slate-800/60">
+                      <span className="text-slate-400 font-semibold">Student Name:</span>
+                      <span className="font-bold text-white text-sm">{modal.student?.full_name || "—"}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-slate-800/60">
+                      <span className="text-slate-400 font-semibold">Email:</span>
+                      <span className="font-medium text-slate-200">{modal.student?.email}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-slate-400 font-semibold">Auth UID:</span>
+                      <code className="text-[11px] font-mono text-slate-400 select-all">{modal.student?.user_id}</code>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-800 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      disabled={actionLoading}
+                      onClick={() => setModal(null)}
+                      className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-bold text-slate-300 hover:bg-slate-700 disabled:opacity-50 transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={actionLoading}
+                      onClick={() => handleVerifyEmail(modal.student.user_id)}
+                      className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white hover:bg-emerald-500 disabled:opacity-50 transition shadow-sm"
+                    >
+                      {actionLoading ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Verifying...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="h-3.5 w-3.5" /> Verify Email
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {modal.kind === "delete_bundle" && (
                 <div className="space-y-4 text-sm text-white">

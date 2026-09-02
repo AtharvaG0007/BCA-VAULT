@@ -13,15 +13,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (profilesError) throw profilesError;
       if (!profiles?.length) return res.status(200).json({ students: [] });
 
-      const { data: accessPermissions, error: accessError } = await client.from("access_permissions").select("id,user_id,status,bundle_id,bundles(title)").in("user_id", profiles.map((profile) => profile.user_id));
-      if (accessError) throw accessError;
-      const accessByUserId = new Map<string, typeof accessPermissions>();
-      for (const access of accessPermissions ?? []) {
+      const [accessRes, authUsersRes] = await Promise.all([
+        client.from("access_permissions").select("id,user_id,status,bundle_id,bundles(title)").in("user_id", profiles.map((profile) => profile.user_id)),
+        client.auth.admin.listUsers({ perPage: 1000 }),
+      ]);
+      if (accessRes.error) throw accessRes.error;
+      const accessByUserId = new Map<string, typeof accessRes.data>();
+      for (const access of accessRes.data ?? []) {
         const existing = accessByUserId.get(access.user_id) ?? [];
         existing.push(access);
         accessByUserId.set(access.user_id, existing);
       }
-      return res.status(200).json({ students: profiles.map((profile) => ({ ...profile, access_permissions: accessByUserId.get(profile.user_id) ?? [] })) });
+      const authUserMap = new Map<string, { email_confirmed_at?: string | null; confirmed_at?: string | null; is_verified: boolean }>();
+      (authUsersRes.data?.users || []).forEach((u) => {
+        const confirmed = Boolean(u.email_confirmed_at || (u as any).confirmed_at);
+        authUserMap.set(u.id, {
+          email_confirmed_at: u.email_confirmed_at || (u as any).confirmed_at || null,
+          confirmed_at: (u as any).confirmed_at || null,
+          is_verified: confirmed,
+        });
+      });
+      return res.status(200).json({
+        students: profiles.map((profile) => {
+          const authInfo = authUserMap.get(profile.user_id);
+          return {
+            ...profile,
+            access_permissions: accessByUserId.get(profile.user_id) ?? [],
+            email_confirmed_at: authInfo?.email_confirmed_at ?? null,
+            is_verified: authInfo?.is_verified ?? false,
+          };
+        }),
+      });
     }
     if (req.method === "POST") {
       const email = text(req.body?.email).toLowerCase();
@@ -93,7 +115,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const status = req.body?.status;
     const bundleId = text(req.body?.bundleId);
     const accessStatus = req.body?.accessStatus;
+    const verifyEmail = Boolean(req.body?.verifyEmail || req.body?.action === "verify_email");
     if (!userId) return res.status(400).json({ error: "Student id is required." });
+    
+    if (verifyEmail) {
+      const { data: authUser, error: authErr } = await client.auth.admin.getUserById(userId);
+      if (authErr || !authUser?.user) return res.status(404).json({ error: "Student auth account not found." });
+      const { data: updateData, error: updateErr } = await client.auth.admin.updateUserById(userId, { email_confirm: true });
+      if (updateErr) throw updateErr;
+      await client.from("activity_logs").insert({
+        actor_id: caller.user.id,
+        action: "verify_student_email",
+        target_type: "student",
+        target_id: userId,
+        metadata: { email: authUser.user.email },
+      });
+      return res.status(200).json({ success: true, message: "Student email verified successfully." });
+    }
+
     if (status === "active" || status === "inactive") {
       const { error } = await client.from("profiles").update({ status }).eq("user_id", userId);
       if (error) throw error;

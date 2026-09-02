@@ -49,6 +49,15 @@ export const adminApi = {
     return q;
   },
   listStudents: async (search = "") => {
+    try {
+      const res = await adminFn<{ success: boolean; data: any[]; count?: number }>("/students/list", { search });
+      if (res && res.data) {
+        return { data: res.data, error: null, count: res.count ?? res.data.length };
+      }
+    } catch (edgeErr) {
+      console.warn("[adminApi.listStudents] Edge function fallback:", edgeErr);
+    }
+
     let q = adminSupabase
       .from("profiles")
       .select("user_id,full_name,email,phone,course,semester,status,created_at,updated_at", { count: "exact" })
@@ -97,6 +106,7 @@ export const adminApi = {
       ...s,
       assigned_bundles: accessByUserId.get(s.user_id) || [],
       payment_status: paymentByUserId.get(s.user_id) || "unpaid",
+      is_verified: true, // fallback assumption if edge fn unavailable
     }));
 
     return { data: enriched, error: null, count };
@@ -247,6 +257,8 @@ export const adminApi = {
 
   reviewPayment: (id: string, status: "approved" | "rejected", note = "") =>
     adminFn<{ success: boolean; payment: unknown }>("/payments/review", { id, status, note }),
+  verifyStudentEmail: (userId: string) =>
+    adminFn<{ success: boolean; message?: string }>("/students/verify-email", { userId }),
   resetPassword: (email: string) => adminFn("/students/reset-password", { email }),
   paymentUrl: (bucket: string, path: string) => adminFn<{ url: string }>("/payments/signed-url", { bucket, path }),
   noteUploadUrl: (fileName: string, semester = 1) => adminFn<{ bucket: string; path: string; token: string }>("/notes/upload-url", { fileName, contentType: "application/pdf", semester }),
