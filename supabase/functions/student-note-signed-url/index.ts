@@ -122,9 +122,10 @@ Deno.serve(async (request: Request) => {
     }
 
     // 1. Check student profile status
+    // 1. Check student profile status and retrieve identity metadata
     const { data: profile, error: profileErr } = await admin
       .from("profiles")
-      .select("status")
+      .select("status, full_name, email")
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -139,7 +140,7 @@ Deno.serve(async (request: Request) => {
     // 2. Fetch note details
     const { data: note, error: noteErr } = await admin
       .from("notes")
-      .select("id, title, storage_bucket, storage_path, published, bundle_id")
+      .select("id, title, subject, semester, storage_bucket, storage_path, published, bundle_id, is_protected")
       .eq("id", noteId)
       .maybeSingle();
 
@@ -159,60 +160,105 @@ Deno.serve(async (request: Request) => {
       );
     }
 
-    // 3. Verify bundle exists and is published
-    const { data: bundle, error: bundleErr } = await admin
-      .from("bundles")
-      .select("id, title, published")
-      .eq("id", note.bundle_id)
-      .maybeSingle();
+    // 3. Verify bundle exists and is published (if note is associated with a bundle)
+    let bundleTitle = "Independent Note";
+    if (note.bundle_id) {
+      const { data: bundle, error: bundleErr } = await admin
+        .from("bundles")
+        .select("id, title, published")
+        .eq("id", note.bundle_id)
+        .maybeSingle();
 
-    if (bundleErr || !bundle || !bundle.published) {
-      return respond(
-        { success: false, error: "The course bundle for this note is unavailable." },
-        403,
-        corsHeaders
-      );
+      if (bundleErr || !bundle || !bundle.published) {
+        return respond(
+          { success: false, error: "The course bundle for this note is unavailable." },
+          403,
+          corsHeaders
+        );
+      }
+      bundleTitle = bundle.title;
     }
 
-    // 4. Verify user has active access permission for this bundle
+    // 4. Verify student authorization: bundle permission OR granular document access
     const nowIso = new Date().toISOString();
-    const { data: permission, error: permErr } = await admin
-      .from("access_permissions")
-      .select("id, status, expires_at")
-      .eq("user_id", userId)
-      .eq("bundle_id", note.bundle_id)
-      .eq("status", "active")
-      .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
-      .maybeSingle();
+    let hasAccess = false;
 
-    if (permErr || !permission) {
+    if (note.bundle_id) {
+      const { data: permission } = await admin
+        .from("access_permissions")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("bundle_id", note.bundle_id)
+        .eq("status", "active")
+        .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+        .maybeSingle();
+
+      if (permission) {
+        hasAccess = true;
+      }
+    }
+
+    // Check direct document-level access grant if not already granted via bundle
+    if (!hasAccess) {
+      const { data: directDocAccess } = await admin
+        .from("student_document_access")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("note_id", note.id)
+        .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+        .maybeSingle();
+
+      if (directDocAccess) {
+        hasAccess = true;
+      }
+    }
+
+    if (!hasAccess) {
+      // Audit log access denial
+      try {
+        await admin.from("activity_logs").insert({
+          actor_id: userId,
+          action: "DOCUMENT_ACCESS_DENIED",
+          target_type: "note",
+          target_id: note.id,
+          metadata: {
+            note_title: note.title,
+            bundle_id: note.bundle_id,
+            reason: "no_active_access_permission",
+          },
+        });
+      } catch (logErr) {
+        console.warn("Access denied audit log error:", logErr);
+      }
+
       return respond(
         {
           success: false,
-          error: "You do not have active access to this note's bundle. Please verify your purchase.",
+          error: "You do not have active access to this note. Please verify your course bundle access.",
         },
         403,
         corsHeaders
       );
     }
 
-    // 5. Generate signed URL (600 seconds = 10 mins)
-    // Support configured bucket, with graceful fallback between "Bca_notes" and "bca-notes"
-    const primaryBucket = note.storage_bucket || "Bca_notes";
+    // 5. Generate short-lived signed URL (180 seconds = 3 minutes)
+    // Short expiration ensures links cannot be effectively shared while giving ample time to stream
+    const SIGNED_URL_TTL = 180;
+    const primaryBucket = note.storage_bucket || "bca-notes";
     let signedUrl = "";
 
     const { data: signedData, error: signedErr } = await admin.storage
       .from(primaryBucket)
-      .createSignedUrl(note.storage_path, 600);
+      .createSignedUrl(note.storage_path, SIGNED_URL_TTL);
 
     if (!signedErr && signedData?.signedUrl) {
       signedUrl = signedData.signedUrl;
     } else {
       // Try alternate bucket casing if first attempt failed
-      const altBucket = primaryBucket === "Bca_notes" ? "bca-notes" : "Bca_notes";
+      const altBucket = primaryBucket === "bca-notes" ? "Bca_notes" : "bca-notes";
       const { data: altData, error: altErr } = await admin.storage
         .from(altBucket)
-        .createSignedUrl(note.storage_path, 600);
+        .createSignedUrl(note.storage_path, SIGNED_URL_TTL);
 
       if (!altErr && altData?.signedUrl) {
         signedUrl = altData.signedUrl;
@@ -221,7 +267,7 @@ Deno.serve(async (request: Request) => {
         return respond(
           {
             success: false,
-            error: "Unable to generate secure link for this note at this time.",
+            error: "Unable to generate secure link for this document at this time.",
           },
           500,
           corsHeaders
@@ -229,30 +275,44 @@ Deno.serve(async (request: Request) => {
       }
     }
 
-    // 6. Log note view activity
+    // 6. Audit log authorized document access
     try {
       await admin.from("activity_logs").insert({
         actor_id: userId,
-        action: "note_opened",
+        action: "DOCUMENT_ACCESS_GRANTED",
         target_type: "note",
         target_id: note.id,
         metadata: {
           note_title: note.title,
           bundle_id: note.bundle_id,
-          bundle_title: bundle.title,
+          bundle_title: bundleTitle,
+          ttl_seconds: SIGNED_URL_TTL,
         },
       });
     } catch (logErr) {
       console.warn("Activity log insert failed:", logErr);
     }
 
+    const studentName = profile.full_name || identity.user.user_metadata?.full_name || "Student";
+    const studentEmail = profile.email || identity.user.email || "";
+
     return respond(
       {
         success: true,
         signedUrl,
+        expiresIn: SIGNED_URL_TTL,
         note: {
           id: note.id,
           title: note.title,
+          subject: note.subject ?? null,
+          semester: note.semester ?? null,
+          is_protected: note.is_protected ?? true,
+        },
+        watermark: {
+          studentName,
+          studentEmail,
+          studentId: userId,
+          sessionTimestamp: nowIso,
         },
       },
       200,

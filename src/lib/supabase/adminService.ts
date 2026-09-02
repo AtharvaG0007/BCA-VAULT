@@ -252,7 +252,17 @@ export const adminApi = {
     if (!response.ok || !json.success || !json.signedUrl) {
       throw new Error(json.error || "Failed to generate secure note access link.");
     }
-    return { signedUrl: json.signedUrl as string, note: json.note };
+    return {
+      signedUrl: json.signedUrl as string,
+      expiresIn: (json.expiresIn as number) || 180,
+      note: json.note,
+      watermark: json.watermark as {
+        studentName?: string;
+        studentEmail?: string;
+        studentId?: string;
+        sessionTimestamp?: string;
+      } | undefined,
+    };
   },
 
   reviewPayment: (id: string, status: "approved" | "rejected", note = "") =>
