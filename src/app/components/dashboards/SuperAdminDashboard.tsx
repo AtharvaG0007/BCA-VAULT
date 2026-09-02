@@ -294,6 +294,7 @@ export function SuperAdminDashboard() {
         const subject = String(f.get("subject") || "").trim();
         const bundleId = String(f.get("bundle_id") || "").trim();
         const published = f.get("published") === "on" || f.get("published") === "true";
+        const isProtected = f.get("is_protected") === "on" || f.get("is_protected") === "true";
 
         if (!title || !description || !bundleId) {
           throw new Error("Title, description, and bundle are required.");
@@ -325,6 +326,7 @@ export function SuperAdminDashboard() {
             storage_bucket: uploadAuth.bucket,
             storage_path: uploadAuth.path,
             published,
+            is_protected: isProtected,
           });
         } catch (dbErr: any) {
           console.error("[Database Insert Error]:", dbErr);
@@ -889,6 +891,7 @@ export function SuperAdminDashboard() {
                             <th className="pb-3">Semester</th>
                             <th className="pb-3">Storage Location</th>
                             <th className="pb-3">Linked Bundle</th>
+                            <th className="pb-3">Security</th>
                             <th className="pb-3">Status</th>
                             <th className="pb-3 text-right">Actions</th>
                           </tr>
@@ -905,6 +908,17 @@ export function SuperAdminDashboard() {
                                 <span>{n.storage_path}</span>
                               </td>
                               <td className="py-3 text-indigo-400">{n.bundles?.title || "—"}</td>
+                              <td className="py-3">
+                                {n.is_protected !== false ? (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-indigo-500/15 border border-indigo-500/30 px-2 py-0.5 text-[10px] font-bold text-indigo-300">
+                                    <ShieldCheck className="h-3 w-3 text-indigo-400" /> Protected
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-800 border border-slate-700 px-2 py-0.5 text-[10px] font-medium text-slate-400">
+                                    Standard
+                                  </span>
+                                )}
+                              </td>
                               <td className="py-3">
                                 <StatusBadge status={n.published ? "published" : "draft"} />
                               </td>
@@ -1522,15 +1536,26 @@ export function SuperAdminDashboard() {
                           className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 p-3 text-white outline-none file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white"
                         />
                       </label>
-                      <label className="flex items-center gap-2 pt-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          name="published"
-                          defaultChecked
-                          className="h-4 w-4 rounded accent-indigo-600"
-                        />
-                        <span className="text-slate-300 font-bold">Publish note immediately</span>
-                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            name="published"
+                            defaultChecked
+                            className="h-4 w-4 rounded accent-indigo-600"
+                          />
+                          <span className="text-slate-300 font-bold">Publish note immediately</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            name="is_protected"
+                            defaultChecked
+                            className="h-4 w-4 rounded accent-indigo-600"
+                          />
+                          <span className="text-slate-300 font-bold">Protected PDF (Watermarked)</span>
+                        </label>
+                      </div>
                     </>
                   )}
 

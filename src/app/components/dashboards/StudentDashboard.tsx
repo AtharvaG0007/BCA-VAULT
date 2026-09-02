@@ -26,7 +26,7 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import { supabase } from "@/lib/supabase/client";
 import { adminApi } from "@/lib/supabase/adminService";
-import { SecurePDFViewer } from "../viewer/SecurePDFViewer";
+import { ProtectedPdfViewer } from "../viewer/ProtectedPdfViewer";
 import { StudentLearningView } from "../student/StudentLearningView";
 import { StudentProfileView } from "../student/StudentProfileView";
 
@@ -71,6 +71,13 @@ export function StudentDashboard() {
     title: string;
     subject?: string;
     semester?: number;
+    expiresIn?: number;
+    watermarkData?: {
+      studentName?: string;
+      studentEmail?: string;
+      studentId?: string;
+      sessionTimestamp?: string;
+    };
   } | null>(null);
   const [message, setMessage] = useState<{ text: string; type: "error" | "info" } | null>(null);
 
@@ -130,33 +137,21 @@ export function StudentDashboard() {
     setOpeningId(note.id);
     setMessage(null);
 
-    let pdfWindow: Window | null = null;
-    try {
-      pdfWindow = window.open("about:blank", "_blank");
-    } catch {
-      // ignore popup blocker catch
-    }
-
     try {
       const res = await adminApi.getStudentSignedNoteUrl(note.id);
       if (res?.signedUrl) {
-        if (pdfWindow && !pdfWindow.closed) {
-          pdfWindow.location.href = res.signedUrl;
-        } else {
-          setActiveViewer({
-            url: res.signedUrl,
-            title: note.title,
-            subject: note.subject ?? undefined,
-            semester: note.semester ?? undefined,
-          });
-        }
+        setActiveViewer({
+          url: res.signedUrl,
+          title: note.title,
+          subject: note.subject ?? undefined,
+          semester: note.semester ?? undefined,
+          expiresIn: res.expiresIn || 180,
+          watermarkData: res.watermark,
+        });
         return;
       }
       throw new Error("Signed URL not returned");
     } catch (err: any) {
-      if (pdfWindow && !pdfWindow.closed) {
-        pdfWindow.close();
-      }
       console.error("Open note error:", err);
       setMessage({
         text: err.message || "This note is currently unavailable. Please verify your course access.",
@@ -524,14 +519,23 @@ export function StudentDashboard() {
         )}
       </main>
 
-      {/* Secure PDF Modal Viewer */}
+      {/* Protected PDF Modal Viewer */}
       {activeViewer && (
-        <SecurePDFViewer
+        <ProtectedPdfViewer
           url={activeViewer.url}
           title={activeViewer.title}
           subject={activeViewer.subject}
           semester={activeViewer.semester}
+          expiresIn={activeViewer.expiresIn}
+          watermarkData={activeViewer.watermarkData}
           onClose={() => setActiveViewer(null)}
+          onSessionExpired={() => {
+            setActiveViewer(null);
+            setMessage({
+              text: "Viewing session expired. Click 'Open & Read Securely' to refresh access.",
+              type: "info",
+            });
+          }}
         />
       )}
     </div>
