@@ -1,8 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 // Service role client (server‑side only)
-const supabaseUrl = process.env.SUPABASE_URL || 'https://dmxegktlxqsxaysqwswa.supabase.co';
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
+const supabaseUrl = Deno.env.get("SUPABASE_URL") || 'https://dmxegktlxqsxaysqwswa.supabase.co';
+const serviceKey = (Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || '') as string;
 if (!serviceKey) {
   throw new Error('SUPABASE_SERVICE_ROLE_KEY not set');
 }
@@ -21,7 +22,7 @@ export const handler = async (event: any) => {
     if (!token) {
       return { statusCode: 401, body: JSON.stringify({ error: 'Missing auth token' }) };
     }
-    const { data: caller, error: callerErr } = await supabaseAdmin.auth.getUser(token);
+    const { data: { user: caller } = { user: null }, error: callerErr } = await supabaseAdmin.auth.getUser(token);
     if (callerErr || !caller) {
       return { statusCode: 401, body: JSON.stringify({ error: 'Invalid auth token' }) };
     }

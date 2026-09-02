@@ -438,7 +438,7 @@ Deno.serve(async (request: Request) => {
     }
 
     // ── Parse request body ─────────────────────────────────────
-    const body = await request.json().catch(() => ({}));
+    const body = (await request.json().catch(() => ({}))) as Record<string, any>;
     const userMessage = String(body.message || "").trim();
     const history = Array.isArray(body.history) ? body.history : [];
 
@@ -539,7 +539,7 @@ Deno.serve(async (request: Request) => {
       );
     }
 
-    const geminiData = await geminiRes.json();
+    const geminiData = (await geminiRes.json()) as any;
     const replyText =
       geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ||
       generateEducationalFallback(userMessage, studentProfile.name, studentProfile.semester);
