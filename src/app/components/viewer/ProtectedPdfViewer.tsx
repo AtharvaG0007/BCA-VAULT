@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import * as pdfjsLib from "pdfjs-dist";
-import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+import pdfjsWorker from "pdfjs-dist/legacy/build/pdf.worker.min.mjs?url";
 import {
   X,
   Shield,
-  ShieldAlert,
+  ShieldCheck,
   Maximize2,
   Minimize2,
   Lock,
@@ -16,12 +16,12 @@ import {
   Maximize,
   RefreshCw,
   AlertTriangle,
-  Clock,
   EyeOff,
+  FileText,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 
-// Configure PDF.js worker URL for Vite bundler
+// Configure PDF.js worker URL with Mozilla's legacy build (includes core-js polyfills for mobile)
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 export interface ProtectedPdfViewerProps {
@@ -29,7 +29,7 @@ export interface ProtectedPdfViewerProps {
   title: string;
   subject?: string;
   semester?: number;
-  expiresIn?: number; // duration in seconds
+  expiresIn?: number; // retained for backwards compatibility
   watermarkData?: {
     studentName?: string;
     studentEmail?: string;
@@ -45,7 +45,6 @@ export function ProtectedPdfViewer({
   title,
   subject,
   semester,
-  expiresIn = 180,
   watermarkData,
   onClose,
   onSessionExpired,
@@ -56,9 +55,15 @@ export function ProtectedPdfViewer({
   const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(0);
-  const [scale, setScale] = useState<number>(1.2);
-  const [fitMode, setFitMode] = useState<"custom" | "fit-width">("fit-width");
+  const [scale, setScale] = useState<number>(1.0);
+  const [fitMode, setFitMode] = useState<"fit-width" | "fit-page" | "custom">("fit-width");
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
+  // Rendered dimensions for canvas wrapper
+  const [renderedDims, setRenderedDims] = useState<{ width: number; height: number }>({
+    width: 0,
+    height: 0,
+  });
 
   // Status & deterrence state
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -66,7 +71,6 @@ export function ProtectedPdfViewer({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isUnauthorized, setIsUnauthorized] = useState<boolean>(false);
   const [isExpired, setIsExpired] = useState<boolean>(false);
-  const [secondsRemaining, setSecondsRemaining] = useState<number>(expiresIn);
   const [isWindowBlurred, setIsWindowBlurred] = useState<boolean>(false);
   const [jumpPageInput, setJumpPageInput] = useState<string>("1");
 
@@ -75,55 +79,23 @@ export function ProtectedPdfViewer({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const renderTaskRef = useRef<any>(null);
 
-  // Identity attributes for dynamic watermark
+  // Student identity for subtle forensic watermark overlay
   const studentName =
     watermarkData?.studentName ||
     appUser?.name ||
     user?.user_metadata?.full_name ||
     "Student";
-  const studentEmail =
-    watermarkData?.studentEmail ||
-    appUser?.email ||
-    user?.email ||
-    "student@bcavault.in";
   const studentId =
     watermarkData?.studentId ||
     appUser?.uid ||
     user?.id ||
-    "STUDENT-ID";
-  const sessionTimestamp =
-    watermarkData?.sessionTimestamp || new Date().toISOString();
-  const formattedDate = new Date(sessionTimestamp).toLocaleString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+    "";
+  const maskedId = studentId ? studentId.slice(0, 8).toUpperCase() : "STUDENT";
 
-  const watermarkString = `BCA VAULT • ${studentName} • ${studentEmail} • ID:${studentId.slice(
-    0,
-    8
-  )} • ${formattedDate} • CONFIDENTIAL`;
+  // Subtle watermark text: forensic deterrent without cluttering document text
+  const watermarkText = `BCA VAULT • LICENSED STUDENT • ${studentName} • ID:${maskedId}`;
 
-  // ── Session Countdown Timer ──────────────────────────────────────────────
-  useEffect(() => {
-    if (isExpired || !expiresIn) return;
-    const interval = setInterval(() => {
-      setSecondsRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setIsExpired(true);
-          if (onSessionExpired) onSessionExpired();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [expiresIn, isExpired, onSessionExpired]);
-
-  // ── Window Blur & Focus Shielding ────────────────────────────────────────
+  // ── Window Blur Privacy Shield ───────────────────────────────────────────
   useEffect(() => {
     const handleBlur = () => setIsWindowBlurred(true);
     const handleFocus = () => setIsWindowBlurred(false);
@@ -142,10 +114,10 @@ export function ProtectedPdfViewer({
     };
   }, []);
 
-  // ── Keyboard & Context Menu Deterrence ────────────────────────────────────
+  // ── Keyboard Navigation & Deterrence Shortcuts ───────────────────────────
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Close on Escape
+      // Escape to exit fullscreen or close viewer
       if (e.key === "Escape") {
         if (isFullscreen) {
           setIsFullscreen(false);
@@ -155,7 +127,7 @@ export function ProtectedPdfViewer({
         return;
       }
 
-      // Page navigation with Arrow keys
+      // Arrow page navigation
       if (e.key === "ArrowRight" || e.key === "PageDown") {
         e.preventDefault();
         setCurrentPage((p) => Math.min(totalPages || 1, p + 1));
@@ -167,7 +139,7 @@ export function ProtectedPdfViewer({
         return;
       }
 
-      // Intercept common print, save, copy, select-all, view-source shortcuts
+      // Intercept browser print, save, copy shortcuts
       const isCmdOrCtrl = e.ctrlKey || e.metaKey;
       if (isCmdOrCtrl) {
         const key = e.key.toLowerCase();
@@ -183,7 +155,7 @@ export function ProtectedPdfViewer({
       window.removeEventListener("keydown", handleKeyDown, { capture: true });
   }, [onClose, totalPages, isFullscreen]);
 
-  // ── Load PDF Document via PDF.js ────────────────────────────────────────
+  // ── Load PDF Document via PDF.js ─────────────────────────────────────────
   const loadDocument = useCallback(async () => {
     if (!url) {
       setErrorMsg("No document link provided.");
@@ -194,6 +166,7 @@ export function ProtectedPdfViewer({
     setIsLoading(true);
     setErrorMsg(null);
     setIsUnauthorized(false);
+    setIsExpired(false);
 
     try {
       const loadingTask = pdfjsLib.getDocument({
@@ -227,14 +200,15 @@ export function ProtectedPdfViewer({
         setIsUnauthorized(true);
       } else if (err.message?.includes("expired") || err.status === 401) {
         setIsExpired(true);
+        if (onSessionExpired) onSessionExpired();
       } else {
         setErrorMsg(
           err.message ||
-            "Unable to render protected PDF document. Please check your network connection."
+            "Unable to render protected document. Please check your network connection."
         );
       }
     }
-  }, [url]);
+  }, [url, onSessionExpired]);
 
   useEffect(() => {
     void loadDocument();
@@ -245,7 +219,7 @@ export function ProtectedPdfViewer({
     };
   }, [loadDocument]);
 
-  // ── Render Current Page & Burn Watermark to Canvas ────────────────────────
+  // ── Render Current Page & Calculate Optimal Dimensions ───────────────────
   const renderCurrentPage = useCallback(async () => {
     if (!pdfDoc || !canvasRef.current || isExpired) return;
 
@@ -253,7 +227,7 @@ export function ProtectedPdfViewer({
       try {
         renderTaskRef.current.cancel();
       } catch {
-        // Cancel previous task cleanly
+        // clean cancellation of previous render task
       }
     }
 
@@ -264,32 +238,55 @@ export function ProtectedPdfViewer({
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      // Calculate viewport and scale
-      let activeScale = scale;
       const unscaledViewport = page.getViewport({ scale: 1.0 });
+      let activeScale = scale;
 
-      if (fitMode === "fit-width" && containerRef.current) {
-        const containerWidth = containerRef.current.clientWidth - 48; // padding
-        if (containerWidth > 200) {
-          activeScale = containerWidth / unscaledViewport.width;
-          // Constrain max scale for readability
-          activeScale = Math.min(Math.max(activeScale, 0.6), 2.2);
+      // Compute responsive scale if fitMode is active
+      if (containerRef.current && fitMode !== "custom") {
+        const isMobile = window.innerWidth < 640;
+        const horizontalPadding = isMobile ? 12 : 32;
+        const verticalPadding = isMobile ? 12 : 32;
+
+        const availableWidth = Math.max(
+          containerRef.current.clientWidth - horizontalPadding,
+          100
+        );
+        const availableHeight = Math.max(
+          containerRef.current.clientHeight - verticalPadding,
+          100
+        );
+
+        if (fitMode === "fit-width") {
+          activeScale = availableWidth / unscaledViewport.width;
+          // Mobile safe scaling: allow scale down to 0.25 for small phones without clipping
+          activeScale = Math.min(Math.max(activeScale, 0.25), 3.0);
+        } else if (fitMode === "fit-page") {
+          const scaleW = availableWidth / unscaledViewport.width;
+          const scaleH = availableHeight / unscaledViewport.height;
+          activeScale = Math.min(Math.min(scaleW, scaleH), 3.0);
+          activeScale = Math.max(activeScale, 0.25);
         }
       }
 
       const viewport = page.getViewport({ scale: activeScale });
       const pixelRatio = window.devicePixelRatio || 1;
 
-      // Match canvas internal resolution with screen DPI
+      // Match canvas internal resolution with screen DPI for crisp high-DPI rendering
       canvas.width = Math.floor(viewport.width * pixelRatio);
       canvas.height = Math.floor(viewport.height * pixelRatio);
       canvas.style.width = `${Math.floor(viewport.width)}px`;
       canvas.style.height = `${Math.floor(viewport.height)}px`;
 
+      // Update state for wrapper & watermark positioning
+      setRenderedDims({
+        width: Math.floor(viewport.width),
+        height: Math.floor(viewport.height),
+      });
+
       ctx.save();
       ctx.scale(pixelRatio, pixelRatio);
 
-      // 1. Render actual PDF contents to canvas
+      // Render actual PDF contents cleanly without heavy bitmap overlay
       const renderTask = page.render({
         canvasContext: ctx,
         viewport,
@@ -297,66 +294,33 @@ export function ProtectedPdfViewer({
       });
       renderTaskRef.current = renderTask;
       await renderTask.promise;
-
-      // 2. Burn Dynamic Watermark Directly into Canvas Bitmap Pixels
-      // This ensures even if DOM/CSS is tampered with, watermark is baked into the rasterized pixels!
-      ctx.globalAlpha = 0.12; // subtle, readable, impossible to crop out
-      ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-      ctx.fillStyle = "#1e293b"; // dark slate
-      ctx.textBaseline = "middle";
-      ctx.textAlign = "center";
-
-      const angle = -24 * (Math.PI / 180);
-      const stepX = 280;
-      const stepY = 160;
-
-      for (let y = 60; y < viewport.height + 200; y += stepY) {
-        for (let x = -80; x < viewport.width + 200; x += stepX) {
-          ctx.save();
-          ctx.translate(x, y);
-          ctx.rotate(angle);
-          ctx.fillText("BCA VAULT • LICENSED STUDENT COPY", 0, -10);
-          ctx.fillText(`${studentName} • ${studentEmail}`, 0, 8);
-          ctx.fillText(
-            `UID: ${studentId.slice(0, 12)} • ${formattedDate}`,
-            0,
-            24
-          );
-          ctx.restore();
-        }
-      }
-
       ctx.restore();
     } catch (err: any) {
       if (err?.name !== "RenderingCancelledException") {
         console.error("[ProtectedPdfViewer] Render Page Error:", err);
       }
     }
-  }, [
-    pdfDoc,
-    currentPage,
-    scale,
-    fitMode,
-    isExpired,
-    studentName,
-    studentEmail,
-    studentId,
-    formattedDate,
-  ]);
+  }, [pdfDoc, currentPage, scale, fitMode, isExpired]);
 
   useEffect(() => {
     void renderCurrentPage();
   }, [renderCurrentPage]);
 
-  // Handle window resizing for fit-to-width
+  // Handle window resizing cleanly
   useEffect(() => {
-    if (fitMode !== "fit-width") return;
+    let resizeTimer: any = null;
     const handleResize = () => {
-      void renderCurrentPage();
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        void renderCurrentPage();
+      }, 100);
     };
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [fitMode, renderCurrentPage]);
+    return () => {
+      clearTimeout(resizeTimer);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [renderCurrentPage]);
 
   // ── Navigation Controls ──────────────────────────────────────────────────
   const goToNextPage = () => {
@@ -387,32 +351,30 @@ export function ProtectedPdfViewer({
 
   const handleZoomIn = () => {
     setFitMode("custom");
-    setScale((s) => Math.min(s + 0.2, 2.5));
+    setScale((s) => Math.min(s + 0.2, 3.0));
   };
 
   const handleZoomOut = () => {
     setFitMode("custom");
-    setScale((s) => Math.max(s - 0.2, 0.6));
+    setScale((s) => Math.max(s - 0.2, 0.4));
   };
 
   const handleResetZoom = () => {
     setFitMode("custom");
-    setScale(1.2);
+    setScale(1.0);
   };
 
-  const handleFitWidth = () => {
-    setFitMode("fit-width");
-  };
-
-  const formatTimer = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m}:${s < 10 ? "0" : ""}${s}`;
+  const handleFitToggle = () => {
+    if (fitMode === "fit-width") {
+      setFitMode("fit-page");
+    } else {
+      setFitMode("fit-width");
+    }
   };
 
   return (
     <>
-      {/* Strict Print Suppression: hides everything if browser print is initiated */}
+      {/* Strict Print Suppression: Hides document if browser print is initiated */}
       <style>{`
         @media print {
           body * {
@@ -420,67 +382,62 @@ export function ProtectedPdfViewer({
             visibility: hidden !important;
           }
           body::before {
-            content: "Printing and document saving are prohibited on BCA Vault protected documents.";
+            content: "Printing and downloading are prohibited on BCA Vault protected documents.";
             display: block !important;
             visibility: visible !important;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             text-align: center;
-            padding: 50px;
+            padding: 40px;
             color: #dc2626;
           }
         }
       `}</style>
 
+      {/* Main Container: Full viewport on mobile, centered modal card on desktop */}
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-2 sm:p-4 select-none"
+        className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md select-none ${
+          isFullscreen ? "p-0" : "p-0 sm:p-4"
+        }`}
         onContextMenu={(e) => e.preventDefault()}
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
+          initial={{ opacity: 0, scale: 0.99 }}
           animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.98 }}
-          transition={{ duration: 0.2 }}
-          className={`relative flex flex-col rounded-2xl sm:rounded-3xl border border-slate-800 bg-slate-950 shadow-2xl overflow-hidden transition-all ${
+          exit={{ opacity: 0, scale: 0.99 }}
+          transition={{ duration: 0.15 }}
+          className={`relative flex flex-col bg-slate-950 text-white overflow-hidden shadow-2xl transition-all ${
             isFullscreen
-              ? "h-[99vh] w-[99vw] max-w-none rounded-none sm:rounded-none"
-              : "h-[92vh] w-full max-w-5xl"
+              ? "h-[100dvh] w-[100vw] rounded-none border-0"
+              : "h-[100dvh] sm:h-[95vh] w-full sm:max-w-6xl sm:rounded-2xl border-0 sm:border sm:border-slate-800/80"
           }`}
         >
-          {/* ── Top Bar ─────────────────────────────────────────────────── */}
-          <header className="flex items-center justify-between border-b border-slate-800/80 bg-slate-900/90 px-4 py-3 text-white shrink-0 z-30">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
-                <Shield className="h-4.5 w-4.5" />
+          {/* ── Compact Header (Timer completely removed) ───────────────────── */}
+          <header className="flex items-center justify-between border-b border-slate-800/80 bg-slate-900/95 px-3 py-2 sm:px-4 sm:py-2.5 text-white shrink-0 z-30">
+            <div className="flex items-center gap-2.5 min-w-0 mr-2">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
+                <FileText className="h-4 w-4" />
               </div>
               <div className="min-w-0">
-                <h2 className="truncate text-xs sm:text-sm font-bold text-slate-100">
+                <h2 className="truncate text-xs sm:text-sm font-semibold text-slate-100 leading-snug">
                   {title}
                 </h2>
-                <p className="truncate text-[10px] sm:text-[11px] text-slate-400">
-                  {subject || "BCA Course Notes"}
-                  {semester ? ` • Semester ${semester}` : ""}
-                </p>
+                <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-400 truncate">
+                  <span>{subject || "BCA Vault Notes"}</span>
+                  {semester ? (
+                    <>
+                      <span className="text-slate-600">•</span>
+                      <span>Sem {semester}</span>
+                    </>
+                  ) : null}
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* Session timer badge */}
-              <div
-                className={`hidden sm:flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-mono font-medium border ${
-                  secondsRemaining < 60
-                    ? "bg-rose-950/40 text-rose-300 border-rose-800/50 animate-pulse"
-                    : "bg-slate-800/80 text-slate-300 border-slate-700/50"
-                }`}
-                title="Active access token validity"
-              >
-                <Clock className="h-3 w-3 text-indigo-400" />
-                <span>{formatTimer(secondsRemaining)}</span>
-              </div>
-
+            <div className="flex items-center gap-1.5 shrink-0">
               {/* Protected badge */}
-              <div className="hidden md:flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 text-[11px] font-semibold text-emerald-400">
-                <Lock className="h-3 w-3" />
+              <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] sm:text-[11px] font-medium text-emerald-400">
+                <Lock className="h-2.5 w-2.5" />
                 <span>Protected</span>
               </div>
 
@@ -488,14 +445,14 @@ export function ProtectedPdfViewer({
               <button
                 type="button"
                 onClick={() => setIsFullscreen(!isFullscreen)}
-                className="grid h-8 w-8 place-items-center rounded-lg bg-slate-800/80 text-slate-300 hover:bg-slate-700 hover:text-white transition"
-                title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                className="grid h-8 w-8 place-items-center rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                title={isFullscreen ? "Exit Fullscreen (Esc)" : "Fullscreen"}
                 aria-label="Toggle Fullscreen"
               >
                 {isFullscreen ? (
-                  <Minimize2 className="h-4 w-4" />
+                  <Minimize2 className="h-3.5 w-3.5" />
                 ) : (
-                  <Maximize2 className="h-4 w-4" />
+                  <Maximize2 className="h-3.5 w-3.5" />
                 )}
               </button>
 
@@ -504,7 +461,7 @@ export function ProtectedPdfViewer({
                 type="button"
                 onClick={onClose}
                 className="grid h-8 w-8 place-items-center rounded-lg bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 hover:text-white transition"
-                title="Close Viewer"
+                title="Close Viewer (Esc)"
                 aria-label="Close"
               >
                 <X className="h-4 w-4" />
@@ -512,25 +469,28 @@ export function ProtectedPdfViewer({
             </div>
           </header>
 
-          {/* ── Document Viewport ───────────────────────────────────────── */}
+          {/* ── Document Viewport (Flex: 1, Maximize Reading Space) ─────────── */}
           <div
             ref={containerRef}
-            className="relative flex-1 bg-slate-900/60 overflow-y-auto overflow-x-hidden flex items-start justify-center p-3 sm:p-6"
-            style={{ overscrollBehavior: "contain" }}
+            className="relative flex-1 bg-slate-950/70 overflow-auto flex items-start justify-center p-2 sm:p-4"
+            style={{
+              overscrollBehavior: "contain",
+              WebkitOverflowScrolling: "touch",
+            }}
           >
             {/* Loading State */}
             {isLoading && (
-              <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center p-6 space-y-4">
+              <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center p-6 space-y-4 m-auto">
                 <div className="relative">
-                  <div className="h-12 w-12 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin" />
-                  <Shield className="absolute inset-0 m-auto h-5 w-5 text-indigo-400" />
+                  <div className="h-10 w-10 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin" />
+                  <Shield className="absolute inset-0 m-auto h-4 w-4 text-indigo-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-200">
+                  <p className="text-xs sm:text-sm font-semibold text-slate-200">
                     Preparing Protected Document
                   </p>
-                  <p className="mt-1 text-xs text-slate-400">
-                    Decrypting and verifying authorization…{" "}
+                  <p className="mt-1 text-[11px] text-slate-400">
+                    Verifying authorization…{" "}
                     {loadingProgress > 0 ? `${loadingProgress}%` : ""}
                   </p>
                 </div>
@@ -539,20 +499,20 @@ export function ProtectedPdfViewer({
 
             {/* Error State */}
             {!isLoading && errorMsg && (
-              <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center p-6 max-w-md">
+              <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center p-6 max-w-md m-auto">
                 <div className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-500/15 text-rose-400 border border-rose-500/20 mb-3">
                   <AlertTriangle className="h-6 w-6" />
                 </div>
-                <h3 className="text-base font-bold text-white">
+                <h3 className="text-sm sm:text-base font-bold text-white">
                   Document Unavailable
                 </h3>
-                <p className="mt-1.5 text-xs leading-5 text-slate-400">
+                <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">
                   {errorMsg}
                 </p>
                 <button
                   type="button"
                   onClick={() => void loadDocument()}
-                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-500 transition"
+                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-500 transition"
                 >
                   <RefreshCw className="h-3.5 w-3.5" /> Try Again
                 </button>
@@ -561,21 +521,21 @@ export function ProtectedPdfViewer({
 
             {/* Unauthorized State */}
             {!isLoading && isUnauthorized && (
-              <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center p-6 max-w-md">
+              <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center p-6 max-w-md m-auto">
                 <div className="grid h-12 w-12 place-items-center rounded-2xl bg-amber-500/15 text-amber-400 border border-amber-500/20 mb-3">
                   <Lock className="h-6 w-6" />
                 </div>
-                <h3 className="text-base font-bold text-white">
-                  Course Access Required
+                <h3 className="text-sm sm:text-base font-bold text-white">
+                  Access Permission Required
                 </h3>
-                <p className="mt-1.5 text-xs leading-5 text-slate-400">
-                  You do not have active permission to view this study material.
-                  Please ensure your course bundle enrollment is verified.
+                <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">
+                  You do not have active permission to view this note. Please
+                  ensure your course bundle enrollment is verified.
                 </p>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-800 px-5 py-2 text-xs font-bold text-slate-200 hover:bg-slate-700 transition"
+                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-slate-800 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-slate-700 transition"
                 >
                   Return to Dashboard
                 </button>
@@ -584,21 +544,21 @@ export function ProtectedPdfViewer({
 
             {/* Expired Session State */}
             {!isLoading && isExpired && (
-              <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center p-6 max-w-md">
+              <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center p-6 max-w-md m-auto">
                 <div className="grid h-12 w-12 place-items-center rounded-2xl bg-amber-500/15 text-amber-400 border border-amber-500/20 mb-3">
-                  <Clock className="h-6 w-6" />
+                  <ShieldCheck className="h-6 w-6" />
                 </div>
-                <h3 className="text-base font-bold text-white">
-                  Reading Session Expired
+                <h3 className="text-sm sm:text-base font-bold text-white">
+                  Session Refreshed
                 </h3>
-                <p className="mt-1.5 text-xs leading-5 text-slate-400">
-                  For your account security, temporary viewing access has
-                  expired. Please re-open the document to continue reading.
+                <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">
+                  For your account security, temporary access has expired.
+                  Please re-open the document to continue reading.
                 </p>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2 text-xs font-bold text-white hover:bg-indigo-500 transition"
+                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-500 transition"
                 >
                   <RefreshCw className="h-3.5 w-3.5" /> Re-open Document
                 </button>
@@ -607,30 +567,39 @@ export function ProtectedPdfViewer({
 
             {/* Active Document Rendering Container */}
             {!isLoading && !errorMsg && !isUnauthorized && !isExpired && (
-              <div className="relative shadow-2xl rounded-lg overflow-hidden bg-white">
-                {/* ── Dynamic DOM Watermark Overlay (Layer 2) ────────────────── */}
+              <div
+                className="relative mx-auto rounded-lg shadow-2xl overflow-hidden bg-white shrink-0 my-auto"
+                style={{
+                  width: renderedDims.width ? `${renderedDims.width}px` : "auto",
+                  height: renderedDims.height ? `${renderedDims.height}px` : "auto",
+                  maxWidth: "100%",
+                }}
+              >
+                {/* ── Subtle Sparse Watermark Overlay (Viewer Layer only) ───── */}
                 <div
-                  className="pointer-events-none absolute inset-0 z-10 overflow-hidden flex flex-col justify-around opacity-[0.07] select-none"
+                  className="pointer-events-none absolute inset-0 z-10 overflow-hidden flex flex-col justify-around select-none py-8 sm:py-16"
                   aria-hidden="true"
                 >
-                  {[...Array(8)].map((_, i) => (
+                  {/* 2 to 3 sparse diagonal watermark bands across the page */}
+                  {[0, 1, 2].map((idx) => (
                     <div
-                      key={i}
-                      className="whitespace-nowrap text-center text-xs sm:text-sm font-black tracking-widest text-slate-900 -rotate-12 transform"
+                      key={idx}
+                      className="whitespace-nowrap text-center -rotate-12 transform"
                     >
-                      {watermarkString} &nbsp;&nbsp; • &nbsp;&nbsp;{" "}
-                      {watermarkString}
+                      <span className="text-[10px] sm:text-xs font-semibold tracking-wider text-slate-900/[0.08] select-none uppercase">
+                        {watermarkText}
+                      </span>
                     </div>
                   ))}
                 </div>
 
-                {/* ── HTML5 Canvas Rendering (Layer 1 with burned-in watermark) ── */}
+                {/* ── HTML5 Canvas Rendering ───────────────────────────────── */}
                 <canvas
                   ref={canvasRef}
-                  className="block mx-auto max-w-full h-auto"
+                  className="block mx-auto"
                 />
 
-                {/* ── Window Blur Privacy Shield ─────────────────────────────── */}
+                {/* ── Window Blur Privacy Shield Overlay ─────────────────────── */}
                 <AnimatePresence>
                   {isWindowBlurred && (
                     <motion.div
@@ -639,13 +608,13 @@ export function ProtectedPdfViewer({
                       exit={{ opacity: 0 }}
                       className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-md p-6 text-center"
                     >
-                      <EyeOff className="h-10 w-10 text-indigo-400 mb-2" />
-                      <p className="text-sm font-bold text-white">
-                        Document Protected
+                      <EyeOff className="h-9 w-9 text-indigo-400 mb-2" />
+                      <p className="text-xs sm:text-sm font-bold text-white">
+                        Document Shielded
                       </p>
                       <p className="mt-1 text-xs text-slate-400 max-w-xs leading-relaxed">
-                        Content is hidden while window or tab is out of focus.
-                        Click here to resume reading.
+                        Content is hidden while your window is not in focus.
+                        Click anywhere to resume reading.
                       </p>
                     </motion.div>
                   )}
@@ -654,15 +623,15 @@ export function ProtectedPdfViewer({
             )}
           </div>
 
-          {/* ── Bottom Floating Control Toolbar ─────────────────────────── */}
-          <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/80 bg-slate-900/90 px-4 py-2.5 text-xs text-slate-300 shrink-0 z-30">
+          {/* ── Bottom Floating Control Toolbar ─────────────────────────────── */}
+          <footer className="flex items-center justify-between gap-2 border-t border-slate-800/80 bg-slate-900/95 px-3 py-2 sm:px-4 text-xs text-slate-300 shrink-0 z-30">
             {/* Page Navigation */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={goToPrevPage}
                 disabled={currentPage <= 1}
-                className="grid h-7 w-7 place-items-center rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition"
+                className="grid h-8 w-8 place-items-center rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition"
                 title="Previous Page (Left Arrow)"
                 aria-label="Previous Page"
               >
@@ -671,25 +640,27 @@ export function ProtectedPdfViewer({
 
               <form
                 onSubmit={handleJumpPageSubmit}
-                className="flex items-center gap-1 text-[11px] font-medium"
+                className="flex items-center gap-1 text-[11px]"
               >
-                <span>Page</span>
                 <input
                   type="text"
+                  inputMode="numeric"
                   value={jumpPageInput}
                   onChange={(e) => setJumpPageInput(e.target.value)}
                   onBlur={handleJumpPageSubmit}
-                  className="w-10 rounded-md border border-slate-700 bg-slate-800 px-1.5 py-0.5 text-center font-bold text-white outline-none focus:border-indigo-500"
-                  aria-label="Current Page"
+                  className="w-9 h-7 rounded border border-slate-700 bg-slate-800 px-1 text-center font-bold text-white outline-none focus:border-indigo-500 text-xs"
+                  aria-label="Page Number"
                 />
-                <span className="text-slate-400">of {totalPages || 1}</span>
+                <span className="text-slate-400 text-[11px]">
+                  / {totalPages || 1}
+                </span>
               </form>
 
               <button
                 type="button"
                 onClick={goToNextPage}
                 disabled={currentPage >= totalPages}
-                className="grid h-7 w-7 place-items-center rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition"
+                className="grid h-8 w-8 place-items-center rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition"
                 title="Next Page (Right Arrow)"
                 aria-label="Next Page"
               >
@@ -702,8 +673,8 @@ export function ProtectedPdfViewer({
               <button
                 type="button"
                 onClick={handleZoomOut}
-                disabled={scale <= 0.6}
-                className="grid h-7 w-7 place-items-center rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-30 transition"
+                disabled={scale <= 0.4}
+                className="grid h-8 w-8 place-items-center rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-30 transition"
                 title="Zoom Out"
                 aria-label="Zoom Out"
               >
@@ -713,7 +684,7 @@ export function ProtectedPdfViewer({
               <button
                 type="button"
                 onClick={handleResetZoom}
-                className="rounded-lg bg-slate-800 px-2 py-1 text-[10px] font-mono font-bold text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                className="h-8 px-2 rounded-lg bg-slate-800 text-[11px] font-mono font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition"
                 title="Reset Zoom to 100%"
               >
                 {Math.round(scale * 100)}%
@@ -722,8 +693,8 @@ export function ProtectedPdfViewer({
               <button
                 type="button"
                 onClick={handleZoomIn}
-                disabled={scale >= 2.5}
-                className="grid h-7 w-7 place-items-center rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-30 transition"
+                disabled={scale >= 3.0}
+                className="grid h-8 w-8 place-items-center rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-30 transition"
                 title="Zoom In"
                 aria-label="Zoom In"
               >
@@ -732,25 +703,32 @@ export function ProtectedPdfViewer({
 
               <button
                 type="button"
-                onClick={handleFitWidth}
-                className={`grid h-7 w-7 place-items-center rounded-lg transition ${
+                onClick={handleFitToggle}
+                className={`h-8 px-2.5 rounded-lg text-[11px] font-medium transition flex items-center gap-1 ${
                   fitMode === "fit-width"
                     ? "bg-indigo-600 text-white"
                     : "bg-slate-800 text-slate-300 hover:bg-slate-700"
                 }`}
-                title="Fit to Width"
-                aria-label="Fit to Width"
+                title={
+                  fitMode === "fit-width"
+                    ? "Switch to Fit Page"
+                    : "Fit to Width"
+                }
+                aria-label="Toggle Fit Mode"
               >
-                <Maximize className="h-3.5 w-3.5" />
+                <Maximize className="h-3 w-3" />
+                <span className="hidden sm:inline">
+                  {fitMode === "fit-width" ? "Fit Width" : "Fit Page"}
+                </span>
               </button>
             </div>
 
-            {/* Licensed Info Footer */}
-            <div className="hidden lg:flex items-center gap-2 text-[11px] text-slate-400">
-              <ShieldAlert className="h-3.5 w-3.5 text-indigo-400" />
+            {/* Licensed Student Tag (Desktop Only) */}
+            <div className="hidden lg:flex items-center gap-1.5 text-[11px] text-slate-400">
+              <ShieldCheck className="h-3.5 w-3.5 text-indigo-400" />
               <span>Licensed to:</span>
-              <span className="font-semibold text-slate-200">
-                {studentName} ({studentEmail})
+              <span className="font-semibold text-slate-200 truncate max-w-[180px]">
+                {studentName}
               </span>
             </div>
           </footer>

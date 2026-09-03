@@ -160,7 +160,7 @@ async function runSecurityTests() {
       // 1. Query notes visible to the student via RLS
       const { data: studentNotes } = await studentClient
         .from("notes")
-        .select("id, title, storage_bucket, storage_path, published, bundle_id, is_protected");
+        .select("id, title, storage_bucket, storage_path, published, bundle_id");
 
       if (studentNotes && studentNotes.length > 0) {
         testNote = studentNotes[0];
@@ -168,7 +168,7 @@ async function runSecurityTests() {
         // Fallback: pick any published note and grant access permission for the test
         const { data: anyNotes } = await adminClient
           .from("notes")
-          .select("id, title, storage_bucket, storage_path, published, bundle_id, is_protected")
+          .select("id, title, storage_bucket, storage_path, published, bundle_id")
           .eq("published", true)
           .limit(1);
 

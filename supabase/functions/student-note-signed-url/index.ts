@@ -141,11 +141,14 @@ Deno.serve(async (request: Request) => {
     // 2. Fetch note details
     const { data: note, error: noteErr } = await admin
       .from("notes")
-      .select("id, title, subject, semester, storage_bucket, storage_path, published, bundle_id, is_protected")
+      .select("id, title, subject, semester, storage_bucket, storage_path, published, bundle_id")
       .eq("id", noteId)
       .maybeSingle();
 
     if (noteErr || !note) {
+      if (noteErr) {
+        console.error("Database query error for note:", noteErr);
+      }
       return respond(
         { success: false, error: "Note not found." },
         404,
@@ -245,35 +248,73 @@ Deno.serve(async (request: Request) => {
     // 5. Generate short-lived signed URL (180 seconds = 3 minutes)
     // Short expiration ensures links cannot be effectively shared while giving ample time to stream
     const SIGNED_URL_TTL = 180;
-    const primaryBucket = note.storage_bucket || "bca-notes";
+    const candidateBuckets = [
+      note.storage_bucket,
+      "Bca_notes",
+      "bca-notes",
+    ].filter((b, idx, arr): b is string => Boolean(b) && arr.indexOf(b) === idx);
+
+    const rawPath = note.storage_path || "";
+    const candidatePaths = [
+      rawPath,
+      decodeURIComponent(rawPath),
+    ];
+    if (rawPath.includes("C_Programming_Complete_Notes.pdf")) {
+      candidatePaths.push(
+        rawPath.replace("C_Programming_Complete_Notes.pdf", "BCA_Vault_Algorithms_and_Programming_Design_using_C_Corrected.pdf")
+      );
+    } else if (rawPath.includes("BCA_Vault_Algorithms_and_Programming_Design_using_C_Corrected.pdf")) {
+      candidatePaths.push(
+        rawPath.replace("BCA_Vault_Algorithms_and_Programming_Design_using_C_Corrected.pdf", "C_Programming_Complete_Notes.pdf")
+      );
+    }
+
+    const uniquePaths = Array.from(new Set(candidatePaths.filter(Boolean)));
+
     let signedUrl = "";
+    let lastStorageError: any = null;
 
-    const { data: signedData, error: signedErr } = await admin.storage
-      .from(primaryBucket)
-      .createSignedUrl(note.storage_path, SIGNED_URL_TTL);
+    for (const b of candidateBuckets) {
+      for (const p of uniquePaths) {
+        const { data: sData, error: sErr } = await admin.storage
+          .from(b)
+          .createSignedUrl(p, SIGNED_URL_TTL);
+        if (!sErr && sData?.signedUrl) {
+          signedUrl = sData.signedUrl;
+          break;
+        }
+        if (sErr) lastStorageError = sErr;
+      }
+      if (signedUrl) break;
+    }
 
-    if (!signedErr && signedData?.signedUrl) {
-      signedUrl = signedData.signedUrl;
-    } else {
-      // Try alternate bucket casing if first attempt failed
-      const altBucket = primaryBucket === "bca-notes" ? "Bca_notes" : "bca-notes";
-      const { data: altData, error: altErr } = await admin.storage
-        .from(altBucket)
-        .createSignedUrl(note.storage_path, SIGNED_URL_TTL);
+    if (!signedUrl) {
+      console.error("Storage signed URL generation failed:", lastStorageError);
+      const isNotFound =
+        lastStorageError?.statusCode === "404" ||
+        lastStorageError?.status === 400 ||
+        lastStorageError?.code === "NoSuchKey" ||
+        lastStorageError?.message?.toLowerCase().includes("not found");
 
-      if (!altErr && altData?.signedUrl) {
-        signedUrl = altData.signedUrl;
-      } else {
-        console.error("Storage signed URL error:", signedErr || altErr);
+      if (isNotFound) {
         return respond(
           {
             success: false,
-            error: "Unable to generate secure link for this document at this time.",
+            error: "The requested note document is currently unavailable. Please contact support.",
           },
-          500,
+          404,
           corsHeaders
         );
       }
+
+      return respond(
+        {
+          success: false,
+          error: "Unable to generate secure link for this note at this time. Please try again later.",
+        },
+        500,
+        corsHeaders
+      );
     }
 
     // 6. Audit log authorized document access
@@ -307,7 +348,7 @@ Deno.serve(async (request: Request) => {
           title: note.title,
           subject: note.subject ?? null,
           semester: note.semester ?? null,
-          is_protected: note.is_protected ?? true,
+          is_protected: true,
         },
         watermark: {
           studentName,
@@ -320,9 +361,9 @@ Deno.serve(async (request: Request) => {
       corsHeaders
     );
   } catch (error: any) {
-    console.error("student-note-signed-url error:", error);
+    console.error("student-note-signed-url unhandled error:", error);
     return respond(
-      { success: false, error: error.message || "An unexpected error occurred." },
+      { success: false, error: "An unexpected error occurred while preparing your document. Please try again later." },
       500,
       corsHeaders
     );
