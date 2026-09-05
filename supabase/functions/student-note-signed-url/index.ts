@@ -217,6 +217,27 @@ Deno.serve(async (request: Request) => {
       }
     }
 
+    // Check referral reward authorization for the 3 Most Repeated Topics notes
+    const REWARDABLE_MOST_REPEATED_TOPIC_NOTE_IDS = [
+      "33cc389f-4a00-4d3e-89dd-670e514e2ed3", // Most Repeated Topics — Foundation of Computing
+      "6d971cc5-5677-43f5-958f-add182553c87", // Most Repeated Topics — C Programming
+      "20af0ae2-66e3-46cb-bbc2-4ae8e12f0500", // Most Repeated Topics — HTML + CSS + JavaScript
+    ];
+
+    if (!hasAccess && REWARDABLE_MOST_REPEATED_TOPIC_NOTE_IDS.includes(note.id)) {
+      const { data: rewardAccess } = await admin
+        .from("referral_rewards")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("reward_type", "most_repeated_questions")
+        .eq("status", "unlocked")
+        .maybeSingle();
+
+      if (rewardAccess) {
+        hasAccess = true;
+      }
+    }
+
     if (!hasAccess) {
       // Audit log access denial
       try {

@@ -415,6 +415,19 @@ Deno.serve(async (request: Request) => {
             }
           }
         }
+
+        // Trigger referral qualification for qualifying Semester 1 payment
+        const isSem1 = payment.semester === 1 ||
+          payment.bundle_id === "5b36f72a-165c-4cd1-8458-d4f33fadd860";
+        if (isSem1) {
+          try {
+            await admin.rpc("qualify_referral_on_payment_approval", {
+              p_referred_user_id: targetUserId,
+            });
+          } catch (refErr) {
+            console.warn("[bca-admin] Referral qualification notice:", refErr);
+          }
+        }
       }
 
       await log(access.user.id, `payment_${status}`, "payment", id, { bundle_id: payment.bundle_id, student_user_id: targetUserId });
