@@ -98,6 +98,7 @@ export function PaymentEvidenceForm({
     semester: appUser?.semester ? String(appUser.semester) : "1",
     amountPaid: String(initialPrice || 499),
     utr: "",
+    referralCode: "",
     paymentConfirmation: false,
   });
 
@@ -179,6 +180,7 @@ export function PaymentEvidenceForm({
         semester: Number(form.semester) || 1,
         amount: Number(form.amountPaid),
         utr: form.utr.trim().toUpperCase(),
+        referral_code: form.referralCode.trim().toUpperCase() || undefined,
         submission_id,
         storage_path,
       });
@@ -381,6 +383,19 @@ export function PaymentEvidenceForm({
               minLength={6}
               maxLength={64}
             />
+          </Field>
+
+          <Field label="Referral Code (Optional)">
+            <input
+              value={form.referralCode}
+              onChange={(e) => update("referralCode", e.target.value.toUpperCase())}
+              placeholder="e.g. BV-ABC123"
+              className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-3 font-mono text-sm uppercase outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 tracking-wider"
+              maxLength={12}
+            />
+            <span className="mt-1 block text-xs text-slate-400">
+              Have a classmate&apos;s referral code? Enter it here so they receive referral reward credit upon verification.
+            </span>
           </Field>
 
           <div>
