@@ -28,8 +28,9 @@ interface AuthContextValue {
     password: string,
     fullName: string,
     semester?: number,
-    course?: string
-  ) => Promise<{ user: User | null; session: any; needsEmailConfirmation: boolean }>;
+    course?: string,
+    phone?: string
+  ) => Promise<{ user: User | null; session: any; needsEmailConfirmation: boolean; error?: any }>;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -222,8 +223,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string,
     fullName: string,
     semester?: number,
-    course?: string
-  ): Promise<{ user: User | null; session: any; needsEmailConfirmation: boolean }> {
+    course?: string,
+    phone?: string
+  ): Promise<{ user: User | null; session: any; needsEmailConfirmation: boolean; error?: any }> {
     setLoading(true);
     try {
       const sem = semester && semester >= 1 && semester <= 6 ? semester : 1;
@@ -239,6 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             full_name: name,
             course: crs,
             semester: sem,
+            phone: phone?.trim() || undefined,
           },
         },
       });
@@ -247,21 +250,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
 
-      const needsEmailConfirmation = Boolean(
-        data.user &&
-          !data.session &&
-          (!data.user.confirmed_at || (data.user.identities && data.user.identities.length === 0))
-      );
+      let activeSession = data.session;
+      let activeUser = data.user;
 
-      if (data.user && data.session) {
-        setUser(data.user);
-        await loadProfile(data.user);
+      // Attempt immediate sign-in if session wasn't returned on signup
+      if (!activeSession && activeUser) {
+        try {
+          const { data: signInData } = await supabase.auth.signInWithPassword({
+            email: cleanEmail,
+            password,
+          });
+          if (signInData?.session) {
+            activeSession = signInData.session;
+            activeUser = signInData.user;
+          }
+        } catch {
+          // Ignore fallback sign-in error
+        }
+      }
+
+      if (activeUser) {
+        setUser(activeUser);
+        await loadProfile(activeUser);
       }
 
       return {
-        user: data.user,
-        session: data.session,
-        needsEmailConfirmation,
+        user: activeUser,
+        session: activeSession,
+        needsEmailConfirmation: false,
+      };
+    } catch (err: any) {
+      return {
+        user: null,
+        session: null,
+        needsEmailConfirmation: false,
+        error: err,
       };
     } finally {
       setLoading(false);

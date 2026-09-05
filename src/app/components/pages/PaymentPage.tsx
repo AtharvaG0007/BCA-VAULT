@@ -21,36 +21,33 @@ export const GOOGLE_PAYMENT_FORM_URL =
 
 const UPI_ID = "gogawaleatharva997-1@oksbi";
 const UPI_NAME = "BCA Vault";
-const BASE_PRICE = 899;
+const BASE_PRICE = 499;
 
 const VALID_COUPONS: Record<string, { discount: number; finalPrice: number; description: string }> = {
-  BUDMS400: {
-    discount: 400,
-    finalPrice: 499,
-    description: "Special Student Offer — ₹400 OFF",
-  },
   WINNER150: {
-    discount: 550,
+    discount: 150,
     finalPrice: 349,
-    description: "Top-3 Quiz Winner Access — Final Price ₹349",
+    description: "Special Winner / Discount Price — Final Price ₹349",
+  },
+  SPECIAL349: {
+    discount: 150,
+    finalPrice: 349,
+    description: "Special Discount Access — Final Price ₹349",
   },
 };
 
 const instructions = [
-  "Login or register to your BCA Vault account.",
-  "Apply your coupon code (BUDMS400) for ₹499 offer.",
-  "Complete the payment using the BCA Vault UPI ID or QR code.",
-  "Take a clear screenshot of the successful payment showing the 12-digit UTR/Txn ID.",
-  "Click Submit Payment Form to open the verification form.",
-  "Enter the same email address used for your BCA Vault account.",
-  "Upload your payment screenshot and submit the form.",
-  "Our admin team manually verifies your payment and activates your notes.",
+  "Pay ₹499 (or ₹349 with winner discount) using any UPI app or QR code.",
+  "Capture a screenshot showing the 12-digit UTR / UPI Transaction ID.",
+  "Click 'Submit Payment Form' and upload your payment details.",
+  "Create your BCA Vault account — your payment details will be auto-filled.",
+  "Our admin team verifies your payment and assigns your complete bundle.",
 ];
 
 export function PaymentPage() {
   const [copied, setCopied] = useState(false);
-  const [couponInput, setCouponInput] = useState("BUDMS400");
-  const [appliedCoupon, setAppliedCoupon] = useState<string | null>("BUDMS400");
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [showEvidenceModal, setShowEvidenceModal] = useState(false);
 
@@ -129,20 +126,20 @@ export function PaymentPage() {
           <div className="flex items-center gap-2 font-medium">
             <Timer className="h-4 w-4 text-amber-400 animate-pulse" />
             <span>
-              Special Offer: Use coupon <strong className="text-amber-300 font-mono tracking-wider">BUDMS400</strong> to get full access for only <strong className="text-emerald-300 font-bold">₹499</strong>!
+              BCA Semester 1 Complete Bundle: Standard price <strong className="text-emerald-300 font-bold">₹499</strong> · Quiz winners use code <strong className="text-amber-300 font-mono tracking-wider">WINNER150</strong> for <strong className="text-amber-300 font-bold">₹349</strong>!
             </span>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 rounded-lg bg-white/15 px-2.5 py-1 font-mono text-xs font-bold text-amber-300 backdrop-blur-sm">
-              <span>Offer expires in:</span>
+              <span>Offer timer:</span>
               <span className="text-white">{formatTimer(secondsRemaining)}</span>
             </div>
-            {appliedCoupon !== "BUDMS400" && (
+            {appliedCoupon !== "WINNER150" && (
               <button
-                onClick={() => handleApplyCoupon("BUDMS400")}
+                onClick={() => handleApplyCoupon("WINNER150")}
                 className="rounded-lg bg-amber-400 px-2.5 py-1 text-xs font-bold text-slate-950 hover:bg-amber-300 transition"
               >
-                Apply Coupon
+                Apply Winner Price
               </button>
             )}
           </div>
@@ -154,9 +151,9 @@ export function PaymentPage() {
         <div className="mx-auto grid max-w-6xl gap-6 px-5 sm:px-8 lg:grid-cols-[0.9fr_1.1fr]">
           {/* Bundle Summary Card */}
           <aside className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5 sm:p-8">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">BCA Vault</p>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">Official Curriculum</p>
             <h2 className="mt-2 text-2xl font-bold tracking-[-0.02em] text-slate-950">
-              Complete Theory Bundle
+              BCA Semester 1 Complete Bundle
             </h2>
             <p className="mt-1 text-xs text-slate-500">
               Theory Notes + PYQs + Analysis + Most Repeated Questions

@@ -358,10 +358,24 @@ Deno.serve(async (request: Request) => {
         return respond({ success: false, error: "Payment submission not found." }, 404, corsHeaders);
       }
 
+      // If user_id is null, attempt to link with profile by email
+      let targetUserId = payment.user_id;
+      if (!targetUserId) {
+        const { data: matchedProfile } = await admin
+          .from("profiles")
+          .select("user_id")
+          .ilike("email", payment.email)
+          .maybeSingle();
+        if (matchedProfile?.user_id) {
+          targetUserId = matchedProfile.user_id;
+        }
+      }
+
       const { error: updateErr } = await admin
         .from("payment_submissions")
         .update({
           status,
+          user_id: targetUserId,
           verified_by: access.user.id,
           verified_at: new Date().toISOString(),
           admin_notes: note ? String(note).trim() : null,
@@ -370,14 +384,14 @@ Deno.serve(async (request: Request) => {
 
       if (updateErr) return respond({ success: false, error: updateErr.message }, 400, corsHeaders);
 
-      if (status === "approved" && payment.user_id) {
+      if (status === "approved" && targetUserId) {
         // Activate profile
-        await admin.from("profiles").update({ status: "active", updated_at: new Date().toISOString() }).eq("user_id", payment.user_id);
+        await admin.from("profiles").update({ status: "active", updated_at: new Date().toISOString() }).eq("user_id", targetUserId);
 
         // Grant access permission
         if (payment.bundle_id) {
           await admin.from("access_permissions").upsert({
-            user_id: payment.user_id,
+            user_id: targetUserId,
             bundle_id: payment.bundle_id,
             status: "active",
             granted_by: access.user.id,
@@ -391,7 +405,7 @@ Deno.serve(async (request: Request) => {
             const { data: semBundles } = await admin.from("bundles").select("id").eq("published", true);
             for (const sb of semBundles || []) {
               await admin.from("access_permissions").upsert({
-                user_id: payment.user_id,
+                user_id: targetUserId,
                 bundle_id: sb.id,
                 status: "active",
                 granted_by: access.user.id,
@@ -403,9 +417,95 @@ Deno.serve(async (request: Request) => {
         }
       }
 
-      await log(access.user.id, `payment_${status}`, "payment", id, { bundle_id: payment.bundle_id });
+      await log(access.user.id, `payment_${status}`, "payment", id, { bundle_id: payment.bundle_id, student_user_id: targetUserId });
 
-      return respond({ success: true, payment: { id, status, bundle_id: payment.bundle_id } }, 200, corsHeaders);
+      return respond({ success: true, payment: { id, status, bundle_id: payment.bundle_id, user_id: targetUserId } }, 200, corsHeaders);
+    }
+
+    if (request.method === "POST" && pathname === "/access/grant") {
+      const { userId, bundleId, expiresAt = null } = await request.json().catch(() => ({}));
+      const cleanUserId = String(userId || "").trim();
+      const cleanBundleId = String(bundleId || "").trim();
+
+      if (!cleanUserId || !cleanBundleId) {
+        return respond({ success: false, error: "Student user ID and bundle ID are required." }, 400, corsHeaders);
+      }
+
+      // 1. Verify bundle exists
+      const { data: bundle, error: bErr } = await admin
+        .from("bundles")
+        .select("id,title")
+        .eq("id", cleanBundleId)
+        .maybeSingle();
+
+      if (bErr || !bundle) {
+        return respond({ success: false, error: "Bundle not found." }, 404, corsHeaders);
+      }
+
+      // 2. Upsert active access permission
+      const { error: grantErr } = await admin
+        .from("access_permissions")
+        .upsert(
+          {
+            user_id: cleanUserId,
+            bundle_id: cleanBundleId,
+            status: "active",
+            granted_by: access.user.id,
+            granted_at: new Date().toISOString(),
+            expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+          },
+          { onConflict: "user_id,bundle_id" }
+        );
+
+      if (grantErr) {
+        return respond({ success: false, error: grantErr.message }, 500, corsHeaders);
+      }
+
+      // 3. Ensure profile is activated
+      await admin.from("profiles").update({ status: "active", updated_at: new Date().toISOString() }).eq("user_id", cleanUserId);
+
+      // 4. Audit log
+      await log(access.user.id, "bundle_granted", "access_permission", cleanUserId, {
+        bundle_id: cleanBundleId,
+        bundle_title: bundle.title,
+      });
+
+      return respond(
+        {
+          success: true,
+          message: `Access to "${bundle.title}" granted successfully.`,
+          user_id: cleanUserId,
+          bundle_id: cleanBundleId,
+        },
+        200,
+        corsHeaders
+      );
+    }
+
+    if (request.method === "POST" && pathname === "/access/revoke") {
+      const { userId, bundleId } = await request.json().catch(() => ({}));
+      const cleanUserId = String(userId || "").trim();
+      const cleanBundleId = String(bundleId || "").trim();
+
+      if (!cleanUserId || !cleanBundleId) {
+        return respond({ success: false, error: "Student user ID and bundle ID are required." }, 400, corsHeaders);
+      }
+
+      const { error: revokeErr } = await admin
+        .from("access_permissions")
+        .update({ status: "revoked" })
+        .eq("user_id", cleanUserId)
+        .eq("bundle_id", cleanBundleId);
+
+      if (revokeErr) {
+        return respond({ success: false, error: revokeErr.message }, 500, corsHeaders);
+      }
+
+      await log(access.user.id, "bundle_revoked", "access_permission", cleanUserId, {
+        bundle_id: cleanBundleId,
+      });
+
+      return respond({ success: true, message: "Access revoked successfully." }, 200, corsHeaders);
     }
 
     if (request.method === "POST" && pathname === "/notes/upload-url") {

@@ -9,6 +9,7 @@ import {
   Clock,
   Download,
   FileText,
+  Flame,
   HelpCircle,
   LayoutDashboard,
   Loader2,
@@ -17,6 +18,7 @@ import {
   MessageSquare,
   Package,
   RefreshCw,
+  Search,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
@@ -45,6 +47,8 @@ interface NoteItem {
   description: string;
   storage_bucket: string;
   storage_path: string;
+  priority?: string | null;
+  status?: string | null;
 }
 
 type TabType = "dashboard" | "ai" | "profile";
@@ -64,6 +68,8 @@ export function StudentDashboard() {
 
   const [access, setAccess] = useState<AccessItem[]>([]);
   const [notes, setNotes] = useState<NoteItem[]>([]);
+  const [noteCategory, setNoteCategory] = useState<"all" | "repeated" | "theory" | "pyq">("all");
+  const [noteSearch, setNoteSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [openingId, setOpeningId] = useState<string | null>(null);
   const [activeViewer, setActiveViewer] = useState<{
@@ -105,7 +111,7 @@ export function StudentDashboard() {
           .eq("status", "active"),
         supabase
           .from("notes")
-          .select("id,title,subject,semester,description,storage_bucket,storage_path")
+          .select("id,title,subject,semester,description,storage_bucket,storage_path,priority,status")
           .eq("published", true)
           .order("semester", { ascending: true }),
       ]);
@@ -437,84 +443,251 @@ export function StudentDashboard() {
               )}
             </section>
 
-            {/* My Notes Section */}
-            <section className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900">My Notes</h2>
-                  <p className="text-xs text-slate-500">Official syllabus notes, PYQ analysis & guides</p>
-                </div>
-                <span className="text-xs font-semibold text-slate-400">
-                  {notes.length} {notes.length === 1 ? "document" : "documents"}
-                </span>
-              </div>
+            {/* Featured: Most Repeated Questions High-Priority Card */}
+            {(() => {
+              const isMostRepeated = (n: NoteItem) =>
+                n.title.toLowerCase().includes("repeated") || n.priority === "high";
+              const isPYQ = (n: NoteItem) =>
+                n.title.toLowerCase().includes("pyq") || n.title.toLowerCase().includes("previous");
+              const isTheory = (n: NoteItem) =>
+                !isMostRepeated(n) && !isPYQ(n);
 
-              {loading ? (
-                <div className="flex items-center justify-center py-16">
-                  <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-                </div>
-              ) : notes.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center">
-                  <BookOpen className="mx-auto h-10 w-10 text-slate-300" />
-                  <h3 className="mt-3 text-sm font-bold text-slate-800">No notes available yet</h3>
-                  <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
-                    Notes for your bundle are being prepared. Check back shortly.
-                  </p>
-                </div>
-              ) : (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {notes.map((note) => (
-                    <article
-                      key={note.id}
-                      className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs hover:shadow-sm transition"
-                    >
-                      <div>
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="grid h-9 w-9 place-items-center rounded-xl bg-indigo-50 text-indigo-600">
-                            <FileText className="h-4 w-4" />
+              const featuredRepeatedNote = notes.find(isMostRepeated);
+
+              const filteredNotes = notes.filter((n) => {
+                if (noteCategory === "repeated" && !isMostRepeated(n)) return false;
+                if (noteCategory === "pyq" && !isPYQ(n)) return false;
+                if (noteCategory === "theory" && !isTheory(n)) return false;
+                if (noteSearch.trim()) {
+                  const q = noteSearch.toLowerCase().trim();
+                  const matchTitle = n.title.toLowerCase().includes(q);
+                  const matchSubject = n.subject?.toLowerCase().includes(q);
+                  const matchDesc = n.description?.toLowerCase().includes(q);
+                  return Boolean(matchTitle || matchSubject || matchDesc);
+                }
+                return true;
+              });
+
+              return (
+                <>
+                  {featuredRepeatedNote && (
+                    <section className="relative overflow-hidden rounded-3xl border-2 border-amber-400/40 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl">
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                        <div className="space-y-2.5">
+                          <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-bold text-amber-300">
+                            <Flame className="h-4 w-4 text-amber-400" />
+                            <span>High Priority · Exam Intelligence</span>
                           </div>
-                          {note.semester && (
-                            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">
-                              Sem {note.semester}
+                          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
+                            {featuredRepeatedNote.title}
+                          </h2>
+                          <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
+                            {featuredRepeatedNote.description ||
+                              "Curated exam-focused questions compiled from previous years. High-priority revision material."}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-indigo-300 font-medium">
+                            <span className="rounded-md bg-indigo-900/60 px-2 py-0.5 text-indigo-200">
+                              {featuredRepeatedNote.subject || "BCA Semester 1"}
                             </span>
-                          )}
+                            <span>•</span>
+                            <span>Protected PDF Viewer</span>
+                            <span>•</span>
+                            <span>Anti-Copy & Watermarked</span>
+                          </div>
                         </div>
 
-                        <h3 className="mt-3 text-sm font-bold text-slate-900 leading-snug">
-                          {note.title}
-                        </h3>
-                        <p className="mt-1 text-[11px] font-semibold text-indigo-600">
-                          {note.subject || "General Theory"}
-                        </p>
-                        {note.description && (
-                          <p className="mt-2 text-xs leading-5 text-slate-500 line-clamp-2">
-                            {note.description}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="mt-5 pt-3 border-t border-slate-100">
                         <button
-                          onClick={() => void openNote(note)}
-                          disabled={openingId === note.id}
-                          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-indigo-700 disabled:bg-slate-300 transition"
+                          onClick={() => void openNote(featuredRepeatedNote)}
+                          disabled={openingId === featuredRepeatedNote.id}
+                          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-400 px-6 py-4 text-xs font-black text-slate-950 shadow-lg shadow-amber-400/20 hover:bg-amber-300 disabled:bg-slate-700 transition shrink-0 uppercase tracking-wider"
                         >
-                          {openingId === note.id ? (
+                          {openingId === featuredRepeatedNote.id ? (
                             <>
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Opening PDF…
+                              <Loader2 className="h-4 w-4 animate-spin text-slate-950" /> Opening Material…
                             </>
                           ) : (
                             <>
-                              <Download className="h-3.5 w-3.5" /> Open & Read Securely
+                              <Flame className="h-4 w-4 text-slate-950" /> Read Most Repeated Questions
                             </>
                           )}
                         </button>
                       </div>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </section>
+                    </section>
+                  )}
+
+                  {/* Study Materials Hub Section */}
+                  <section className="space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <h2 className="text-lg font-bold text-slate-900">Study Materials Hub</h2>
+                        <p className="text-xs text-slate-500">
+                          Categorized unit notes, solved PYQs & high-priority exam questions
+                        </p>
+                      </div>
+                      <span className="text-xs font-semibold text-slate-400 self-start sm:self-auto">
+                        Showing {filteredNotes.length} of {notes.length} {notes.length === 1 ? "document" : "documents"}
+                      </span>
+                    </div>
+
+                    {/* Category Filter Pills & Search Bar */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-200/60 rounded-2xl">
+                        <button
+                          onClick={() => setNoteCategory("all")}
+                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                            noteCategory === "all"
+                              ? "bg-white text-indigo-700 shadow-xs"
+                              : "text-slate-600 hover:text-slate-900"
+                          }`}
+                        >
+                          All ({notes.length})
+                        </button>
+                        <button
+                          onClick={() => setNoteCategory("repeated")}
+                          className={`inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                            noteCategory === "repeated"
+                              ? "bg-amber-400 text-slate-950 shadow-xs"
+                              : "text-slate-600 hover:text-slate-900"
+                          }`}
+                        >
+                          <Flame className="h-3.5 w-3.5 text-amber-600" />
+                          Most Repeated ({notes.filter(isMostRepeated).length})
+                        </button>
+                        <button
+                          onClick={() => setNoteCategory("theory")}
+                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                            noteCategory === "theory"
+                              ? "bg-white text-indigo-700 shadow-xs"
+                              : "text-slate-600 hover:text-slate-900"
+                          }`}
+                        >
+                          Theory Notes ({notes.filter(isTheory).length})
+                        </button>
+                        <button
+                          onClick={() => setNoteCategory("pyq")}
+                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                            noteCategory === "pyq"
+                              ? "bg-white text-indigo-700 shadow-xs"
+                              : "text-slate-600 hover:text-slate-900"
+                          }`}
+                        >
+                          Solved PYQs ({notes.filter(isPYQ).length})
+                        </button>
+                      </div>
+
+                      {/* Keyword Search */}
+                      <div className="relative w-full md:w-64">
+                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                        <input
+                          type="text"
+                          value={noteSearch}
+                          onChange={(e) => setNoteSearch(e.target.value)}
+                          placeholder="Search materials…"
+                          className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-xs outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100"
+                        />
+                      </div>
+                    </div>
+
+                    {loading ? (
+                      <div className="flex items-center justify-center py-16">
+                        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                      </div>
+                    ) : filteredNotes.length === 0 ? (
+                      <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center">
+                        <BookOpen className="mx-auto h-10 w-10 text-slate-300" />
+                        <h3 className="mt-3 text-sm font-bold text-slate-800">No documents found</h3>
+                        <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+                          {noteSearch
+                            ? `No materials match your search "${noteSearch}". Try adjusting your filters.`
+                            : "No materials are currently published in this category."}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {filteredNotes.map((note) => {
+                          const isRep = isMostRepeated(note);
+                          const isPyq = isPYQ(note);
+                          return (
+                            <article
+                              key={note.id}
+                              className={`flex flex-col justify-between rounded-2xl border bg-white p-5 shadow-2xs hover:shadow-sm transition ${
+                                isRep ? "border-amber-300/80 ring-1 ring-amber-200/50" : "border-slate-200"
+                              }`}
+                            >
+                              <div>
+                                <div className="flex items-start justify-between gap-2">
+                                  <div
+                                    className={`grid h-9 w-9 place-items-center rounded-xl ${
+                                      isRep
+                                        ? "bg-amber-100 text-amber-700"
+                                        : isPyq
+                                        ? "bg-purple-100 text-purple-700"
+                                        : "bg-indigo-50 text-indigo-600"
+                                    }`}
+                                  >
+                                    {isRep ? <Flame className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    {isRep && (
+                                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                                        🔥 High Priority
+                                      </span>
+                                    )}
+                                    {note.semester && (
+                                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                                        Sem {note.semester}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <h3 className="mt-3 text-sm font-bold text-slate-900 leading-snug">
+                                  {note.title}
+                                </h3>
+                                <p
+                                  className={`mt-1 text-[11px] font-semibold ${
+                                    isRep ? "text-amber-700" : isPyq ? "text-purple-700" : "text-indigo-600"
+                                  }`}
+                                >
+                                  {note.subject || "General Theory"}
+                                </p>
+                                {note.description && (
+                                  <p className="mt-2 text-xs leading-5 text-slate-500 line-clamp-2">
+                                    {note.description}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="mt-5 pt-3 border-t border-slate-100">
+                                <button
+                                  onClick={() => void openNote(note)}
+                                  disabled={openingId === note.id}
+                                  className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white transition ${
+                                    isRep
+                                      ? "bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold"
+                                      : "bg-indigo-600 hover:bg-indigo-700"
+                                  } disabled:bg-slate-300`}
+                                >
+                                  {openingId === note.id ? (
+                                    <>
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Opening PDF…
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Download className="h-3.5 w-3.5" /> Open & Read Securely
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            </article>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </section>
+                </>
+              );
+            })()}
           </div>
         )}
       </main>

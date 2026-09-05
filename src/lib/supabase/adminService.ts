@@ -205,19 +205,22 @@ export const adminApi = {
     if (result.error) throw result.error;
   },
   grantAccess: async (user_id: string, bundle_id: string, expires_at?: string) => {
-    const { data: { user } } = await adminSupabase.auth.getUser();
-    const result = await adminSupabase.from("access_permissions").upsert({
-      user_id,
-      bundle_id,
-      status: "active",
-      granted_by: user?.id,
-      expires_at: expires_at || null,
-    }, { onConflict: "user_id,bundle_id" });
-    if (result.error) throw result.error;
+    return adminFn<{ success: boolean; message: string }>("/access/grant", {
+      userId: user_id,
+      bundleId: bundle_id,
+      expiresAt: expires_at || null,
+    });
   },
-  revokeAccess: async (id: string) => {
-    const result = await adminSupabase.from("access_permissions").update({ status: "revoked" }).eq("id", id);
-    if (result.error) throw result.error;
+  revokeAccess: async (userOrPermissionId: string, bundle_id?: string) => {
+    if (bundle_id) {
+      return adminFn<{ success: boolean; message: string }>("/access/revoke", {
+        userId: userOrPermissionId,
+        bundleId: bundle_id,
+      });
+    }
+    return adminFn<{ success: boolean; message: string }>("/access/revoke", {
+      permissionId: userOrPermissionId,
+    });
   },
   saveBundle: async (payload: { id?: string; title: string; description: string; price: number; published: boolean }) => {
     const { id, ...data } = payload;

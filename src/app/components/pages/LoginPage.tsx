@@ -71,6 +71,32 @@ export function LoginPage({ initialMode = "signin" }: { initialMode?: "signin" |
 
   const from = (location.state as any)?.from?.pathname;
 
+  // Auto-fill from payment lead or URL search params
+  useEffect(() => {
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const urlEmail = searchParams.get("email");
+      const urlName = searchParams.get("name");
+
+      const leadRaw = sessionStorage.getItem("bca_payment_lead");
+      const lead = leadRaw ? JSON.parse(leadRaw) : null;
+
+      const prefillEmail = urlEmail || lead?.email;
+      const prefillName = urlName || lead?.fullName;
+      const prefillSem = lead?.semester;
+
+      if (prefillEmail) setEmail(prefillEmail);
+      if (prefillName) setFullName(prefillName);
+      if (prefillSem) setSemester(Number(prefillSem) || 1);
+
+      if (prefillEmail || prefillName) {
+        setMode("signup");
+      }
+    } catch {
+      // Ignore
+    }
+  }, []);
+
   // Check for error parameters in URL (e.g. from OAuth redirect failure)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -135,10 +161,10 @@ export function LoginPage({ initialMode = "signin" }: { initialMode?: "signin" |
     setSubmitting(true);
     try {
       const res = await signUp(email, password, fullName, semester, course);
-      if (res.needsEmailConfirmation) {
-        setSuccessMessage("Account created! Please verify your email before logging in.");
-        setMode("signin");
-      } else if (res.user) {
+      if (res.error) {
+        setError(friendlyError(res.error.code || res.error.message));
+      } else {
+        // Immediate dashboard navigation without email roadblock
         navigate(from ?? "/dashboard", { replace: true });
       }
     } catch (err: any) {

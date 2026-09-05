@@ -1,23 +1,16 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { AlertCircle, CheckCircle2, ImageUp, Loader2, ShieldCheck, X } from "lucide-react";
+import { useRef, useState, type FormEvent } from "react";
+import { AlertCircle, CheckCircle2, ImageUp, Loader2, ShieldCheck, X, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/app/components/auth/AuthContext";
 import { useNavigate } from "react-router";
 import { PaymentEvidenceSuccess } from "./PaymentEvidenceSuccess";
-import { PaymentAuthModal } from "./PaymentAuthModal";
 import { publicAnonKey } from "../../../../utils/supabase/info";
 
-const MAX_FILE_SIZE = 1 * 1024 * 1024;
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // Up to 5 MB
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://dmxegktlxqsxaysqwswa.supabase.co";
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || publicAnonKey;
-
-interface BundleOption {
-  id: string;
-  title: string;
-  price: number;
-}
 
 interface EdgeResponse<T = any> {
   success?: boolean;
@@ -29,17 +22,19 @@ async function callPaymentFunction<T = any>(body: Record<string, unknown>): Prom
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
 
-  if (!token) {
-    throw new Error("Authentication required. Please sign in to submit payment evidence.");
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "apikey": ANON_KEY,
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   // 1. Try invoking through supabase-js client
   try {
     const { data, error } = await supabase.functions.invoke("payment-evidence", {
       body,
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
 
     if (!error && data && data.success !== false) {
@@ -57,15 +52,11 @@ async function callPaymentFunction<T = any>(body: Record<string, unknown>): Prom
     }
   }
 
-  // 2. Direct fetch fallback with full CORS and Authorization headers
+  // 2. Direct fetch fallback with full CORS headers
   const url = `${SUPABASE_URL}/functions/v1/payment-evidence`;
   const response = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-      "apikey": ANON_KEY,
-    },
+    headers,
     body: JSON.stringify(body),
   });
 
@@ -84,7 +75,7 @@ async function callPaymentFunction<T = any>(body: Record<string, unknown>): Prom
 export function PaymentEvidenceForm({
   onClose,
   initialBundleId,
-  initialPrice,
+  initialPrice = 499,
 }: {
   onClose: () => void;
   initialBundleId?: string;
@@ -94,8 +85,6 @@ export function PaymentEvidenceForm({
   const { user, appUser } = useAuth();
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const [bundles, setBundles] = useState<BundleOption[]>([]);
-  const [selectedBundleId, setSelectedBundleId] = useState<string>(initialBundleId || "");
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -107,54 +96,13 @@ export function PaymentEvidenceForm({
     email: user?.email || appUser?.email || "",
     course: "BCA",
     semester: appUser?.semester ? String(appUser.semester) : "1",
-    amountPaid: initialPrice ? String(initialPrice) : "899",
+    amountPaid: String(initialPrice || 499),
     utr: "",
     paymentConfirmation: false,
   });
 
-  useEffect(() => {
-    async function loadBundles() {
-      try {
-        const { data, error: bError } = await supabase
-          .from("bundles")
-          .select("id, title, price")
-          .eq("published", true)
-          .order("price", { ascending: false });
-
-        if (!bError && data && data.length > 0) {
-          setBundles(data);
-          if (!selectedBundleId) {
-            setSelectedBundleId(data[0].id);
-            setForm((prev) => ({ ...prev, amountPaid: String(data[0].price) }));
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load bundles:", err);
-      }
-    }
-    void loadBundles();
-  }, [selectedBundleId]);
-
-  useEffect(() => {
-    if (user?.email && !form.email) {
-      setForm((prev) => ({
-        ...prev,
-        email: user.email || "",
-        fullName: prev.fullName || appUser?.name || "",
-      }));
-    }
-  }, [user, appUser]);
-
   const update = (key: keyof typeof form, value: string | boolean) => {
     setForm((current) => ({ ...current, [key]: value }));
-  };
-
-  const handleBundleChange = (bundleId: string) => {
-    setSelectedBundleId(bundleId);
-    const bundle = bundles.find((b) => b.id === bundleId);
-    if (bundle) {
-      setForm((prev) => ({ ...prev, amountPaid: String(bundle.price) }));
-    }
   };
 
   function chooseFile(nextFile: File | undefined) {
@@ -164,7 +112,7 @@ export function PaymentEvidenceForm({
       return setError("Please upload a PNG, JPG, or WebP image.");
     }
     if (nextFile.size > MAX_FILE_SIZE) {
-      return setError("Payment screenshot must be 1 MB or smaller.");
+      return setError("Payment screenshot must be 5 MB or smaller.");
     }
     setFile(nextFile);
   }
@@ -173,16 +121,12 @@ export function PaymentEvidenceForm({
     event.preventDefault();
     setError("");
 
-    if (!user) {
-      return setError("Please sign in to your BCA Vault account before submitting payment.");
-    }
-
-    if (!selectedBundleId) {
-      return setError("Please select a bundle.");
-    }
-
     if (!file) {
       return setError("Please upload your payment screenshot.");
+    }
+
+    if (!form.utr.trim()) {
+      return setError("Please enter your 12-digit UPI transaction ID / UTR.");
     }
 
     if (!form.paymentConfirmation) {
@@ -199,7 +143,7 @@ export function PaymentEvidenceForm({
         token: string;
       }>({
         action: "create-upload",
-        bundle_id: selectedBundleId,
+        bundle_id: initialBundleId || undefined,
         content_type: file.type,
         size: file.size,
       });
@@ -227,12 +171,12 @@ export function PaymentEvidenceForm({
         status: string;
       }>({
         action: "submit",
-        bundle_id: selectedBundleId,
+        bundle_id: initialBundleId || undefined,
         full_name: form.fullName.trim(),
         phone: form.phone.trim(),
-        email: form.email.trim(),
+        email: form.email.trim().toLowerCase(),
         course: form.course.trim(),
-        semester: Number(form.semester),
+        semester: Number(form.semester) || 1,
         amount: Number(form.amountPaid),
         utr: form.utr.trim().toUpperCase(),
         submission_id,
@@ -241,6 +185,24 @@ export function PaymentEvidenceForm({
 
       if (!submitData.submission_id) {
         throw new Error("Failed to finalize payment record. Please contact support if payment was debited.");
+      }
+
+      // Cache lead in sessionStorage for account creation auto-fill
+      try {
+        sessionStorage.setItem(
+          "bca_payment_lead",
+          JSON.stringify({
+            fullName: form.fullName.trim(),
+            email: form.email.trim().toLowerCase(),
+            phone: form.phone.trim(),
+            course: form.course.trim(),
+            semester: Number(form.semester) || 1,
+            referenceId: submitData.submission_id,
+            amount: Number(form.amountPaid),
+          })
+        );
+      } catch {
+        // Ignore session storage errors
       }
 
       setReferenceId(submitData.submission_id);
@@ -260,6 +222,13 @@ export function PaymentEvidenceForm({
     return (
       <PaymentEvidenceSuccess
         referenceId={referenceId}
+        guestData={!user ? {
+          fullName: form.fullName.trim(),
+          email: form.email.trim().toLowerCase(),
+          phone: form.phone.trim(),
+          course: form.course.trim(),
+          semester: Number(form.semester) || 1,
+        } : undefined}
         onDashboard={() => navigate("/app/dashboard")}
         onClose={onClose}
       />
@@ -280,204 +249,196 @@ export function PaymentEvidenceForm({
               Step 2 · Submit evidence
             </p>
             <h2 className="mt-2 text-2xl font-bold text-slate-950">Submit Payment Form</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              Your evidence is reviewed manually before bundle access is authorized.
+            <p className="mt-1 text-sm text-slate-500">
+              Your evidence is verified manually before bundle access is activated.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl p-2 text-slate-500 hover:bg-slate-100"
+            className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 transition"
             aria-label="Close form"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {!user ? (
-          <PaymentAuthModal onClose={onClose} />
-        ) : (
-          <form onSubmit={submit} className="space-y-5 p-6 sm:p-8">
-            {error && (
-              <div
-                role="alert"
-                className="flex gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
-              >
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                {error}
-              </div>
-            )}
-
-            {bundles.length > 1 && (
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">
-                  Select Bundle <span className="text-red-600">*</span>
-                </label>
-                <select
-                  value={selectedBundleId}
-                  onChange={(e) => handleBundleChange(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-medium text-slate-800 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100"
-                  required
-                >
-                  {bundles.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.title} — ₹{b.price}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Field label="Full Name" required>
-                <input
-                  required
-                  value={form.fullName}
-                  onChange={(e) => update("fullName", e.target.value)}
-                  placeholder="Your full name"
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100"
-                  autoComplete="name"
-                />
-              </Field>
-
-              <Field label="Phone Number" required>
-                <input
-                  required
-                  value={form.phone}
-                  onChange={(e) => update("phone", e.target.value)}
-                  placeholder="10-digit mobile number"
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100"
-                  inputMode="tel"
-                  autoComplete="tel"
-                />
-              </Field>
-
-              <Field label="Registered Email" required>
-                <input
-                  required
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => update("email", e.target.value)}
-                  readOnly={!!user?.email}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 outline-none"
-                  autoComplete="email"
-                />
-              </Field>
-
-              <Field label="Course" required>
-                <select
-                  required
-                  value={form.course}
-                  onChange={(e) => update("course", e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100"
-                >
-                  <option value="BCA">BCA (Bachelor of Computer Applications)</option>
-                  <option value="Other">Other</option>
-                </select>
-              </Field>
-
-              <Field label="Semester" required>
-                <select
-                  required
-                  value={form.semester}
-                  onChange={(e) => update("semester", e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100"
-                >
-                  <option value="">Select semester</option>
-                  {[1, 2, 3, 4, 5, 6].map((semester) => (
-                    <option key={semester} value={semester}>
-                      Semester {semester}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-
-              <Field label="Amount Paid" required>
-                <div className="relative mt-1.5">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500">
-                    ₹
-                  </span>
-                  <input
-                    required
-                    type="number"
-                    value={form.amountPaid}
-                    readOnly
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 pl-8 text-sm font-bold text-slate-900 outline-none"
-                  />
-                </div>
-              </Field>
+        <form onSubmit={submit} className="space-y-5 p-6 sm:p-8">
+          {error && (
+            <div
+              role="alert"
+              className="flex gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+            >
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              {error}
             </div>
+          )}
 
-            <Field label="UPI Transaction ID / UTR" required>
+          {/* Product Banner - Fixed to BCA Semester 1 Complete Bundle */}
+          <div className="flex items-center justify-between rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50 to-blue-50/50 p-4">
+            <div>
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-indigo-700">
+                <Sparkles className="h-3 w-3 text-amber-500" />
+                Target Course Bundle
+              </span>
+              <h4 className="text-base font-bold text-slate-900">
+                BCA Semester 1 Complete Bundle
+              </h4>
+              <p className="text-xs text-slate-500">
+                All Unit Notes · Solved PYQs · Most Repeated Questions
+              </p>
+            </div>
+            <div className="text-right">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                Amount
+              </span>
+              <p className="font-mono text-2xl font-extrabold text-indigo-700">
+                ₹{form.amountPaid}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label="Full Name" required>
               <input
                 required
-                value={form.utr}
-                onChange={(e) => update("utr", e.target.value.toUpperCase())}
-                placeholder="12-digit UTR or transaction ID (e.g. 423456789012)"
-                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-3 font-mono text-sm uppercase outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100"
-                minLength={6}
-                maxLength={64}
+                value={form.fullName}
+                onChange={(e) => update("fullName", e.target.value)}
+                placeholder="Student full name"
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100"
+                autoComplete="name"
               />
             </Field>
 
-            <div>
-              <label className="block text-sm font-bold text-slate-700">
-                Payment Screenshot <span className="text-red-600">*</span>
-              </label>
-              <input
-                ref={fileInput}
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                className="sr-only"
-                onChange={(e) => chooseFile(e.target.files?.[0])}
-              />
-              <button
-                type="button"
-                onClick={() => fileInput.current?.click()}
-                className="mt-2 flex w-full items-center gap-3 rounded-2xl border border-dashed border-indigo-300 bg-indigo-50/50 p-4 text-left hover:bg-indigo-50 transition"
-              >
-                <ImageUp className="h-6 w-6 text-indigo-600 shrink-0" />
-                <span className="min-w-0">
-                  <span className="block text-sm font-bold text-slate-800 truncate">
-                    {file ? file.name : "Choose a payment screenshot"}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-slate-500">
-                    PNG, JPG, JPEG, or WebP · maximum 1 MB
-                  </span>
-                </span>
-              </button>
-            </div>
-
-            <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+            <Field label="Phone Number" required>
               <input
                 required
-                type="checkbox"
-                checked={form.paymentConfirmation}
-                onChange={(e) => update("paymentConfirmation", e.target.checked)}
-                className="mt-1 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 accent-indigo-600"
+                value={form.phone}
+                onChange={(e) => update("phone", e.target.value)}
+                placeholder="10-digit mobile number"
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100"
+                inputMode="tel"
+                autoComplete="tel"
               />
-              <span>
-                I confirm that the payment details and screenshot are accurate. I understand that payment
-                verification is manual.
-              </span>
+            </Field>
+
+            <Field label="Email Address" required>
+              <input
+                required
+                type="email"
+                value={form.email}
+                onChange={(e) => update("email", e.target.value)}
+                readOnly={Boolean(user?.email)}
+                placeholder="student@gmail.com"
+                className={`mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-sm outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 ${
+                  user?.email ? "bg-slate-50 text-slate-600" : "bg-white text-slate-900"
+                }`}
+                autoComplete="email"
+              />
+            </Field>
+
+            <Field label="Course" required>
+              <input
+                required
+                disabled
+                value="BCA (Bachelor of Computer Applications)"
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600"
+              />
+            </Field>
+
+            <Field label="Semester" required>
+              <input
+                required
+                disabled
+                value="Semester 1"
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600"
+              />
+            </Field>
+
+            <Field label="Amount Paid" required>
+              <div className="relative mt-1.5">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500">
+                  ₹
+                </span>
+                <input
+                  required
+                  type="number"
+                  value={form.amountPaid}
+                  readOnly
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 pl-8 text-sm font-bold text-slate-900 outline-none"
+                />
+              </div>
+            </Field>
+          </div>
+
+          <Field label="UPI Transaction ID / 12-digit UTR" required>
+            <input
+              required
+              value={form.utr}
+              onChange={(e) => update("utr", e.target.value.toUpperCase())}
+              placeholder="12-digit UTR from your UPI payment receipt"
+              className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-3 font-mono text-sm uppercase outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 tracking-wider"
+              minLength={6}
+              maxLength={64}
+            />
+          </Field>
+
+          <div>
+            <label className="block text-sm font-bold text-slate-700">
+              Payment Screenshot <span className="text-red-600">*</span>
             </label>
-
-            <div className="flex gap-2 rounded-xl border border-indigo-100 bg-indigo-50/60 p-3 text-xs leading-5 text-slate-600">
-              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
-              Your screenshot is uploaded securely to private BCA Vault storage. Submission does not
-              automatically grant access.
-            </div>
-
+            <input
+              ref={fileInput}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="sr-only"
+              onChange={(e) => chooseFile(e.target.files?.[0])}
+            />
             <button
-              type="submit"
-              disabled={submitting}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-4 text-sm font-bold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-400 transition"
+              type="button"
+              onClick={() => fileInput.current?.click()}
+              className="mt-2 flex w-full items-center gap-3 rounded-2xl border border-dashed border-indigo-300 bg-indigo-50/50 p-4 text-left hover:bg-indigo-50 transition"
             >
-              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              {submitting ? "Submitting evidence…" : "Submit Payment Evidence"}
+              <ImageUp className="h-6 w-6 text-indigo-600 shrink-0" />
+              <span className="min-w-0">
+                <span className="block text-sm font-bold text-slate-800 truncate">
+                  {file ? file.name : "Click to select payment screenshot"}
+                </span>
+                <span className="mt-0.5 block text-xs text-slate-500">
+                  PNG, JPG, JPEG, or WebP · up to 5 MB
+                </span>
+              </span>
             </button>
-          </form>
-        )}
+          </div>
+
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+            <input
+              required
+              type="checkbox"
+              checked={form.paymentConfirmation}
+              onChange={(e) => update("paymentConfirmation", e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 accent-indigo-600"
+            />
+            <span>
+              I confirm that the payment details and screenshot are accurate. I understand that payment
+              verification is completed manually by BCA Vault.
+            </span>
+          </label>
+
+          <div className="flex gap-2 rounded-xl border border-indigo-100 bg-indigo-50/60 p-3 text-xs leading-5 text-slate-600">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
+            Your screenshot is encrypted and stored in private BCA Vault storage. No external parties have access.
+          </div>
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-4 text-sm font-bold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-400 transition shadow-lg shadow-indigo-600/20"
+          >
+            {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+            {submitting ? "Submitting payment evidence…" : "Submit Payment Evidence"}
+          </button>
+        </form>
       </div>
     </div>
   );

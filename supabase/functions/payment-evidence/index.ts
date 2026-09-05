@@ -56,28 +56,50 @@ function respond(body: unknown, status = 200, corsHeaders: Record<string, string
 
 const text = (value: unknown) => (typeof value === "string" ? value.trim() : "");
 
-async function requireUser(request: Request, corsHeaders: Record<string, string>) {
-  const token = request.headers.get("Authorization")?.replace("Bearer ", "");
+async function getOptionalUser(request: Request) {
+  const token = request.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
   if (!token) {
-    return { error: respond({ success: false, error: "Authentication required" }, 401, corsHeaders) };
+    return { user: null };
   }
   const { data: { user }, error } = await admin.auth.getUser(token);
   if (error || !user) {
-    return { error: respond({ success: false, error: "Authentication required or session expired" }, 401, corsHeaders) };
+    return { user: null };
   }
   return { user };
 }
 
-async function bundleFor(id: string) {
-  const { data, error } = await admin.from("bundles").select("id,title,price,published").eq("id", id).maybeSingle();
-  if (error || !data || !data.published) return null;
-  return data;
+async function getSem1Bundle(id?: string) {
+  if (id) {
+    const { data } = await admin.from("bundles").select("id,title,price,published").eq("id", id).maybeSingle();
+    if (data && data.published) return data;
+  }
+
+  // Look for Semester 1 bundle
+  const { data: sem1 } = await admin
+    .from("bundles")
+    .select("id,title,price,published")
+    .ilike("title", "%sem%1%")
+    .eq("published", true)
+    .maybeSingle();
+
+  if (sem1) return sem1;
+
+  // Fallback to any published bundle
+  const { data: anyBundle } = await admin
+    .from("bundles")
+    .select("id,title,price,published")
+    .eq("published", true)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  return anyBundle || null;
 }
 
 Deno.serve(async (request: Request) => {
   const corsHeaders = getCorsHeaders(request);
 
-  // 1. Handle OPTIONS preflight immediately without requiring authentication
+  // 1. Handle OPTIONS preflight immediately
   if (request.method === "OPTIONS") {
     return new Response("ok", {
       status: 200,
@@ -89,18 +111,17 @@ Deno.serve(async (request: Request) => {
     return respond({ success: false, error: "Method not allowed." }, 405, corsHeaders);
   }
 
-  // 2. Authenticate user from bearer token
-  const identity = await requireUser(request, corsHeaders);
-  if (identity.error) return identity.error;
+  // 2. Identify caller (can be guest or logged-in student)
+  const { user } = await getOptionalUser(request);
 
   try {
     const body = (await request.json().catch(() => ({}))) as Record<string, any>;
     const action = text(body.action);
     const bundleId = text(body.bundle_id);
 
-    const bundle = await bundleFor(bundleId);
+    const bundle = await getSem1Bundle(bundleId);
     if (!bundle) {
-      return respond({ success: false, error: "The selected bundle is unavailable." }, 400, corsHeaders);
+      return respond({ success: false, error: "The course bundle is currently unavailable." }, 400, corsHeaders);
     }
 
     // ACTION: create-upload
@@ -116,7 +137,8 @@ Deno.serve(async (request: Request) => {
       }
 
       const submissionId = `BV-${crypto.randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase()}`;
-      const path = `payment-evidence/${identity.user.id}/${submissionId}/screenshot.${extensions[contentType]}`;
+      const userPrefix = user?.id ? user.id : `guest-${submissionId}`;
+      const path = `payment-evidence/${userPrefix}/${submissionId}/screenshot.${extensions[contentType]}`;
 
       const { data, error } = await admin.storage.from(bucket).createSignedUploadUrl(path);
       if (error || !data) {
@@ -130,7 +152,7 @@ Deno.serve(async (request: Request) => {
           submission_id: submissionId,
           storage_path: path,
           token: data.token,
-          bundle: { id: bundle.id, title: bundle.title, price: bundle.price },
+          bundle: { id: bundle.id, title: bundle.title, price: 499 },
         },
         200,
         corsHeaders
@@ -142,20 +164,17 @@ Deno.serve(async (request: Request) => {
       const fullName = text(body.full_name);
       const phone = text(body.phone).replace(/[\s-]/g, "");
       const email = text(body.email).toLowerCase();
-      const course = text(body.course);
+      const course = text(body.course) || "BCA";
       const utr = text(body.utr).toUpperCase();
       const submissionId = text(body.submission_id);
       const path = text(body.storage_path);
-      const semester = Number(body.semester);
+      const semester = Number(body.semester) || 1;
       const amount = Number(body.amount);
-
-      if (!identity.user.email || email !== identity.user.email.toLowerCase()) {
-        return respond({ success: false, error: "Use your registered BCA Vault email address." }, 400, corsHeaders);
-      }
 
       if (
         fullName.length < 2 ||
         fullName.length > 100 ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
         !/^\+?[0-9]{10,15}$/.test(phone) ||
         course.length < 2 ||
         course.length > 80 ||
@@ -170,12 +189,14 @@ Deno.serve(async (request: Request) => {
         return respond({ success: false, error: "Please enter a valid UPI transaction ID / UTR." }, 400, corsHeaders);
       }
 
-      if (!/^BV-[A-F0-9]{12}$/.test(submissionId) || !path.startsWith(`payment-evidence/${identity.user.id}/${submissionId}/screenshot.`)) {
+      if (!/^BV-[A-F0-9]{12}$/.test(submissionId) || !path.startsWith("payment-evidence/") || !path.includes(submissionId)) {
         return respond({ success: false, error: "Your upload session is invalid. Please select your screenshot again." }, 400, corsHeaders);
       }
 
-      if (Number(bundle.price) !== amount) {
-        return respond({ success: false, error: "The payment amount does not match the selected bundle." }, 400, corsHeaders);
+      // Valid prices: 499 (normal) or 349 (winner/coupon)
+      const allowedPrices = [499, 349, Number(bundle.price)];
+      if (!allowedPrices.includes(amount)) {
+        return respond({ success: false, error: "Invalid payment amount. Valid pricing is ₹499 or ₹349." }, 400, corsHeaders);
       }
 
       const folder = path.slice(0, path.lastIndexOf("/"));
@@ -194,16 +215,29 @@ Deno.serve(async (request: Request) => {
         return respond({ success: false, error: "Your uploaded screenshot could not be verified in storage. Please upload again." }, 400, corsHeaders);
       }
 
+      // If student is logged in, attach their user_id. If guest, check if profile exists with email.
+      let effectiveUserId = user?.id || null;
+      if (!effectiveUserId) {
+        const { data: existingProfile } = await admin
+          .from("profiles")
+          .select("user_id")
+          .ilike("email", email)
+          .maybeSingle();
+        if (existingProfile?.user_id) {
+          effectiveUserId = existingProfile.user_id;
+        }
+      }
+
       const { error: insertError } = await admin.from("payment_submissions").insert({
         reference_id: submissionId,
-        user_id: identity.user.id,
+        user_id: effectiveUserId,
         bundle_id: bundle.id,
         full_name: fullName,
-        email: identity.user.email,
+        email,
         phone,
         course,
         semester,
-        amount: bundle.price,
+        amount,
         utr,
         screenshot_bucket: bucket,
         screenshot_path: path,
@@ -224,7 +258,8 @@ Deno.serve(async (request: Request) => {
           success: true,
           submission_id: submissionId,
           status: "pending",
-          bundle: { id: bundle.id, title: bundle.title, price: bundle.price },
+          bundle: { id: bundle.id, title: bundle.title, price: amount },
+          user_id: effectiveUserId,
         },
         201,
         corsHeaders
