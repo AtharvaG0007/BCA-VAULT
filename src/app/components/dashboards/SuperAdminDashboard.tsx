@@ -12,6 +12,7 @@ import {
   Copy,
   Eye,
   EyeOff,
+  Gift,
   KeyRound,
   Loader2,
   LogOut,
@@ -42,13 +43,14 @@ function generateStrongPassword(): string {
 type Row = Record<string, any>;
 
 const PAGES = [
-  { key: "dashboard", label: "Dashboard", icon: BarChart3 },
-  { key: "payments", label: "Payment CRM", icon: ShieldCheck },
-  { key: "students", label: "Students", icon: Users },
-  { key: "access", label: "Access Control", icon: KeyRound },
-  { key: "notes", label: "Study Notes", icon: BookOpen },
-  { key: "bundles", label: "Bundles", icon: Package },
-  { key: "activity", label: "Activity Logs", icon: Clock },
+  { key: "dashboard", label: "Dashboard", icon: BarChart3, group: "DASHBOARD" },
+  { key: "students", label: "Students", icon: Users, group: "STUDENTS" },
+  { key: "payments", label: "Payment CRM", icon: ShieldCheck, group: "PAYMENTS" },
+  { key: "referrals", label: "Referral Management", icon: Gift, group: "REFERRALS" },
+  { key: "bundles", label: "Bundles", icon: Package, group: "CONTENT" },
+  { key: "notes", label: "Study Notes", icon: BookOpen, group: "CONTENT" },
+  { key: "access", label: "Access Control", icon: KeyRound, group: "CONTENT" },
+  { key: "activity", label: "Activity Logs", icon: Clock, group: "SYSTEM" },
 ] as const;
 
 const formatDate = (v: any) =>
@@ -107,6 +109,12 @@ export function SuperAdminDashboard() {
   const activeTab = PAGES.some((p) => p.key === pathSegment) ? pathSegment : "dashboard";
 
   const [data, setData] = useState<Record<string, Row[]>>({});
+  const [referralMetrics, setReferralMetrics] = useState({
+    total_referrals: 0,
+    pending_referrals: 0,
+    successful_referrals: 0,
+    rewards_unlocked: 0,
+  });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [paymentFilter, setPaymentFilter] = useState("all");
@@ -150,16 +158,17 @@ export function SuperAdminDashboard() {
     setLoading(true);
     setError("");
     try {
-      const [p, s, a, b, n, l] = await Promise.all([
+      const [p, s, a, b, n, l, ref] = await Promise.all([
         adminApi.listPayments(paymentFilter, search),
         adminApi.listStudents(activeTab === "students" ? search : ""),
         adminApi.listAccess(),
         adminApi.listBundles(),
         adminApi.listNotes(),
         adminApi.listActivity(),
+        adminApi.listReferrals(),
       ]);
 
-      const errors = [p.error, s.error, a.error, b.error, n.error, l.error].filter(Boolean);
+      const errors = [p.error, s.error, a.error, b.error, n.error, l.error, ref?.error].filter(Boolean);
       if (errors.length > 0) {
         throw errors[0];
       }
@@ -171,7 +180,13 @@ export function SuperAdminDashboard() {
         bundles: b.data || [],
         notes: n.data || [],
         activity: l.data || [],
+        referrals: ref?.data?.referrals || [],
+        rewards: ref?.data?.rewards || [],
       });
+
+      if (ref?.data?.metrics) {
+        setReferralMetrics(ref.data.metrics);
+      }
     } catch (err: any) {
       console.error("[SuperAdmin] load error:", err);
       setError(err.message || "Unable to load data from Supabase.");
@@ -190,6 +205,8 @@ export function SuperAdminDashboard() {
   const bundles = data.bundles || [];
   const notes = data.notes || [];
   const activity = data.activity || [];
+  const adminReferrals = data.referrals || [];
+  const adminRewards = data.rewards || [];
 
   const approvedPayments = payments.filter((x) => x.status === "approved");
   const totalRevenue = approvedPayments.reduce((acc, x) => acc + Number(x.amount || 0), 0);
@@ -366,23 +383,34 @@ export function SuperAdminDashboard() {
             </div>
           </div>
 
-          <nav className="space-y-1">
-            {PAGES.map((page) => {
-              const Icon = page.icon;
-              const isActive = activeTab === page.key;
+          <nav className="space-y-4">
+            {["DASHBOARD", "STUDENTS", "PAYMENTS", "REFERRALS", "CONTENT", "SYSTEM"].map((groupName) => {
+              const groupPages = PAGES.filter((p) => p.group === groupName);
+              if (!groupPages.length) return null;
               return (
-                <Link
-                  key={page.key}
-                  to={`/admin/${page.key}`}
-                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition ${
-                    isActive
-                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
-                      : "text-slate-400 hover:bg-slate-900 hover:text-white"
-                  }`}
-                >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  <span>{page.label}</span>
-                </Link>
+                <div key={groupName} className="space-y-1">
+                  <p className="px-3.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                    {groupName}
+                  </p>
+                  {groupPages.map((page) => {
+                    const Icon = page.icon;
+                    const isActive = activeTab === page.key;
+                    return (
+                      <Link
+                        key={page.key}
+                        to={`/admin/${page.key}`}
+                        className={`flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold transition ${
+                          isActive
+                            ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
+                            : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                        }`}
+                      >
+                        <Icon className="h-4 w-4 shrink-0" />
+                        <span>{page.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
               );
             })}
           </nav>
@@ -458,6 +486,10 @@ export function SuperAdminDashboard() {
                       value: access.filter((x) => x.status === "active").length,
                     },
                     { label: "Total Revenue", value: formatMoney(totalRevenue) },
+                    { label: "Total Referrals", value: referralMetrics.total_referrals },
+                    { label: "Pending Referrals", value: referralMetrics.pending_referrals },
+                    { label: "Successful Referrals", value: referralMetrics.successful_referrals },
+                    { label: "Unlocked Rewards", value: referralMetrics.rewards_unlocked },
                   ].map((stat) => (
                     <div
                       key={stat.label}
@@ -572,6 +604,7 @@ export function SuperAdminDashboard() {
                             <th className="pb-3">Course / Sem</th>
                             <th className="pb-3">Amount</th>
                             <th className="pb-3">UTR / Ref</th>
+                            <th className="pb-3">Referral Code</th>
                             <th className="pb-3">Bundle</th>
                             <th className="pb-3">Status</th>
                             <th className="pb-3">Date</th>
@@ -595,6 +628,16 @@ export function SuperAdminDashboard() {
                                 <td className="py-3">
                                   <p className="font-mono text-[11px] text-slate-300 font-semibold">{p.utr}</p>
                                   <p className="font-mono text-[10px] text-slate-500">{p.reference_id}</p>
+                                </td>
+                                <td className="py-3">
+                                  {p.referral_code ? (
+                                    <span className="inline-flex items-center gap-1 rounded-md bg-indigo-950/80 border border-indigo-700/60 px-2 py-0.5 font-mono text-[11px] font-bold text-indigo-300">
+                                      <Gift className="w-3 h-3 text-indigo-400" />
+                                      {p.referral_code}
+                                    </span>
+                                  ) : (
+                                    <span className="text-slate-600 text-[11px]">—</span>
+                                  )}
                                 </td>
                                 <td className="py-3">
                                   <span className="inline-block max-w-[140px] truncate font-medium text-slate-300" title={bundleTitle}>
@@ -641,6 +684,167 @@ export function SuperAdminDashboard() {
                               </tr>
                             );
                           })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Referrals Tab */}
+            {activeTab === "referrals" && (
+              <div className="space-y-6">
+                {/* Metrics */}
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5 shadow-xl shadow-black/20">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold text-slate-400">Total Referrals</p>
+                      <Users className="w-4 h-4 text-slate-400" />
+                    </div>
+                    <p className="mt-2 text-3xl font-black text-white">{referralMetrics.total_referrals}</p>
+                    <p className="text-[11px] text-slate-500 mt-1">Codes applied across orders</p>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5 shadow-xl shadow-black/20">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold text-amber-400">Pending Referrals</p>
+                      <Clock className="w-4 h-4 text-amber-400" />
+                    </div>
+                    <p className="mt-2 text-3xl font-black text-amber-400">{referralMetrics.pending_referrals}</p>
+                    <p className="text-[11px] text-slate-500 mt-1">Awaiting payment verification</p>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5 shadow-xl shadow-black/20">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold text-emerald-400">Successful Referrals</p>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    </div>
+                    <p className="mt-2 text-3xl font-black text-emerald-400">{referralMetrics.successful_referrals}</p>
+                    <p className="text-[11px] text-slate-500 mt-1">Qualified via payment approval</p>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5 shadow-xl shadow-black/20">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold text-indigo-400">Rewards Unlocked</p>
+                      <Gift className="w-4 h-4 text-indigo-400" />
+                    </div>
+                    <p className="mt-2 text-3xl font-black text-indigo-400">{referralMetrics.rewards_unlocked}</p>
+                    <p className="text-[11px] text-slate-500 mt-1">Most Repeated Questions unlocked</p>
+                  </div>
+                </div>
+
+                {/* Referrals Table */}
+                <div className="rounded-2xl border border-slate-800 bg-slate-950 p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-base font-bold text-white">Referrals Table</h3>
+                      <p className="text-xs text-slate-400">Track student referrals and their qualifying status</p>
+                    </div>
+                    <span className="text-xs text-slate-500 font-semibold">{adminReferrals.length} referrals</span>
+                  </div>
+
+                  {adminReferrals.length === 0 ? (
+                    <div className="py-10 text-center text-xs text-slate-500">
+                      No referral records recorded yet.
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="border-b border-slate-800 text-slate-400 font-semibold">
+                            <th className="pb-3">Referrer</th>
+                            <th className="pb-3">Referred Student</th>
+                            <th className="pb-3">Referral Code</th>
+                            <th className="pb-3">Status</th>
+                            <th className="pb-3">Created Date</th>
+                            <th className="pb-3">Successful Date</th>
+                            <th className="pb-3 text-right">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                          {adminReferrals.map((r: any) => (
+                            <tr key={r.id} className="hover:bg-slate-900/50">
+                              <td className="py-3">
+                                <p className="font-bold text-white">{r.referrer_name}</p>
+                                <p className="text-[11px] text-slate-400">{r.referrer_email}</p>
+                              </td>
+                              <td className="py-3">
+                                <p className="font-bold text-white">{r.referred_name}</p>
+                                <p className="text-[11px] text-slate-400">{r.referred_email}</p>
+                              </td>
+                              <td className="py-3">
+                                <span className="font-mono bg-indigo-950 border border-indigo-800/80 text-indigo-300 px-2 py-0.5 rounded-md font-bold text-[11px]">
+                                  {r.referral_code}
+                                </span>
+                              </td>
+                              <td className="py-3">
+                                <StatusBadge status={r.status} />
+                              </td>
+                              <td className="py-3 text-slate-400">{formatDate(r.created_at)}</td>
+                              <td className="py-3 text-slate-400">{formatDate(r.successful_at)}</td>
+                              <td className="py-3 text-right">
+                                <button
+                                  onClick={() => setModal({ kind: "referral_detail", item: r })}
+                                  className="rounded-lg bg-slate-800 px-2.5 py-1 text-xs font-bold text-slate-200 hover:bg-indigo-600 hover:text-white transition"
+                                >
+                                  View Flow
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* Rewards Table */}
+                <div className="rounded-2xl border border-slate-800 bg-slate-950 p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-base font-bold text-white">Unlocked Rewards Table</h3>
+                      <p className="text-xs text-slate-400">Most Repeated Questions reward access grants</p>
+                    </div>
+                    <span className="text-xs text-slate-500 font-semibold">{adminRewards.length} rewards</span>
+                  </div>
+
+                  {adminRewards.length === 0 ? (
+                    <div className="py-10 text-center text-xs text-slate-500">
+                      No rewards unlocked yet.
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="border-b border-slate-800 text-slate-400 font-semibold">
+                            <th className="pb-3">Student</th>
+                            <th className="pb-3">Reward Type</th>
+                            <th className="pb-3">Status</th>
+                            <th className="pb-3">Unlocked At</th>
+                            <th className="pb-3 text-right">Claimed At</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                          {adminRewards.map((rw: any) => (
+                            <tr key={rw.id} className="hover:bg-slate-900/50">
+                              <td className="py-3">
+                                <p className="font-bold text-white">{rw.student_name}</p>
+                                <p className="text-[11px] text-slate-400">{rw.student_email}</p>
+                              </td>
+                              <td className="py-3">
+                                <span className="inline-flex items-center gap-1.5 text-indigo-300 font-semibold">
+                                  <Gift className="w-3.5 h-3.5 text-indigo-400" />
+                                  {rw.reward_type}
+                                </span>
+                              </td>
+                              <td className="py-3">
+                                <StatusBadge status={rw.status} />
+                              </td>
+                              <td className="py-3 text-slate-400">{formatDate(rw.unlocked_at)}</td>
+                              <td className="py-3 text-slate-500 text-right">{formatDate(rw.claimed_at)}</td>
+                            </tr>
+                          ))}
                         </tbody>
                       </table>
                     </div>
@@ -1168,12 +1372,31 @@ export function SuperAdminDashboard() {
                       <p className="font-mono text-slate-400 mt-0.5">{modal.payment.reference_id}</p>
                     </div>
                     <div>
+                      <p className="text-slate-500 font-semibold">Referral Code</p>
+                      <p className="font-mono font-bold text-indigo-400 mt-0.5">
+                        {modal.payment.referral_code || "None (Direct Purchase)"}
+                      </p>
+                    </div>
+                    <div>
                       <p className="text-slate-500 font-semibold">Current Status</p>
                       <div className="mt-1">
                         <StatusBadge status={modal.payment.status} />
                       </div>
                     </div>
                   </div>
+
+                  {/* Informational referral notice for eligible Sem 1 payment with referral code */}
+                  {modal.payment.referral_code && (modal.payment.semester === 1 || String(modal.payment.course).toUpperCase().includes("BCA")) && (
+                    <div className="rounded-xl border border-indigo-500/40 bg-indigo-950/40 p-3 text-xs text-indigo-200 space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold text-indigo-300">
+                        <Gift className="w-4 h-4 text-indigo-400" />
+                        <span>Referral Linked: {modal.payment.referral_code}</span>
+                      </div>
+                      <p className="text-[11px] leading-relaxed text-slate-300">
+                        Approving this payment will qualify the referral and unlock the referrer's <strong>Most Repeated Questions</strong> reward.
+                      </p>
+                    </div>
+                  )}
 
                   <div>
                     <p className="text-xs font-bold text-slate-400 mb-2">Uploaded Payment Screenshot</p>
@@ -1215,6 +1438,112 @@ export function SuperAdminDashboard() {
                       </button>
                     </div>
                   )}
+                </div>
+              )}
+
+              {modal.kind === "referral_detail" && (
+                <div className="space-y-6 text-xs">
+                  {/* Visual Flow Timeline */}
+                  <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 space-y-4">
+                    <p className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider">
+                      Visual Operational Lifecycle
+                    </p>
+                    
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 relative">
+                      {/* Step 1: Payment */}
+                      <div className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase">1. Referred Student</span>
+                          <span className="text-[10px] font-bold text-emerald-400">Step 1</span>
+                        </div>
+                        <p className="font-bold text-white text-xs truncate">{modal.item.referred_name}</p>
+                        <p className="text-[10px] text-slate-400 truncate">{modal.item.referred_email}</p>
+                      </div>
+
+                      <div className="hidden md:block text-slate-600 font-black">→</div>
+
+                      {/* Step 2: Referral */}
+                      <div className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase">2. Referral Code</span>
+                          <span className="text-[10px] font-bold text-indigo-400">Step 2</span>
+                        </div>
+                        <p className="font-mono font-bold text-indigo-300 text-xs">{modal.item.referral_code}</p>
+                        <p className="text-[10px] text-slate-400">Status: {modal.item.status}</p>
+                      </div>
+
+                      <div className="hidden md:block text-slate-600 font-black">→</div>
+
+                      {/* Step 3: Reward */}
+                      <div className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase">3. Referrer Reward</span>
+                          <span className="text-[10px] font-bold text-amber-400">Step 3</span>
+                        </div>
+                        <p className="font-bold text-white text-xs truncate">{modal.item.referrer_name}</p>
+                        <p className="text-[10px] text-emerald-400 font-semibold">
+                          {modal.item.status === "successful" ? "✓ Unlocked" : "⏳ Pending Approval"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Summary Attributes */}
+                  <div className="grid grid-cols-2 gap-3 bg-slate-900 p-4 rounded-2xl border border-slate-800">
+                    <div>
+                      <p className="text-slate-500 font-semibold">Referrer Name & Email</p>
+                      <p className="font-bold text-white mt-0.5">{modal.item.referrer_name}</p>
+                      <p className="text-[11px] text-slate-400">{modal.item.referrer_email}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 font-semibold">Referred Student</p>
+                      <p className="font-bold text-white mt-0.5">{modal.item.referred_name}</p>
+                      <p className="text-[11px] text-slate-400">{modal.item.referred_email}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 font-semibold">Referral Code</p>
+                      <p className="font-mono font-bold text-indigo-400 mt-0.5">{modal.item.referral_code}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 font-semibold">Referral Status</p>
+                      <div className="mt-1">
+                        <StatusBadge status={modal.item.status} />
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 font-semibold">Reward Designation</p>
+                      <p className="font-semibold text-indigo-300 mt-0.5">Most Repeated Questions</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500 font-semibold">Reward Access Status</p>
+                      <p className="font-bold text-emerald-400 mt-0.5 capitalize">
+                        {modal.item.status === "successful" ? "Reward Unlocked" : "Waiting for payment verification"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Clarification Notice */}
+                  <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 text-slate-300 text-[11px] leading-relaxed">
+                    {modal.item.status === "successful" ? (
+                      <span className="text-emerald-300">
+                        ✓ This referral is qualified. Student A has active authorization to the three Most Repeated Topics PDFs (Foundation of Computing, C Programming, HTML+CSS+JavaScript).
+                      </span>
+                    ) : (
+                      <span className="text-amber-300">
+                        ⏳ Waiting for eligible payment verification. Once an admin verifies Student B's eligible Semester 1 payment in Payment CRM, this referral will automatically qualify.
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-800 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setModal(null)}
+                      className="rounded-xl bg-slate-800 px-5 py-2.5 text-xs font-bold text-white hover:bg-slate-700 transition"
+                    >
+                      Close Details
+                    </button>
+                  </div>
                 </div>
               )}
 

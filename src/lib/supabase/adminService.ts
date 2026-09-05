@@ -38,7 +38,7 @@ export const adminApi = {
     let q = adminSupabase
       .from("payment_submissions")
       .select(
-        "id,reference_id,user_id,full_name,email,phone,course,semester,amount,utr,screenshot_bucket,screenshot_path,status,admin_notes,verified_at,verified_by,created_at,bundle_id,bundles(title)",
+        "id,reference_id,user_id,full_name,email,phone,course,semester,amount,utr,screenshot_bucket,screenshot_path,status,admin_notes,verified_at,verified_by,created_at,bundle_id,referral_code,bundles(title)",
         { count: "exact" }
       )
       .order("created_at", { ascending: false })
@@ -124,6 +124,73 @@ export const adminApi = {
   listBundles: () => adminSupabase.from("bundles").select("id,title,description,price,published,created_at,notes(count),access_permissions(count)").order("created_at", { ascending: false }).range(0, 99),
   listNotes: () => adminSupabase.from("notes").select("id,title,description,subject,semester,bundle_id,storage_bucket,storage_path,published,created_at,bundles(title)").order("created_at", { ascending: false }).range(0, 99),
   listActivity: () => adminSupabase.from("activity_logs").select("id,action,target_type,target_id,metadata,created_at,actor_id").order("created_at", { ascending: false }).range(0, 99),
+  
+  listReferrals: async () => {
+    try {
+      const res = await adminFn<{
+        success: boolean;
+        metrics: {
+          total_referrals: number;
+          pending_referrals: number;
+          successful_referrals: number;
+          rewards_unlocked: number;
+        };
+        referrals: any[];
+        rewards: any[];
+      }>("/referrals/list", {});
+      if (res && res.success) {
+        return { data: res, error: null };
+      }
+    } catch (err: any) {
+      console.warn("[adminApi.listReferrals] Edge function error:", err);
+    }
+
+    // Direct database fallback
+    const [refsRes, rewardsRes] = await Promise.all([
+      adminSupabase
+        .from("referrals")
+        .select("id, referrer_user_id, referred_user_id, referral_code_id, status, created_at, successful_at")
+        .order("created_at", { ascending: false })
+        .range(0, 99),
+      adminSupabase
+        .from("referral_rewards")
+        .select("id, referral_id, user_id, reward_type, status, unlocked_at, claimed_at")
+        .order("unlocked_at", { ascending: false })
+        .range(0, 99),
+    ]);
+
+    const referrals = (refsRes.data || []).map((r: any) => ({
+      ...r,
+      referral_code: "BV-******",
+      referrer_name: "Referrer",
+      referrer_email: "—",
+      referred_name: "Referred Student",
+      referred_email: "—",
+      reward_status: r.status === "successful" ? "unlocked" : "pending",
+      reward_type: "Most Repeated Questions",
+    }));
+
+    const rewards = (rewardsRes.data || []).map((rw: any) => ({
+      ...rw,
+      student_name: "Student",
+      student_email: "—",
+      reward_type: rw.reward_type === "most_repeated_questions" ? "Most Repeated Questions" : rw.reward_type,
+    }));
+
+    return {
+      data: {
+        metrics: {
+          total_referrals: referrals.length,
+          pending_referrals: referrals.filter((r) => r.status === "pending").length,
+          successful_referrals: referrals.filter((r) => r.status === "successful").length,
+          rewards_unlocked: rewards.filter((rw) => rw.status === "unlocked").length,
+        },
+        referrals,
+        rewards,
+      },
+      error: null,
+    };
+  },
   
   // Delete a bundle and all associated data
   deleteBundle: async (bundleId: string) => {

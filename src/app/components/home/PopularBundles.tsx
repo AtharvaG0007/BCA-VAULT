@@ -133,6 +133,26 @@ export function PopularBundles() {
             </div>
           </motion.div>
         </div>
+
+        {/* Promo 3: Referral Callout */}
+        <div className="mt-8 max-w-2xl mx-auto bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1E40AF]">
+              <span>Study Together. Earn More.</span>
+            </div>
+            <p className="text-xs text-slate-700 leading-relaxed max-w-md">
+              Refer a friend and unlock <strong className="text-slate-900 font-semibold">Most Repeated Questions</strong> after their eligible purchase is verified.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/referral")}
+            className="shrink-0 bg-white border-blue-200 text-[#1E40AF] hover:bg-blue-50 text-xs font-bold rounded-xl shadow-xs"
+          >
+            Refer a Friend
+          </Button>
+        </div>
       </div>
     </section>
   );

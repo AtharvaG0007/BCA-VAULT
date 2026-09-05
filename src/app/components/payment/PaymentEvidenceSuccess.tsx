@@ -230,13 +230,25 @@ export function PaymentEvidenceSuccess({
             </button>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={onDashboard}
-            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3.5 text-sm font-bold text-white hover:bg-slate-800 transition"
-          >
-            <LayoutDashboard className="h-4 w-4" /> Go to Student Dashboard
-          </button>
+          <div>
+            {/* Promo 5: Post-action referral reminder */}
+            <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/60 p-3 text-left">
+              <p className="text-[11px] font-bold text-[#1E40AF]">
+                Know someone preparing for BCA?
+              </p>
+              <p className="text-[11px] text-slate-600 mt-0.5 leading-normal">
+                Once inside your dashboard, share your personal referral code to unlock Most Repeated Questions after their verified purchase.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={onDashboard}
+              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3.5 text-sm font-bold text-white hover:bg-slate-800 transition"
+            >
+              <LayoutDashboard className="h-4 w-4" /> Go to Student Dashboard
+            </button>
+          </div>
         )}
       </div>
     </div>

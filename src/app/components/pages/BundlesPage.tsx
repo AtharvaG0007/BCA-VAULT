@@ -153,6 +153,24 @@ export function BundlesPage() {
           </div>
         </motion.div>
 
+        {/* Promo 2: Referral Callout */}
+        <div className="mt-6 bg-gradient-to-r from-blue-50/70 to-indigo-50/50 border border-blue-200/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#1E40AF]">
+              <span>🎓 Know a BCA friend?</span>
+            </div>
+            <p className="text-xs text-slate-700 leading-relaxed max-w-lg">
+              Refer them to BCA Vault and unlock <strong className="text-slate-900 font-semibold">Most Repeated Questions</strong> for yourself after their eligible purchase is verified.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate("/referral")}
+            className="shrink-0 px-4 py-2 bg-white border border-blue-200 text-[#1E40AF] hover:bg-blue-50 text-xs font-bold rounded-xl shadow-xs transition-colors"
+          >
+            Learn About Referral
+          </button>
+        </div>
+
         {/* How it works */}
         <motion.div
           initial={{ opacity: 0 }}

@@ -30,6 +30,8 @@ import { adminApi } from "@/lib/supabase/adminService";
 import { ProtectedPdfViewer } from "../viewer/ProtectedPdfViewer";
 import { StudentLearningView } from "../student/StudentLearningView";
 import { StudentProfileView } from "../student/StudentProfileView";
+import { StudentReferralView } from "../student/StudentReferralView";
+import { Gift } from "lucide-react";
 
 interface AccessItem {
   id: string;
@@ -50,7 +52,7 @@ interface NoteItem {
   status?: string | null;
 }
 
-type TabType = "dashboard" | "ai" | "profile";
+type TabType = "dashboard" | "ai" | "profile" | "referral";
 
 export function StudentDashboard() {
   const { appUser, logout } = useAuth();
@@ -60,7 +62,13 @@ export function StudentDashboard() {
   // Detect active tab from URL path if applicable
   const pathSegment = location.pathname.split("/").pop() || "dashboard";
   const initialTab: TabType =
-    pathSegment === "ai" ? "ai" : pathSegment === "profile" ? "profile" : "dashboard";
+    pathSegment === "ai"
+      ? "ai"
+      : pathSegment === "profile"
+      ? "profile"
+      : pathSegment === "referral"
+      ? "referral"
+      : "dashboard";
 
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -90,6 +98,7 @@ export function StudentDashboard() {
   useEffect(() => {
     if (pathSegment === "ai") setActiveTab("ai");
     else if (pathSegment === "profile") setActiveTab("profile");
+    else if (pathSegment === "referral") setActiveTab("referral");
     else setActiveTab("dashboard");
   }, [location.pathname]);
 
@@ -227,6 +236,18 @@ export function StudentDashboard() {
               <User className="h-4 w-4 shrink-0" />
               <span>My Profile</span>
             </button>
+
+            <button
+              onClick={() => switchTab("referral")}
+              className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold transition text-left ${
+                activeTab === "referral"
+                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+              }`}
+            >
+              <Gift className="h-4 w-4 shrink-0 text-emerald-500" />
+              <span>Referral Program</span>
+            </button>
           </nav>
         </div>
 
@@ -309,6 +330,17 @@ export function StudentDashboard() {
               <span>My Profile</span>
             </button>
             <button
+              onClick={() => switchTab("referral")}
+              className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-xs font-bold transition text-left ${
+                activeTab === "referral"
+                  ? "bg-indigo-600 text-white"
+                  : "text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              <Gift className="h-4 w-4 text-emerald-500" />
+              <span>Referral Program</span>
+            </button>
+            <button
               onClick={() => void logout()}
               className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 transition"
             >
@@ -329,7 +361,15 @@ export function StudentDashboard() {
         {/* VIEW 2: MY PROFILE */}
         {activeTab === "profile" && <StudentProfileView />}
 
-        {/* VIEW 3: MAIN DASHBOARD */}
+        {/* VIEW 3: REFERRAL PROGRAM */}
+        {activeTab === "referral" && (
+          <StudentReferralView
+            onOpenNote={(note) => void openNote(note)}
+            openingId={openingId}
+          />
+        )}
+
+        {/* VIEW 4: MAIN DASHBOARD */}
         {activeTab === "dashboard" && (
           <div className="mx-auto max-w-5xl w-full px-4 py-8 sm:px-6 space-y-8">
             {/* Header */}

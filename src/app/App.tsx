@@ -24,6 +24,7 @@ import { NotesPage } from "./components/pages/NotesPage";
 import { PYQPage } from "./components/pages/PYQPage";
 import { BundlesPage } from "./components/pages/BundlesPage";
 import { PricingPage } from "./components/pages/PricingPage";
+import { ReferralPage } from "./components/pages/ReferralPage";
 import { LoginPage } from "./components/pages/LoginPage";
 import { SuperAdminDashboard } from "./components/dashboards/SuperAdminDashboard";
 import { StudentDashboard } from "./components/dashboards/StudentDashboard";
@@ -37,6 +38,7 @@ import { AdminAuthProvider } from "@/app/components/auth/AdminAuthContext";
 import { AdminProtectedRoute } from "./components/guards/AdminProtectedRoute";
 import { PublicSupportChat } from "./components/chatbot/PublicSupportChat";
 import { WhatsAppFloatingButton } from "./components/support/WhatsAppFloatingButton";
+import { ReferralFloatingPromo } from "./components/marketing/ReferralFloatingPromo";
 
 function PageWrapper({
   children,
@@ -155,6 +157,18 @@ function AppLayout() {
                   <BundlesPage />
                 </PageWrapper>
               }
+            />
+            <Route
+              path="/referral"
+              element={
+                <PageWrapper>
+                  <ReferralPage />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="/referral-program"
+              element={<Navigate to="/referral" replace />}
             />
             <Route
               path="/pricing"
@@ -370,8 +384,13 @@ function AppLayout() {
       </div>
       {!hideNav && <Footer />}
       {!isAdminRoute && <WhatsAppFloatingButton />}
-      {/* Public pages → Support AI | Admin & Student → none */}
-      {!isAdminRoute && !isStudentRoute && <PublicSupportChat />}
+      {/* Public pages → Support AI & Referral Promo | Admin & Student → none */}
+      {!isAdminRoute && !isStudentRoute && (
+        <>
+          <PublicSupportChat />
+          <ReferralFloatingPromo />
+        </>
+      )}
       <Toaster />
     </div>
   );

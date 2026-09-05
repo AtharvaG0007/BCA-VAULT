@@ -521,6 +521,124 @@ Deno.serve(async (request: Request) => {
       return respond({ success: true, message: "Access revoked successfully." }, 200, corsHeaders);
     }
 
+    if (request.method === "POST" && (pathname === "/referrals" || pathname === "/referrals/list")) {
+      // 1. Query referrals with referrer and referred profile information
+      const { data: rawReferrals, error: refsErr } = await admin
+        .from("referrals")
+        .select(`
+          id,
+          referrer_user_id,
+          referred_user_id,
+          referral_code_id,
+          status,
+          created_at,
+          successful_at
+        `)
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      if (refsErr) {
+        return respond({ success: false, error: refsErr.message }, 500, corsHeaders);
+      }
+
+      // Collect user IDs and code IDs for enrichment
+      const userIds = new Set<string>();
+      const codeIds = new Set<string>();
+      for (const r of rawReferrals || []) {
+        if (r.referrer_user_id) userIds.add(r.referrer_user_id);
+        if (r.referred_user_id) userIds.add(r.referred_user_id);
+        if (r.referral_code_id) codeIds.add(r.referral_code_id);
+      }
+
+      const [profilesRes, codesRes, rewardsRes] = await Promise.all([
+        userIds.size > 0
+          ? admin.from("profiles").select("user_id, full_name, email").in("user_id", Array.from(userIds))
+          : Promise.resolve({ data: [] }),
+        codeIds.size > 0
+          ? admin.from("referral_codes").select("id, code").in("id", Array.from(codeIds))
+          : Promise.resolve({ data: [] }),
+        admin
+          .from("referral_rewards")
+          .select("id, referral_id, user_id, reward_type, status, unlocked_at, claimed_at")
+          .order("unlocked_at", { ascending: false })
+          .limit(200),
+      ]);
+
+      const profileMap = new Map<string, { full_name: string; email: string }>();
+      (profilesRes.data || []).forEach((p: any) => {
+        profileMap.set(p.user_id, { full_name: p.full_name || "Student", email: p.email });
+      });
+
+      const codeMap = new Map<string, string>();
+      (codesRes.data || []).forEach((c: any) => {
+        codeMap.set(c.id, c.code);
+      });
+
+      const rewardsList = (rewardsRes.data || []).map((rw: any) => {
+        const u = profileMap.get(rw.user_id);
+        return {
+          id: rw.id,
+          referral_id: rw.referral_id,
+          user_id: rw.user_id,
+          student_name: u?.full_name || "Student",
+          student_email: u?.email || "—",
+          reward_type: rw.reward_type === "most_repeated_questions" ? "Most Repeated Questions" : rw.reward_type,
+          status: rw.status,
+          unlocked_at: rw.unlocked_at,
+          claimed_at: rw.claimed_at,
+        };
+      });
+
+      const rewardByReferralId = new Map<string, any>();
+      rewardsList.forEach((rw: any) => {
+        if (rw.referral_id) rewardByReferralId.set(rw.referral_id, rw);
+      });
+
+      const referralsList = (rawReferrals || []).map((r: any) => {
+        const referrer = profileMap.get(r.referrer_user_id);
+        const referred = profileMap.get(r.referred_user_id);
+        const code = codeMap.get(r.referral_code_id) || "—";
+        const rw = rewardByReferralId.get(r.id);
+
+        return {
+          id: r.id,
+          referral_code: code,
+          referrer_user_id: r.referrer_user_id,
+          referrer_name: referrer?.full_name || "Student",
+          referrer_email: referrer?.email || "—",
+          referred_user_id: r.referred_user_id,
+          referred_name: referred?.full_name || "Student",
+          referred_email: referred?.email || "—",
+          status: r.status,
+          created_at: r.created_at,
+          successful_at: r.successful_at,
+          reward_status: rw?.status || (r.status === "successful" ? "unlocked" : "locked"),
+          reward_type: rw?.reward_type || "Most Repeated Questions",
+        };
+      });
+
+      const totalReferrals = referralsList.length;
+      const pendingReferrals = referralsList.filter((x: any) => x.status === "pending").length;
+      const successfulReferrals = referralsList.filter((x: any) => x.status === "successful").length;
+      const rewardsUnlocked = rewardsList.filter((x: any) => x.status === "unlocked").length;
+
+      return respond(
+        {
+          success: true,
+          metrics: {
+            total_referrals: totalReferrals,
+            pending_referrals: pendingReferrals,
+            successful_referrals: successfulReferrals,
+            rewards_unlocked: rewardsUnlocked,
+          },
+          referrals: referralsList,
+          rewards: rewardsList,
+        },
+        200,
+        corsHeaders
+      );
+    }
+
     if (request.method === "POST" && pathname === "/notes/upload-url") {
       const { fileName, contentType, semester = 1 } = await request.json().catch(() => ({}));
       if (contentType !== "application/pdf") return respond({ success: false, error: "Only PDF files are allowed." }, 400, corsHeaders);

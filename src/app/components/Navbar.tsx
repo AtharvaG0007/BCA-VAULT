@@ -24,6 +24,7 @@ const navLinks = [
     ],
   },
   { label: "Bundles", href: "/bundles" },
+  { label: "Referral Program", href: "/referral", badge: "Unlock Qs" },
 ];
 
 export function Navbar() {
@@ -59,10 +60,15 @@ export function Navbar() {
                 <Link
                   to={link.href}
                   className={cn(
-                    "flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#1E40AF] rounded-lg hover:bg-blue-50 transition-colors",
+                    "flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#1E40AF] rounded-lg hover:bg-blue-50 transition-colors",
                   )}
                 >
-                  {link.label}
+                  <span>{link.label}</span>
+                  {(link as any).badge && (
+                    <span className="text-[10px] font-bold tracking-tight bg-blue-100 text-[#1E40AF] px-1.5 py-0.2 rounded-full border border-blue-200">
+                      {(link as any).badge}
+                    </span>
+                  )}
                   {link.children && <ChevronDown className="w-3.5 h-3.5" />}
                 </Link>
                 {link.children && openDropdown === link.label && (
@@ -198,10 +204,15 @@ export function Navbar() {
                 <div key={link.label}>
                   <Link
                     to={link.href}
-                    className="block px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-blue-50 hover:text-[#1E40AF] transition-colors"
+                    className="flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-blue-50 hover:text-[#1E40AF] transition-colors"
                     onClick={() => setMobileOpen(false)}
                   >
-                    {link.label}
+                    <span>{link.label}</span>
+                    {(link as any).badge && (
+                      <span className="text-[10px] font-bold tracking-tight bg-blue-100 text-[#1E40AF] px-2 py-0.5 rounded-full border border-blue-200">
+                        {(link as any).badge}
+                      </span>
+                    )}
                   </Link>
                   {link.children && (
                     <div className="ml-4 mt-1 space-y-1">
