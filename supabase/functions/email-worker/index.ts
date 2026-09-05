@@ -5,7 +5,7 @@ const url = Deno.env.get("SUPABASE_URL") ?? "";
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const resendKey = Deno.env.get("RESEND_API_KEY") ?? "";
 const fromName = Deno.env.get("EMAIL_FROM_NAME") ?? "BCA Vault";
-const fromAddress = Deno.env.get("EMAIL_FROM_ADDRESS") ?? "bcavault07@gmail.com";
+const fromAddress = Deno.env.get("EMAIL_FROM_ADDRESS") ?? "no-reply@mail.bcavault.in";
 const MAX_ATTEMPTS = 5;
 const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
 
@@ -46,8 +46,8 @@ Deno.serve(async (req) => {
       await admin.from("email_delivery_log").insert({ outbox_id: job.id, user_id: job.recipient_user_id, recipient_email: job.recipient_email, event_type: job.event_type, provider: "resend", provider_message_id: providerId, status: "sent", sent_at: new Date().toISOString() });
       await admin.from("email_outbox").update({ status: "sent", sent_at: new Date().toISOString(), locked_at: null, last_error: null, provider_message_id: providerId }).eq("id", job.id);
       results.push({ id: job.id, status: "sent", provider_message_id: providerId });
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       const terminal = job.attempt_count >= MAX_ATTEMPTS;
       await admin.from("email_delivery_log").insert({ outbox_id: job.id, user_id: job.recipient_user_id, recipient_email: job.recipient_email, event_type: job.event_type, provider: "resend", status: "failed", failed_at: new Date().toISOString(), error_message: message });
       await admin.from("email_outbox").update({ status: terminal ? "failed" : "pending", available_at: terminal ? new Date().toISOString() : retryAt(job.attempt_count), failed_at: terminal ? new Date().toISOString() : null, locked_at: null, last_error: message }).eq("id", job.id);
