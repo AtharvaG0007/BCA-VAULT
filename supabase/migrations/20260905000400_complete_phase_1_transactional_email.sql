@@ -1,0 +1,2 @@
+-- Phase 1 transactional email infrastructure is applied live.
+-- See live database for authoritative review_payment_submission integration.
