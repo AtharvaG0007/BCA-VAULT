@@ -28,10 +28,10 @@ async function main() {
 
   const noteData = {
     bundle_id: sem1Bundle?.id,
-    title: "Most Repeated Questions (BCA Semester 1)",
-    subject: "BCA Semester 1",
+    title: "Most Repeated Questions & Topics — BCA Semester 1",
+    subject: "Foundation of Computing • C Programming • HTML • CSS • JavaScript",
     semester: 1,
-    description: "Curated exam-focused questions compiled from previous years. High-priority revision material.",
+    description: "Exam-focused most repeated questions and topics for BCA Semester 1, covering Foundation of Computing, C Programming, HTML, CSS and JavaScript.",
     storage_bucket: "Bca_notes",
     storage_path: "BCA SEM1/bca_sem1_most_repeated_questions_complete.pdf",
     published: true,

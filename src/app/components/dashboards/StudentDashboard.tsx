@@ -6,7 +6,6 @@ import {
   Bot,
   CheckCircle2,
   ChevronRight,
-  Clock,
   Download,
   FileText,
   Flame,
@@ -446,11 +445,55 @@ export function StudentDashboard() {
             {/* Featured: Most Repeated Questions High-Priority Card */}
             {(() => {
               const isMostRepeated = (n: NoteItem) =>
-                n.title.toLowerCase().includes("repeated") || n.priority === "high";
+                n.title.toLowerCase().includes("repeated") ||
+                n.priority === "high" ||
+                n.storage_path?.toLowerCase().includes("repeated");
+
               const isPYQ = (n: NoteItem) =>
                 n.title.toLowerCase().includes("pyq") || n.title.toLowerCase().includes("previous");
+
               const isTheory = (n: NoteItem) =>
                 !isMostRepeated(n) && !isPYQ(n);
+
+              const getRepeatedQuestionDetails = (note: NoteItem) => {
+                const isRep = isMostRepeated(note);
+                if (!isRep) {
+                  return {
+                    isRepeated: false,
+                    displayTitle: note.title,
+                    subtitle: note.semester ? `BCA Semester ${note.semester}` : (note.subject || "Study Material"),
+                    chips: note.subject ? [note.subject] : [],
+                    description: note.description,
+                  };
+                }
+
+                // Derive subjects/topics dynamically from subject metadata
+                const parsedChips = note.subject
+                  ? note.subject
+                      .split(/[•·|,]/)
+                      .map((s) => s.trim())
+                      .filter(Boolean)
+                  : [];
+
+                const defaultCoverage = [
+                  "Foundation of Computing",
+                  "C Programming",
+                  "HTML",
+                  "CSS",
+                  "JavaScript",
+                ];
+
+                const chips = parsedChips.length > 0 ? parsedChips : defaultCoverage;
+
+                return {
+                  isRepeated: true,
+                  displayTitle: "Most Repeated Questions & Topics",
+                  subtitle: note.semester ? `BCA Semester ${note.semester}` : "BCA Semester 1",
+                  chips,
+                  description:
+                    "Exam-focused repeated questions and important topics collected from previous-year examination patterns for Semester 1 revision.",
+                };
+              };
 
               const featuredRepeatedNote = notes.find(isMostRepeated);
 
@@ -470,50 +513,74 @@ export function StudentDashboard() {
 
               return (
                 <>
-                  {featuredRepeatedNote && (
-                    <section className="relative overflow-hidden rounded-3xl border-2 border-amber-400/40 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl">
-                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                        <div className="space-y-2.5">
-                          <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-bold text-amber-300">
-                            <Flame className="h-4 w-4 text-amber-400" />
-                            <span>High Priority · Exam Intelligence</span>
-                          </div>
-                          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
-                            {featuredRepeatedNote.title}
-                          </h2>
-                          <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-                            {featuredRepeatedNote.description ||
-                              "Curated exam-focused questions compiled from previous years. High-priority revision material."}
-                          </p>
-                          <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-indigo-300 font-medium">
-                            <span className="rounded-md bg-indigo-900/60 px-2 py-0.5 text-indigo-200">
-                              {featuredRepeatedNote.subject || "BCA Semester 1"}
-                            </span>
-                            <span>•</span>
-                            <span>Protected PDF Viewer</span>
-                            <span>•</span>
-                            <span>Anti-Copy & Watermarked</span>
-                          </div>
-                        </div>
+                  {featuredRepeatedNote && (() => {
+                    const details = getRepeatedQuestionDetails(featuredRepeatedNote);
+                    return (
+                      <section className="relative overflow-hidden rounded-3xl border-2 border-amber-400/40 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl">
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                          <div className="space-y-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-bold text-amber-300">
+                                <Flame className="h-4 w-4 text-amber-400" />
+                                <span>High Priority · Exam Intelligence</span>
+                              </div>
+                              <span className="rounded-full bg-indigo-500/20 border border-indigo-400/30 px-3 py-1 text-xs font-bold text-indigo-200">
+                                {details.subtitle}
+                              </span>
+                            </div>
 
-                        <button
-                          onClick={() => void openNote(featuredRepeatedNote)}
-                          disabled={openingId === featuredRepeatedNote.id}
-                          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-400 px-6 py-4 text-xs font-black text-slate-950 shadow-lg shadow-amber-400/20 hover:bg-amber-300 disabled:bg-slate-700 transition shrink-0 uppercase tracking-wider"
-                        >
-                          {openingId === featuredRepeatedNote.id ? (
-                            <>
-                              <Loader2 className="h-4 w-4 animate-spin text-slate-950" /> Opening Material…
-                            </>
-                          ) : (
-                            <>
-                              <Flame className="h-4 w-4 text-slate-950" /> Read Most Repeated Questions
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </section>
-                  )}
+                            <div>
+                              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                                {details.displayTitle}
+                              </h2>
+                              <p className="mt-1.5 text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
+                                {details.description}
+                              </p>
+                            </div>
+
+                            {/* Subject Coverage Chips */}
+                            <div>
+                              <p className="text-[11px] font-bold text-indigo-300 uppercase tracking-wider mb-2">
+                                Covered Subjects & Topics:
+                              </p>
+                              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                                {details.chips.map((chip, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="inline-flex items-center rounded-xl bg-indigo-950/80 border border-indigo-500/30 px-3 py-1 text-xs font-semibold text-indigo-100 shadow-2xs"
+                                  >
+                                    {chip}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 pt-1 text-[11px] text-slate-400 font-medium">
+                              <span>Protected PDF Viewer</span>
+                              <span>•</span>
+                              <span>Dynamic Forensic Watermark</span>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => void openNote(featuredRepeatedNote)}
+                            disabled={openingId === featuredRepeatedNote.id}
+                            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-400 px-6 py-4 text-xs font-black text-slate-950 shadow-lg shadow-amber-400/20 hover:bg-amber-300 disabled:bg-slate-700 transition shrink-0 uppercase tracking-wider"
+                          >
+                            {openingId === featuredRepeatedNote.id ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin text-slate-950" /> Opening Material…
+                              </>
+                            ) : (
+                              <>
+                                <Flame className="h-4 w-4 text-slate-950" /> Read Most Repeated Questions
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </section>
+                    );
+                  })()}
 
                   {/* Study Materials Hub Section */}
                   <section className="space-y-4">
@@ -607,6 +674,7 @@ export function StudentDashboard() {
                         {filteredNotes.map((note) => {
                           const isRep = isMostRepeated(note);
                           const isPyq = isPYQ(note);
+                          const details = getRepeatedQuestionDetails(note);
                           return (
                             <article
                               key={note.id}
@@ -633,28 +701,47 @@ export function StudentDashboard() {
                                         🔥 High Priority
                                       </span>
                                     )}
-                                    {note.semester && (
-                                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                                        Sem {note.semester}
-                                      </span>
-                                    )}
+                                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                                      {details.subtitle}
+                                    </span>
                                   </div>
                                 </div>
 
                                 <h3 className="mt-3 text-sm font-bold text-slate-900 leading-snug">
-                                  {note.title}
+                                  {details.displayTitle}
                                 </h3>
-                                <p
-                                  className={`mt-1 text-[11px] font-semibold ${
-                                    isRep ? "text-amber-700" : isPyq ? "text-purple-700" : "text-indigo-600"
-                                  }`}
-                                >
-                                  {note.subject || "General Theory"}
-                                </p>
-                                {note.description && (
-                                  <p className="mt-2 text-xs leading-5 text-slate-500 line-clamp-2">
-                                    {note.description}
-                                  </p>
+
+                                {isRep ? (
+                                  <div className="mt-2.5 space-y-2">
+                                    <div className="flex flex-wrap gap-1">
+                                      {details.chips.map((chip, idx) => (
+                                        <span
+                                          key={idx}
+                                          className="rounded-md bg-amber-50 border border-amber-200/60 px-2 py-0.5 text-[10px] font-semibold text-amber-900"
+                                        >
+                                          {chip}
+                                        </span>
+                                      ))}
+                                    </div>
+                                    <p className="text-xs leading-5 text-slate-500 line-clamp-2">
+                                      {details.description}
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <p
+                                      className={`mt-1 text-[11px] font-semibold ${
+                                        isPyq ? "text-purple-700" : "text-indigo-600"
+                                      }`}
+                                    >
+                                      {note.subject || "General Theory"}
+                                    </p>
+                                    {note.description && (
+                                      <p className="mt-2 text-xs leading-5 text-slate-500 line-clamp-2">
+                                        {note.description}
+                                      </p>
+                                    )}
+                                  </>
                                 )}
                               </div>
 

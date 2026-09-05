@@ -286,7 +286,7 @@ export function ProtectedPdfViewer({
       ctx.save();
       ctx.scale(pixelRatio, pixelRatio);
 
-      // Render actual PDF contents cleanly without heavy bitmap overlay
+      // Render actual PDF contents cleanly
       const renderTask = page.render({
         canvasContext: ctx,
         viewport,
@@ -294,13 +294,36 @@ export function ProtectedPdfViewer({
       });
       renderTaskRef.current = renderTask;
       await renderTask.promise;
+
+      // ── Baked-in Subtle Forensic Watermark (Canvas Pixels) ───────────────────
+      // Ensures document protection is embedded in rasterized pixels without obstructing text
+      ctx.save();
+      ctx.globalAlpha = 0.07;
+      ctx.font = "600 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillStyle = "#334155";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      const angle = -15 * (Math.PI / 180);
+      const centerX = viewport.width / 2;
+      const stepY = viewport.height / 3;
+
+      for (let y = stepY; y < viewport.height; y += stepY) {
+        ctx.save();
+        ctx.translate(centerX, y);
+        ctx.rotate(angle);
+        ctx.fillText(watermarkText, 0, 0);
+        ctx.restore();
+      }
+      ctx.restore();
+
       ctx.restore();
     } catch (err: any) {
       if (err?.name !== "RenderingCancelledException") {
         console.error("[ProtectedPdfViewer] Render Page Error:", err);
       }
     }
-  }, [pdfDoc, currentPage, scale, fitMode, isExpired]);
+  }, [pdfDoc, currentPage, scale, fitMode, isExpired, watermarkText]);
 
   useEffect(() => {
     void renderCurrentPage();
@@ -472,7 +495,7 @@ export function ProtectedPdfViewer({
           {/* ── Document Viewport (Flex: 1, Maximize Reading Space) ─────────── */}
           <div
             ref={containerRef}
-            className="relative flex-1 bg-slate-950/70 overflow-auto flex items-start justify-center p-2 sm:p-4"
+            className="relative flex-1 bg-slate-950/70 overflow-auto flex flex-col items-center justify-start p-2 sm:p-4"
             style={{
               overscrollBehavior: "contain",
               WebkitOverflowScrolling: "touch",
@@ -586,7 +609,7 @@ export function ProtectedPdfViewer({
                       key={idx}
                       className="whitespace-nowrap text-center -rotate-12 transform"
                     >
-                      <span className="text-[10px] sm:text-xs font-semibold tracking-wider text-slate-900/[0.08] select-none uppercase">
+                      <span className="text-[10px] sm:text-xs font-semibold tracking-wider text-slate-900/[0.04] select-none uppercase">
                         {watermarkText}
                       </span>
                     </div>
