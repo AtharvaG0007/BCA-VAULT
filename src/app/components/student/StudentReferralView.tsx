@@ -1,26 +1,18 @@
 import { useEffect, useState } from "react";
 import {
   Gift,
-  Copy,
-  Check,
-  Share2,
   Users,
   Clock,
   CheckCircle2,
   Sparkles,
-  BookOpen,
   FileText,
   Flame,
   Download,
   AlertCircle,
   Loader2,
-  ShieldCheck,
-  ExternalLink
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "../auth/AuthContext";
-import { adminApi } from "@/lib/supabase/adminService";
-import { Button } from "../ui/button";
 
 interface ReferralRow {
   id: string;
@@ -55,14 +47,18 @@ export function StudentReferralView({
   openingId: string | null;
 }) {
   const { user, appUser } = useAuth();
-  const [referralCode, setReferralCode] = useState<string | null>(null);
   const [referrals, setReferrals] = useState<ReferralRow[]>([]);
   const [reward, setReward] = useState<RewardRow | null>(null);
   const [rewardNotes, setRewardNotes] = useState<NoteItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [copiedCode, setCopiedCode] = useState(false);
-  const [copiedMessage, setCopiedMessage] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const studentName =
+    appUser?.name?.trim() ||
+    (user?.user_metadata?.full_name as string | undefined)?.trim() ||
+    user?.email?.split("@")[0]?.trim() ||
+    "Student";
+  const studentDms = `${studentName} DMS`;
 
   const REWARD_NOTE_IDS = [
     "33cc389f-4a00-4d3e-89dd-670e514e2ed3", // Foundation of Computing
@@ -77,34 +73,7 @@ export function StudentReferralView({
       setError(null);
 
       try {
-        // 1. Retrieve or generate user's referral code via secure RPC
-        let resolvedCode: string | null = null;
-        const { data: rpcCode, error: rpcErr } = await supabase.rpc("get_or_create_referral_code");
-
-        if (!rpcErr && rpcCode) {
-          resolvedCode = rpcCode;
-        } else {
-          if (rpcErr) {
-            console.warn("[StudentReferralView] get_or_create_referral_code notice:", rpcErr.message);
-          }
-          // Read-only fallback: fetch existing active code if RPC is pending cache or temporary hiccup
-          const { data: codeData } = await supabase
-            .from("referral_codes")
-            .select("code")
-            .eq("user_id", user.id)
-            .eq("is_active", true)
-            .maybeSingle();
-
-          if (codeData?.code) {
-            resolvedCode = codeData.code;
-          }
-        }
-
-        if (resolvedCode) {
-          setReferralCode(resolvedCode);
-        }
-
-        // 2. Fetch referrals where user is the referrer
+        // 1. Fetch referrals where user is the referrer
         const { data: refs, error: refErr } = await supabase
           .from("referrals")
           .select("id, status, created_at, successful_at")
@@ -115,7 +84,7 @@ export function StudentReferralView({
           setReferrals(refs as ReferralRow[]);
         }
 
-        // 3. Fetch user's referral reward status
+        // 2. Fetch user's referral reward status
         const { data: rewardData, error: rewardErr } = await supabase
           .from("referral_rewards")
           .select("id, reward_type, status, unlocked_at")
@@ -127,7 +96,7 @@ export function StudentReferralView({
           setReward(rewardData as RewardRow);
         }
 
-        // 4. Fetch the 3 specific Most Repeated Topics notes
+        // 3. Fetch the 3 specific Most Repeated Topics notes
         const { data: notesData } = await supabase
           .from("notes")
           .select("id, title, subject, semester, description, storage_bucket, storage_path, priority")
@@ -148,45 +117,6 @@ export function StudentReferralView({
 
     void fetchReferralData();
   }, [user]);
-
-  const copyCode = async () => {
-    if (!referralCode) return;
-    try {
-      await navigator.clipboard.writeText(referralCode);
-      setCopiedCode(true);
-      setTimeout(() => setCopiedCode(false), 2200);
-    } catch {
-      // fallback
-    }
-  };
-
-  const shareText = `Hey! Check out BCA Vault for BCA study resources and exam preparation. Use my referral code: ${referralCode || ""}\nhttps://bcavault.in/bundles`;
-
-  const copyShareMessage = async () => {
-    try {
-      await navigator.clipboard.writeText(shareText);
-      setCopiedMessage(true);
-      setTimeout(() => setCopiedMessage(false), 2200);
-    } catch {
-      // fallback
-    }
-  };
-
-  const handleNativeShare = async () => {
-    if (navigator.share && referralCode) {
-      try {
-        await navigator.share({
-          title: "BCA Vault Referral",
-          text: `Hey! Check out BCA Vault for BCA study resources. Use my referral code: ${referralCode}`,
-          url: "https://bcavault.in/referral",
-        });
-      } catch {
-        // Share cancelled or unsupported
-      }
-    } else {
-      void copyShareMessage();
-    }
-  };
 
   const isRewardUnlocked = reward?.status === "unlocked";
   const pendingCount = referrals.filter((r) => r.status === "pending").length;
@@ -215,7 +145,7 @@ export function StudentReferralView({
           Refer a Friend & Earn Free Study Resources
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 max-w-2xl leading-relaxed">
-          Share your referral code with a friend. When they make an eligible BCA Semester 1 purchase and their payment is verified, your <strong className="text-slate-900 font-semibold">Most Repeated Questions</strong> reward is unlocked automatically.
+          Invite friends to BCA Vault. When your referred student completes an eligible BCA Semester 1 purchase and their payment is verified, your <strong className="text-slate-900 font-semibold">Most Repeated Questions</strong> reward is unlocked automatically.
         </p>
       </header>
 
@@ -226,69 +156,26 @@ export function StudentReferralView({
         </div>
       )}
 
-      {/* ── Personal Referral Code & Share Card ──────────────────────── */}
+      {/* ── Student Identifier Card ──────────────────────── */}
       <section className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs relative overflow-hidden">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="space-y-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Your Personal Referral Code
+              Student Identifier
             </span>
             <div className="flex items-center gap-3">
-              <div className="bg-slate-50 border-2 border-indigo-100 rounded-2xl px-5 py-3 font-mono text-2xl sm:text-3xl font-black text-indigo-700 tracking-wider shadow-inner">
-                {referralCode || "Generating…"}
+              <div className="bg-slate-50 border-2 border-indigo-100 rounded-2xl px-5 py-3 font-mono text-2xl sm:text-3xl font-black text-indigo-700 tracking-tight shadow-inner">
+                {studentDms}
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={copyCode}
-                disabled={!referralCode}
-                className="h-12 px-4 rounded-xl border-slate-200 hover:bg-indigo-50 hover:text-indigo-700 text-xs font-bold gap-2 shadow-xs transition-all"
-              >
-                {copiedCode ? (
-                  <>
-                    <Check className="w-4 h-4 text-emerald-600" />
-                    <span className="text-emerald-700">Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4" />
-                    <span>Copy Code</span>
-                  </>
-                )}
-              </Button>
             </div>
             <p className="text-[11px] text-slate-500">
-              Friends enter this code during their Semester 1 bundle checkout.
+              Your referral rewards and progress are linked to your BCA Vault account.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 md:self-end">
-            <Button
-              onClick={handleNativeShare}
-              disabled={!referralCode}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 py-3 rounded-xl text-xs gap-2 shadow-md shadow-indigo-600/20"
-            >
-              <Share2 className="w-4 h-4" />
-              <span>Share Code</span>
-            </Button>
-            <Button
-              variant="outline"
-              onClick={copyShareMessage}
-              disabled={!referralCode}
-              className="border-slate-200 hover:bg-slate-50 text-slate-700 font-bold px-4 py-3 rounded-xl text-xs gap-2"
-            >
-              {copiedMessage ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Message Copied</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3.5 h-3.5" />
-                  <span>Copy Message</span>
-                </>
-              )}
-            </Button>
+          <div className="flex items-center gap-2 self-start sm:self-center bg-indigo-50/70 border border-indigo-100 rounded-2xl px-4 py-3 text-xs text-indigo-800">
+            <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+            <span className="font-semibold">Rewards activate on qualifying Semester 1 referral</span>
           </div>
         </div>
       </section>
@@ -303,7 +190,7 @@ export function StudentReferralView({
           <p className="text-2xl font-black text-slate-900" style={{ fontFamily: "var(--font-mono)" }}>
             {referrals.length}
           </p>
-          <p className="text-[11px] text-slate-400 mt-1">Friends who applied your code</p>
+          <p className="text-[11px] text-slate-400 mt-1">Referred students</p>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
@@ -449,7 +336,7 @@ export function StudentReferralView({
             <Gift className="mx-auto h-8 w-8 text-slate-300" />
             <p className="mt-2 text-xs font-bold text-slate-700">No referrals yet</p>
             <p className="mt-1 text-[11px] text-slate-400 max-w-sm mx-auto">
-              Share your referral code with friends preparing for BCA Semester 1 to get started.
+              Invite friends preparing for BCA Semester 1 to get started.
             </p>
           </div>
         ) : (
