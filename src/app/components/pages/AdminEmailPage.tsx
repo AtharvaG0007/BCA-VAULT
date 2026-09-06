@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Eye,
   Code2,
+  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase, adminSupabase, supabaseUrl, publicAnonKey } from "@/lib/supabase/client";
@@ -22,7 +23,7 @@ import { supabase, adminSupabase, supabaseUrl, publicAnonKey } from "@/lib/supab
 export interface OutboxItem {
   id: string;
   event_key: string;
-  event_type: "payment_approved" | "payment_rejected" | "referral_reward_unlocked" | string;
+  event_type: "test_email" | "payment_approved" | "payment_rejected" | "referral_reward_unlocked" | string;
   recipient_user_id: string | null;
   recipient_email: string;
   sender_name: string;
@@ -45,6 +46,7 @@ export interface OutboxItem {
 }
 
 const EMAIL_ADMIN_URL = `${supabaseUrl}/functions/v1/email-admin`;
+const REQUIRED_SENDER = "bcavault07@gmail.com";
 
 async function getAdminToken(): Promise<string> {
   const { data: adminSession } = await adminSupabase.auth.getSession();
@@ -73,6 +75,8 @@ async function apiCall(endpoint: string, body: Record<string, any> = {}) {
 
 function formatEventType(type: string) {
   switch (type) {
+    case "test_email":
+      return "Test Email";
     case "payment_approved":
       return "Payment Approved";
     case "payment_rejected":
@@ -117,12 +121,18 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
   const navigate = useNavigate();
   const [queue, setQueue] = useState<OutboxItem[]>([]);
   const [selectedJob, setSelectedJob] = useState<OutboxItem | null>(null);
+
+  // Compose mode state
+  const [isComposing, setIsComposing] = useState(false);
+  const [composeRecipient, setComposeRecipient] = useState("");
+  const [composeEventType, setComposeEventType] = useState<string>("test_email");
+
   const [subject, setSubject] = useState("");
   const [htmlBody, setHtmlBody] = useState("");
   const [textBody, setTextBody] = useState("");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [senderAccount, setSenderAccount] = useState<string | null>(null);
+  const [senderAccount, setSenderAccount] = useState<string | null>(REQUIRED_SENDER);
   const [filterType, setFilterType] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -137,8 +147,8 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
 
       // Verify Gmail connection
       apiCall("/verify-gmail")
-        .then((v) => setSenderAccount(v.from))
-        .catch(() => setSenderAccount(null));
+        .then((v) => setSenderAccount(v.from || REQUIRED_SENDER))
+        .catch(() => setSenderAccount(REQUIRED_SENDER));
 
       // Keep selection in sync
       if (selectedJob) {
@@ -149,7 +159,7 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
           setHtmlBody(found.html_body || "");
           setTextBody(found.text_body || "");
         }
-      } else if (list.length > 0) {
+      } else if (!isComposing && list.length > 0) {
         // Select first pending item by default, or first item
         const firstPending = list.find((j) => j.status === "pending") || list[0];
         setSelectedJob(firstPending);
@@ -169,21 +179,44 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
   }, []);
 
   const selectJob = (job: OutboxItem) => {
+    setIsComposing(false);
     setSelectedJob(job);
     setSubject(job.subject || "");
     setHtmlBody(job.html_body || "");
     setTextBody(job.text_body || "");
   };
 
+  const startCompose = (type: "test_email" | "payment_approved" = "test_email") => {
+    setIsComposing(true);
+    setSelectedJob(null);
+    setComposeEventType(type);
+    setComposeRecipient("");
+    setSubject(type === "test_email" ? "BCA Vault — Gmail API Test Email" : "");
+    setHtmlBody("");
+    setTextBody("");
+  };
+
   const handleGenerate = async () => {
-    if (!selectedJob) return;
     setActionLoading(true);
     try {
-      const res = await apiCall("/generate", { id: selectedJob.id });
-      const updated: OutboxItem = res.data;
-      selectJob(updated);
-      setQueue((prev) => prev.map((j) => (j.id === updated.id ? updated : j)));
-      toast.success("Gemini generated the email draft.");
+      if (isComposing) {
+        const res = await apiCall("/generate", {
+          event_type: composeEventType,
+          recipient_email: composeRecipient.trim() || "bcavault07@gmail.com",
+        });
+        if (res.data) {
+          setSubject(res.data.subject || "");
+          setHtmlBody(res.data.html_body || "");
+          setTextBody(res.data.text_body || "");
+        }
+        toast.success("Gemini generated the email draft.");
+      } else if (selectedJob) {
+        const res = await apiCall("/generate", { id: selectedJob.id });
+        const updated: OutboxItem = res.data;
+        selectJob(updated);
+        setQueue((prev) => prev.map((j) => (j.id === updated.id ? updated : j)));
+        toast.success("Gemini generated the email draft.");
+      }
     } catch (err: any) {
       toast.error(err.message || "Gemini email generation failed.");
     } finally {
@@ -192,19 +225,43 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
   };
 
   const handleSaveDraft = async () => {
-    if (!selectedJob) return;
+    if (!subject.trim() || !htmlBody.trim() || !textBody.trim()) {
+      toast.error("Please enter Subject, HTML body, and text body before saving.");
+      return;
+    }
+
     setActionLoading(true);
     try {
-      const res = await apiCall("/save", {
-        id: selectedJob.id,
-        subject,
-        html_body: htmlBody,
-        text_body: textBody,
-      });
-      const updated: OutboxItem = res.data;
-      selectJob(updated);
-      setQueue((prev) => prev.map((j) => (j.id === updated.id ? updated : j)));
-      toast.success("Draft saved successfully.");
+      if (isComposing) {
+        if (!composeRecipient.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(composeRecipient.trim())) {
+          toast.error("Please enter a valid recipient email address.");
+          setActionLoading(false);
+          return;
+        }
+
+        const res = await apiCall("/save", {
+          recipient_email: composeRecipient.trim(),
+          event_type: composeEventType,
+          subject: subject.trim(),
+          html_body: htmlBody.trim(),
+          text_body: textBody.trim(),
+        });
+        const savedItem: OutboxItem = res.data;
+        setQueue((prev) => [savedItem, ...prev]);
+        selectJob(savedItem);
+        toast.success("Draft saved to queue (Pending).");
+      } else if (selectedJob) {
+        const res = await apiCall("/save", {
+          id: selectedJob.id,
+          subject: subject.trim(),
+          html_body: htmlBody.trim(),
+          text_body: textBody.trim(),
+        });
+        const updated: OutboxItem = res.data;
+        selectJob(updated);
+        setQueue((prev) => prev.map((j) => (j.id === updated.id ? updated : j)));
+        toast.success("Draft saved successfully.");
+      }
     } catch (err: any) {
       toast.error(err.message || "Failed to save draft.");
     } finally {
@@ -213,25 +270,50 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
   };
 
   const handleSend = async () => {
-    if (!selectedJob) return;
+    const targetRecipient = isComposing ? composeRecipient.trim() : selectedJob?.recipient_email;
+
+    if (!targetRecipient || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(targetRecipient)) {
+      toast.error("A valid recipient email address is required.");
+      return;
+    }
+
     if (!subject.trim() || !htmlBody.trim() || !textBody.trim()) {
       toast.error("Please generate or enter the email subject, HTML, and text before sending.");
       return;
     }
+
     const confirmed = window.confirm(
-      `Are you sure you want to send this email to ${selectedJob.recipient_email}?`
+      `Are you sure you want to send this email via Gmail API to ${targetRecipient}?`
     );
     if (!confirmed) return;
 
     setActionLoading(true);
     try {
-      const res = await apiCall("/send", { id: selectedJob.id });
+      let jobId = selectedJob?.id;
+
+      // If in compose mode, save draft first to create the outbox record
+      if (isComposing || !jobId) {
+        const saveRes = await apiCall("/save", {
+          recipient_email: targetRecipient,
+          event_type: composeEventType,
+          subject: subject.trim(),
+          html_body: htmlBody.trim(),
+          text_body: textBody.trim(),
+        });
+        jobId = saveRes.data.id;
+      }
+
+      // Now send via Gmail API
+      const res = await apiCall("/send", { id: jobId });
       const updated: OutboxItem = res.data;
       selectJob(updated);
-      setQueue((prev) => prev.map((j) => (j.id === updated.id ? updated : j)));
-      toast.success("Email sent successfully via Gmail API!");
+      setQueue((prev) => {
+        const exists = prev.some((j) => j.id === updated.id);
+        return exists ? prev.map((j) => (j.id === updated.id ? updated : j)) : [updated, ...prev];
+      });
+      toast.success("✓ Email sent successfully via Gmail API!");
     } catch (err: any) {
-      toast.error(err.message || "Failed to send email.");
+      toast.error(err.message || "Failed to send email via Gmail.");
       await loadQueue();
     } finally {
       setActionLoading(false);
@@ -290,23 +372,30 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {senderAccount ? (
-              <div className="flex items-center gap-2 rounded-xl bg-slate-900 border border-slate-800 px-3.5 py-2 text-xs text-slate-300">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></span>
-                <span className="font-semibold">{senderAccount}</span>
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Sender Identity Badge */}
+            <div className="flex items-center gap-2 rounded-xl bg-slate-900 border border-slate-800 px-3.5 py-2 text-xs text-slate-300">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400 font-medium">From:</span>
+                <span className="font-bold text-white">{REQUIRED_SENDER}</span>
+                <span className="text-slate-600">•</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                  Gmail API
+                </span>
               </div>
-            ) : (
-              <a
-                href={`${EMAIL_ADMIN_URL}/google/start`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs font-bold text-amber-300 hover:bg-amber-500/20 transition"
-              >
-                <ExternalLink className="h-3.5 w-3.5" /> Connect Gmail OAuth
-              </a>
-            )}
+            </div>
 
+            {/* Compose Test Email Button */}
+            <button
+              onClick={() => startCompose("test_email")}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 px-3.5 py-2 text-xs font-black text-white shadow-md shadow-indigo-600/20 transition"
+            >
+              <Plus className="h-4 w-4" />
+              Compose Test Email
+            </button>
+
+            {/* Refresh Button */}
             <button
               onClick={() => void loadQueue()}
               disabled={loading}
@@ -346,9 +435,12 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
               <span className="text-xs font-black uppercase tracking-wider text-slate-400">
                 Email Queue ({filteredQueue.length})
               </span>
-              <span className="rounded-full bg-indigo-500/15 px-2.5 py-0.5 text-xs font-bold text-indigo-300">
-                {stats.pending} pending
-              </span>
+              <button
+                onClick={() => startCompose("test_email")}
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-400 hover:text-indigo-300 transition"
+              >
+                <Plus className="h-3 w-3" /> New
+              </button>
             </div>
 
             {/* Filter controls */}
@@ -382,6 +474,7 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                   className="flex-1 rounded-lg border border-slate-800 bg-slate-950 px-2 py-1.5 text-slate-300 outline-none"
                 >
                   <option value="all">All Events</option>
+                  <option value="test_email">Test Email</option>
                   <option value="payment_approved">Payment Approved</option>
                   <option value="payment_rejected">Payment Rejected</option>
                   <option value="referral_reward_unlocked">Referral Reward</option>
@@ -393,11 +486,19 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
             <div className="flex-1 space-y-2 max-h-[640px] overflow-y-auto pr-1">
               {filteredQueue.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-800 p-8 text-center text-xs text-slate-500">
-                  {queue.length === 0 ? "No emails found in the outbox." : "No emails match this filter."}
+                  <Mail className="h-8 w-8 mx-auto mb-2 text-slate-700" />
+                  <p className="font-semibold text-slate-400">Queue is empty</p>
+                  <p className="mt-1 text-slate-500">No emails match this filter or outbox is clear.</p>
+                  <button
+                    onClick={() => startCompose("test_email")}
+                    className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-indigo-500 transition"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Compose Test Email
+                  </button>
                 </div>
               ) : (
                 filteredQueue.map((job) => {
-                  const isSelected = selectedJob?.id === job.id;
+                  const isSelected = !isComposing && selectedJob?.id === job.id;
                   return (
                     <button
                       key={job.id}
@@ -428,7 +529,7 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                       <div className="mt-2 flex items-center justify-between text-[10px] text-slate-500">
                         <span>{new Date(job.created_at).toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
                         {job.status === "sent" && job.sent_at && (
-                          <span className="text-emerald-400">Delivered</span>
+                          <span className="text-emerald-400 font-semibold">Delivered</span>
                         )}
                       </div>
                     </button>
@@ -440,8 +541,228 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
 
           {/* Right Column: Email Detail & Composer */}
           <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-            {selectedJob ? (
+            {isComposing ? (
+              /* COMPOSE TEST EMAIL INTERFACE */
               <div className="space-y-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between border-b border-slate-800/80 pb-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
+                        <Plus className="h-3 w-3" /> New Message
+                      </span>
+                      <span className="text-xs text-slate-500 font-semibold">Super Admin Compose</span>
+                    </div>
+                    <h2 className="text-xl font-black text-white mt-1">Compose Email</h2>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Draft a test message or notification, generate with Gemini, and dispatch via Gmail API.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => void handleGenerate()}
+                      disabled={actionLoading}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-500 disabled:opacity-50 transition shadow-md shadow-indigo-600/20"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Generate with Gemini
+                    </button>
+                  </div>
+                </div>
+
+                {/* Sender, Recipient & Type Fields */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Sender (Locked to bcavault07@gmail.com) */}
+                  <div>
+                    <label className="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-400">
+                      Sender Account
+                    </label>
+                    <div className="rounded-xl border border-slate-800 bg-slate-950/80 px-3.5 py-2 text-xs text-slate-300 font-semibold flex items-center justify-between">
+                      <span className="truncate">{REQUIRED_SENDER}</span>
+                      <span className="text-[10px] text-emerald-400 font-black uppercase">Gmail API</span>
+                    </div>
+                  </div>
+
+                  {/* Recipient Email Input */}
+                  <div>
+                    <label className="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-400">
+                      Recipient Email <span className="text-rose-400">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="e.g. your-email@gmail.com"
+                      value={composeRecipient}
+                      onChange={(e) => setComposeRecipient(e.target.value)}
+                      className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2 text-xs font-semibold text-white outline-none focus:border-indigo-500 transition"
+                    />
+                  </div>
+
+                  {/* Email Type */}
+                  <div>
+                    <label className="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-400">
+                      Email Type
+                    </label>
+                    <select
+                      value={composeEventType}
+                      onChange={(e) => {
+                        setComposeEventType(e.target.value);
+                        if (e.target.value === "test_email") {
+                          setSubject("BCA Vault — Gmail API Test Email");
+                        }
+                      }}
+                      className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2 text-xs font-semibold text-white outline-none focus:border-indigo-500 transition"
+                    >
+                      <option value="test_email">Test Email (Operational Check)</option>
+                      <option value="payment_approved">Payment Approval</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Subject Input */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-400">
+                    Subject <span className="text-rose-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder="e.g. BCA Vault — Gmail API Test Email"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-xs font-semibold text-white outline-none focus:border-indigo-500 transition"
+                  />
+                </div>
+
+                {/* HTML Body and Live Preview */}
+                <div>
+                  <div className="mb-2 flex items-center justify-between">
+                    <label className="text-xs font-black uppercase tracking-wider text-slate-400">
+                      Email Body Content <span className="text-rose-400">*</span>
+                    </label>
+                    <div className="flex items-center rounded-lg border border-slate-800 bg-slate-950 p-0.5 text-xs">
+                      <button
+                        onClick={() => setViewMode("preview")}
+                        className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-bold transition ${
+                          viewMode === "preview" ? "bg-indigo-600 text-white" : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        <Eye className="h-3 w-3" /> Live Preview
+                      </button>
+                      <button
+                        onClick={() => setViewMode("code")}
+                        className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-bold transition ${
+                          viewMode === "code" ? "bg-indigo-600 text-white" : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        <Code2 className="h-3 w-3" /> HTML Code
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {/* HTML Editor */}
+                    <div className={viewMode === "preview" ? "hidden md:block" : "block col-span-2"}>
+                      <textarea
+                        value={htmlBody}
+                        onChange={(e) => setHtmlBody(e.target.value)}
+                        placeholder="Click 'Generate with Gemini' or enter HTML here..."
+                        className="h-72 w-full rounded-xl border border-slate-700 bg-slate-950 p-3 font-mono text-[11px] leading-relaxed text-slate-300 outline-none focus:border-indigo-500"
+                      />
+                    </div>
+
+                    {/* Live Preview Iframe */}
+                    <div className={viewMode === "code" ? "hidden md:block" : "block col-span-2 md:col-span-1"}>
+                      <div className="h-72 overflow-hidden rounded-xl border border-slate-700 bg-white flex flex-col">
+                        <div className="border-b border-slate-200 bg-slate-100 px-3 py-1.5 text-[10px] text-slate-600 flex items-center justify-between">
+                          <span className="truncate"><strong>From:</strong> {REQUIRED_SENDER}</span>
+                          <span className="truncate"><strong>To:</strong> {composeRecipient || "recipient"}</span>
+                        </div>
+                        <iframe
+                          title="Email Preview"
+                          sandbox=""
+                          srcDoc={
+                            htmlBody ||
+                            "<p style='font-family: Arial, sans-serif; padding: 24px; color: #64748b;'>Click <strong>'Generate with Gemini'</strong> to automatically craft a professional email, or type HTML on the left.</p>"
+                          }
+                          className="h-full w-full border-0"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Plain-Text Fallback */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-400">
+                    Plain-Text Fallback <span className="text-rose-400">*</span>
+                  </label>
+                  <textarea
+                    value={textBody}
+                    onChange={(e) => setTextBody(e.target.value)}
+                    placeholder="Plain-text version for email clients that do not render HTML..."
+                    className="h-20 w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-xs leading-relaxed text-slate-300 outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                {/* Bottom Actions */}
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/80 pt-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => void handleGenerate()}
+                      disabled={actionLoading}
+                      className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black text-white hover:bg-indigo-500 disabled:opacity-50 transition"
+                    >
+                      <Sparkles className="h-4 w-4" /> Generate with Gemini
+                    </button>
+
+                    <button
+                      onClick={() => void handleSaveDraft()}
+                      disabled={actionLoading || !composeRecipient.trim() || !subject.trim()}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-black text-slate-200 hover:bg-slate-700 disabled:opacity-50 transition"
+                    >
+                      <Save className="h-4 w-4" /> Save Draft
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => void handleSend()}
+                    disabled={
+                      actionLoading ||
+                      !composeRecipient.trim() ||
+                      !subject.trim() ||
+                      !htmlBody.trim() ||
+                      !textBody.trim()
+                    }
+                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-black text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 disabled:opacity-50 transition"
+                  >
+                    <Send className="h-4 w-4" />
+                    Send Email via Gmail API
+                  </button>
+                </div>
+              </div>
+            ) : selectedJob ? (
+              /* VIEW / EDIT SELECTED OUTBOX JOB */
+              <div className="space-y-5">
+                {/* Successful Delivery Banner */}
+                {selectedJob.status === "sent" && (
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-emerald-300">
+                    <div className="flex items-center gap-2 font-black text-sm text-emerald-400">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                      ✓ Email sent successfully via Gmail API
+                    </div>
+                    <div className="mt-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-emerald-200/90 font-mono">
+                      <div><span className="text-emerald-400 font-sans font-semibold">From:</span> {REQUIRED_SENDER}</div>
+                      <div><span className="text-emerald-400 font-sans font-semibold">To:</span> {selectedJob.recipient_email}</div>
+                      <div><span className="text-emerald-400 font-sans font-semibold">Provider:</span> Gmail API</div>
+                      <div><span className="text-emerald-400 font-sans font-semibold">Message ID:</span> {selectedJob.provider_message_id}</div>
+                      {selectedJob.sent_at && (
+                        <div className="sm:col-span-2">
+                          <span className="text-emerald-400 font-sans font-semibold">Sent:</span> {new Date(selectedJob.sent_at).toLocaleString("en-IN")}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Recipient & Job Header */}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between border-b border-slate-800/80 pb-4">
                   <div>
@@ -576,7 +897,11 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
 
                     {/* Live Preview Iframe */}
                     <div className={viewMode === "code" ? "hidden md:block" : "block col-span-2 md:col-span-1"}>
-                      <div className="h-72 overflow-hidden rounded-xl border border-slate-700 bg-white">
+                      <div className="h-72 overflow-hidden rounded-xl border border-slate-700 bg-white flex flex-col">
+                        <div className="border-b border-slate-200 bg-slate-100 px-3 py-1.5 text-[10px] text-slate-600 flex items-center justify-between">
+                          <span className="truncate"><strong>From:</strong> {REQUIRED_SENDER}</span>
+                          <span className="truncate"><strong>To:</strong> {selectedJob.recipient_email}</span>
+                        </div>
                         <iframe
                           title="Email Preview"
                           sandbox=""
@@ -636,7 +961,7 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                     className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-black text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 disabled:opacity-50 transition"
                   >
                     <Send className="h-4 w-4" />
-                    {selectedJob.status === "sent" ? "Email Already Sent" : "Send via Gmail"}
+                    {selectedJob.status === "sent" ? "Email Already Sent" : "Send via Gmail API"}
                   </button>
                 </div>
               </div>
@@ -645,8 +970,14 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                 <Mail className="h-12 w-12 text-slate-700 mb-3" />
                 <p className="text-sm font-bold text-slate-400">No Email Selected</p>
                 <p className="text-xs text-slate-600 mt-1 max-w-sm">
-                  Select an email from the queue on the left to review, generate content with Gemini, and dispatch via Gmail.
+                  Select an email from the queue on the left, or compose a new test email to verify Gmail API delivery.
                 </p>
+                <button
+                  onClick={() => startCompose("test_email")}
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-500 transition shadow-md shadow-indigo-600/20"
+                >
+                  <Plus className="h-4 w-4" /> Compose Test Email
+                </button>
               </div>
             )}
           </section>
