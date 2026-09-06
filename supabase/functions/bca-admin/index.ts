@@ -344,6 +344,55 @@ Deno.serve(async (request: Request) => {
       });
 
       if (!rpcResult.error) {
+        if (status === "approved") {
+          try {
+            const { data: pData } = await admin.from("payment_submissions").select("id,reference_id,user_id,full_name,email,amount,utr,course,semester,bundle_id,bundles(title)").eq("id", id).maybeSingle();
+            if (pData) {
+              const bundleTitle = (pData.bundles as any)?.title || "BCA Vault Bundle";
+              const targetUser = pData.user_id || (rpcResult.data as any)?.user_id;
+              const { data: sProfile } = targetUser ? await admin.from("profiles").select("full_name,email").eq("user_id", targetUser).maybeSingle() : { data: null };
+              const studentName = sProfile?.full_name?.trim() || pData.full_name?.trim() || "Student";
+              const studentEmail = sProfile?.email?.trim() || pData.email?.trim();
+              if (studentEmail) {
+                const eventKey = `payment-approved:${pData.id}`;
+                const payload = {
+                  payment_id: pData.id,
+                  reference_id: pData.reference_id,
+                  reference_last4: (pData.reference_id || "").slice(-4),
+                  user_id: targetUser,
+                  student_name: studentName,
+                  recipient_email: studentEmail,
+                  course: pData.course || "BCA",
+                  semester: pData.semester,
+                  bundle_id: pData.bundle_id,
+                  bundle_name: bundleTitle,
+                  amount: pData.amount,
+                  utr: pData.utr,
+                  payment_status: "approved",
+                  approved_at: new Date().toISOString(),
+                  verified_by: access.user.id,
+                  access_granted: true,
+                  receipt_filename: `BCA-Vault-Payment-Receipt-${pData.reference_id || pData.id}.pdf`
+                };
+                await admin.from("email_outbox").upsert({
+                  event_key: eventKey,
+                  event_type: "payment_approved",
+                  recipient_user_id: targetUser,
+                  recipient_email: studentEmail,
+                  sender_name: "BCA Vault",
+                  sender_email: "bcavault07@gmail.com",
+                  status: "pending",
+                  subject: "Payment Approved — BCA Vault Access Activated",
+                  payload,
+                  approved_at: new Date().toISOString(),
+                  approved_by: access.user.id,
+                }, { onConflict: "event_key" });
+              }
+            }
+          } catch (outboxErr) {
+            console.warn("[bca-admin] email_outbox draft notice:", outboxErr);
+          }
+        }
         return respond({ success: true, payment: rpcResult.data }, 200, corsHeaders);
       }
 
@@ -388,6 +437,7 @@ Deno.serve(async (request: Request) => {
         // Activate profile
         await admin.from("profiles").update({ status: "active", updated_at: new Date().toISOString() }).eq("user_id", targetUserId);
 
+        let bundleTitle = "BCA Vault Bundle";
         // Grant access permission
         if (payment.bundle_id) {
           await admin.from("access_permissions").upsert({
@@ -401,6 +451,7 @@ Deno.serve(async (request: Request) => {
 
           // Also check for semester combo bundle granting
           const { data: bundle } = await admin.from("bundles").select("title").eq("id", payment.bundle_id).maybeSingle();
+          if (bundle?.title) bundleTitle = bundle.title;
           if (bundle && (bundle.title.toLowerCase().includes("complete") || bundle.title.toLowerCase().includes("both"))) {
             const { data: semBundles } = await admin.from("bundles").select("id").eq("published", true);
             for (const sb of semBundles || []) {
@@ -427,6 +478,50 @@ Deno.serve(async (request: Request) => {
           } catch (refErr) {
             console.warn("[bca-admin] Referral qualification notice:", refErr);
           }
+        }
+
+        // Automatically populate payment_approved email draft into email_outbox
+        try {
+          const { data: studentProf } = await admin.from("profiles").select("full_name,email").eq("user_id", targetUserId).maybeSingle();
+          const studentName = studentProf?.full_name?.trim() || payment.full_name?.trim() || "Student";
+          const studentEmail = studentProf?.email?.trim() || payment.email?.trim();
+          if (studentEmail) {
+            const eventKey = `payment-approved:${payment.id}`;
+            const payload = {
+              payment_id: payment.id,
+              reference_id: payment.reference_id,
+              reference_last4: (payment.reference_id || "").slice(-4),
+              user_id: targetUserId,
+              student_name: studentName,
+              recipient_email: studentEmail,
+              course: payment.course || "BCA",
+              semester: payment.semester,
+              bundle_id: payment.bundle_id,
+              bundle_name: bundleTitle,
+              amount: payment.amount,
+              utr: payment.utr,
+              payment_status: "approved",
+              approved_at: new Date().toISOString(),
+              verified_by: access.user.id,
+              access_granted: true,
+              receipt_filename: `BCA-Vault-Payment-Receipt-${payment.reference_id || payment.id}.pdf`
+            };
+            await admin.from("email_outbox").upsert({
+              event_key: eventKey,
+              event_type: "payment_approved",
+              recipient_user_id: targetUserId,
+              recipient_email: studentEmail,
+              sender_name: "BCA Vault",
+              sender_email: "bcavault07@gmail.com",
+              status: "pending",
+              subject: "Payment Approved — BCA Vault Access Activated",
+              payload,
+              approved_at: new Date().toISOString(),
+              approved_by: access.user.id,
+            }, { onConflict: "event_key" });
+          }
+        } catch (outboxErr) {
+          console.warn("[bca-admin] email_outbox draft fallback notice:", outboxErr);
         }
       }
 

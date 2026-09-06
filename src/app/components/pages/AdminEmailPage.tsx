@@ -282,9 +282,12 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Are you sure you want to send this email via Gmail API to ${targetRecipient}?`
-    );
+    const isPaymentApproved = (selectedJob?.event_type === "payment_approved") || (isComposing && composeEventType === "payment_approved");
+    const confirmMessage = isPaymentApproved
+      ? `Send this payment approval email with the PDF receipt to ${targetRecipient}?`
+      : `Are you sure you want to send this email via Gmail API to ${targetRecipient}?`;
+
+    const confirmed = window.confirm(confirmMessage);
     if (!confirmed) return;
 
     setActionLoading(true);
@@ -311,7 +314,10 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
         const exists = prev.some((j) => j.id === updated.id);
         return exists ? prev.map((j) => (j.id === updated.id ? updated : j)) : [updated, ...prev];
       });
-      toast.success("✓ Email sent successfully via Gmail API!");
+      const successToast = isPaymentApproved
+        ? "✓ Email sent successfully via Gmail API with payment receipt attached!"
+        : "✓ Email sent successfully via Gmail API!";
+      toast.success(successToast);
     } catch (err: any) {
       toast.error(err.message || "Failed to send email via Gmail.");
       await loadQueue();
@@ -802,35 +808,82 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                 {/* Event Facts / Payload summary */}
                 {selectedJob.payload && Object.keys(selectedJob.payload).length > 0 && (
                   <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 text-xs text-slate-300">
-                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
-                      Event Parameters (Supplied Facts)
-                    </p>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                        Verified Event Parameters (Database-Derived)
+                      </p>
+                      {selectedJob.event_type === "payment_approved" && (
+                        <span className="inline-flex items-center gap-1 rounded bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                          📄 PDF Receipt Attached
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
                       {selectedJob.payload.student_name && (
                         <div>
-                          <span className="text-slate-500">Student:</span>{" "}
-                          <span className="font-bold">{selectedJob.payload.student_name}</span>
+                          <span className="text-slate-500 block text-[10px] uppercase font-bold">Student</span>
+                          <span className="font-bold text-white">{selectedJob.payload.student_name}</span>
+                        </div>
+                      )}
+                      {selectedJob.recipient_email && (
+                        <div>
+                          <span className="text-slate-500 block text-[10px] uppercase font-bold">Email</span>
+                          <span className="font-medium text-slate-200 truncate block">{selectedJob.recipient_email}</span>
+                        </div>
+                      )}
+                      {selectedJob.payload.course && (
+                        <div>
+                          <span className="text-slate-500 block text-[10px] uppercase font-bold">Course</span>
+                          <span className="font-bold text-white">{selectedJob.payload.course}</span>
+                        </div>
+                      )}
+                      {selectedJob.payload.semester !== undefined && selectedJob.payload.semester !== null && (
+                        <div>
+                          <span className="text-slate-500 block text-[10px] uppercase font-bold">Semester</span>
+                          <span className="font-bold text-white">Sem {selectedJob.payload.semester}</span>
                         </div>
                       )}
                       {selectedJob.payload.bundle_name && (
                         <div>
-                          <span className="text-slate-500">Bundle:</span>{" "}
-                          <span className="font-bold">{selectedJob.payload.bundle_name}</span>
+                          <span className="text-slate-500 block text-[10px] uppercase font-bold">Bundle</span>
+                          <span className="font-bold text-white">{selectedJob.payload.bundle_name}</span>
                         </div>
                       )}
-                      {selectedJob.payload.amount && (
+                      {selectedJob.payload.amount !== undefined && selectedJob.payload.amount !== null && (
                         <div>
-                          <span className="text-slate-500">Amount:</span>{" "}
-                          <span className="font-bold">₹{selectedJob.payload.amount}</span>
+                          <span className="text-slate-500 block text-[10px] uppercase font-bold">Amount</span>
+                          <span className="font-bold text-emerald-400">₹{selectedJob.payload.amount}</span>
                         </div>
                       )}
-                      {selectedJob.payload.reference_last4 && (
+                      {(selectedJob.payload.reference_id || selectedJob.payload.reference_last4) && (
                         <div>
-                          <span className="text-slate-500">Reference:</span>{" "}
-                          <span className="font-mono font-bold">••••{selectedJob.payload.reference_last4}</span>
+                          <span className="text-slate-500 block text-[10px] uppercase font-bold">Reference</span>
+                          <span className="font-mono font-bold text-slate-200">
+                            {selectedJob.payload.reference_id || `••••${selectedJob.payload.reference_last4}`}
+                          </span>
+                        </div>
+                      )}
+                      {selectedJob.payload.utr && (
+                        <div>
+                          <span className="text-slate-500 block text-[10px] uppercase font-bold">UTR</span>
+                          <span className="font-mono text-slate-300">{selectedJob.payload.utr}</span>
+                        </div>
+                      )}
+                      {selectedJob.payload.approved_at && (
+                        <div>
+                          <span className="text-slate-500 block text-[10px] uppercase font-bold">Approved</span>
+                          <span className="text-slate-300">
+                            {new Date(selectedJob.payload.approved_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}
+                          </span>
                         </div>
                       )}
                     </div>
+                    {selectedJob.payload.receipt_filename && (
+                      <div className="mt-2.5 rounded bg-slate-900 border border-slate-800 px-2.5 py-1.5 flex items-center justify-between">
+                        <span className="text-slate-400 text-[10px]">Generated Receipt File:</span>
+                        <span className="font-mono text-[11px] text-emerald-300 font-bold">{selectedJob.payload.receipt_filename}</span>
+                      </div>
+                    )}
                   </div>
                 )}
 
