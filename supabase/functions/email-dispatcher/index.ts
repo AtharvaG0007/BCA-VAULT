@@ -286,7 +286,8 @@ async function ensureOutboxEntryForPayment(paymentId: string) {
     const paymentRef = payment.reference_id || payment.utr || payment.id;
     const rawAmount = payment.amount != null ? String(payment.amount).trim() : "";
     const amountText = !rawAmount ? "₹0" : (rawAmount.startsWith("₹") ? rawAmount : `₹${rawAmount}`);
-    const bundleTitle = (Array.isArray(payment.bundles) ? payment.bundles[0]?.title : payment.bundles?.title) || "BCA Vault Bundle";
+    const paymentAny = payment as any;
+    const bundleTitle = (Array.isArray(paymentAny?.bundles) ? paymentAny.bundles[0]?.title : paymentAny?.bundles?.title) || "BCA Vault Bundle";
 
     const payload = {
       payment_id: payment.id,
@@ -410,7 +411,7 @@ async function dispatchClaimedRow(claimed: Record<string, any>) {
 
     const { data: paymentRow, error: pErr } = await admin
       .from("payment_submissions")
-      .select("id, status, amount, reference_id, utr, bundle_id, user_id, email, full_name, bundles(title)")
+      .select("id, status, amount, reference_id, utr, bundle_id, user_id, email, full_name, course, bundles(title)")
       .eq("id", paymentId)
       .maybeSingle();
 
@@ -434,11 +435,12 @@ async function dispatchClaimedRow(claimed: Record<string, any>) {
     let htmlBody = claimed.html_body;
 
     if (!textBody || !htmlBody) {
-      const studentName = payload.student_name || paymentRow.full_name || "Student";
-      const rawAmount = payload.amount_paid || (paymentRow.amount ? `₹${paymentRow.amount}` : "₹499");
+      const pRowAny = paymentRow as any;
+      const studentName = payload.student_name || pRowAny?.full_name || "Student";
+      const rawAmount = payload.amount_paid || (pRowAny?.amount ? `₹${pRowAny.amount}` : "₹499");
       const amountText = String(rawAmount).startsWith("₹") ? String(rawAmount) : `₹${rawAmount}`;
-      const bundleTitle = payload.bundle_name || (Array.isArray(paymentRow.bundles) ? paymentRow.bundles[0]?.title : paymentRow.bundles?.title) || "BCA Vault Bundle";
-      const course = payload.course || paymentRow.course || "BCA";
+      const bundleTitle = payload.bundle_name || (Array.isArray(pRowAny?.bundles) ? pRowAny.bundles[0]?.title : pRowAny?.bundles?.title) || "BCA Vault Bundle";
+      const course = payload.course || pRowAny?.course || "BCA";
 
       textBody = textBody || `Dear ${studentName},\n\nWe are pleased to inform you that your payment has been successfully approved.\n\nPayment Details\n\n• Course: ${course}\n• Bundle: ${bundleTitle}\n• Amount: ${amountText}\n• Status: Approved\n\nThank you for choosing BCA Vault for your studies.\n\nWarm regards,\n\nBCA Vault Team`;
 

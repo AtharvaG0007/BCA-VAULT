@@ -185,7 +185,8 @@ async function ensurePaymentApprovedOutboxEntry(paymentId: string, verifiedByUse
     const paymentRef = payment.reference_id || payment.utr || payment.id;
     const rawAmount = payment.amount != null ? String(payment.amount).trim() : "";
     const amountText = !rawAmount ? "₹0" : (rawAmount.startsWith("₹") ? rawAmount : `₹${rawAmount}`);
-    const bundleTitle = (Array.isArray(payment.bundles) ? payment.bundles[0]?.title : payment.bundles?.title) || "BCA Vault Bundle";
+    const paymentAny = payment as any;
+    const bundleTitle = (Array.isArray(paymentAny?.bundles) ? paymentAny.bundles[0]?.title : paymentAny?.bundles?.title) || "BCA Vault Bundle";
 
     const payload = {
       payment_id: payment.id,
