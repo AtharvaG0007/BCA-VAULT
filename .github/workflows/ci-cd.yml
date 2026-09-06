@@ -1,0 +1,199 @@
+name: Production CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+env:
+  DEFAULT_PROJECT_REF: dmxegktlxqsxaysqwswa
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # JOB 1: CI VALIDATION GATE
+  # ─────────────────────────────────────────────────────────────
+  ci:
+    name: CI Validation Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies (exact lockfile)
+        run: npm ci
+
+      - name: Frontend TypeScript check
+        run: npm run typecheck
+
+      - name: Supabase Edge Functions TypeScript check
+        run: npx tsc -p supabase/functions/tsconfig.json --noEmit
+
+      - name: Edge Functions verification suite
+        run: npx tsx scripts/test_edge_functions_types.ts
+
+      - name: Production Vite build
+        run: npm run build
+
+      - name: Verify build artifacts
+        run: |
+          test -f dist/index.html || { echo "Missing dist/index.html"; exit 1; }
+          echo "Production build verified successfully."
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 2: SUPABASE DATABASE MIGRATIONS
+  # ─────────────────────────────────────────────────────────────
+  database-migrations:
+    name: Apply Database Migrations
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI (pinned 2.116.0)
+        uses: supabase-community/setup-cli@v1
+        with:
+          version: 2.116.0
+
+      - name: Validate database credentials
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::error::Missing SUPABASE_ACCESS_TOKEN in GitHub Repository Secrets."
+            exit 1
+          fi
+          if [ -z "$SUPABASE_DB_PASSWORD" ]; then
+            echo "::error::Missing SUPABASE_DB_PASSWORD in GitHub Repository Secrets."
+            exit 1
+          fi
+
+      - name: Migration dry-run
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || env.DEFAULT_PROJECT_REF }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          echo "Running database migration dry-run..."
+          supabase db push --dry-run --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Apply database migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || env.DEFAULT_PROJECT_REF }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          echo "Applying pending migrations to remote production database..."
+          supabase db push --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 3: SUPABASE EDGE FUNCTIONS DEPLOYMENT
+  # ─────────────────────────────────────────────────────────────
+  edge-functions:
+    name: Deploy Supabase Edge Functions
+    needs: [ci, database-migrations]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI (pinned 2.116.0)
+        uses: supabase-community/setup-cli@v1
+        with:
+          version: 2.116.0
+
+      - name: Validate Supabase access token
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::error::Missing SUPABASE_ACCESS_TOKEN in GitHub Repository Secrets."
+            exit 1
+          fi
+
+      # 1. Public & unauthenticated-compatible Edge Functions (--no-verify-jwt)
+      - name: Deploy email-admin (no-verify-jwt for OAuth callbacks)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || env.DEFAULT_PROJECT_REF }}
+        run: supabase functions deploy email-admin --project-ref "$SUPABASE_PROJECT_REF" --use-api --no-verify-jwt
+
+      - name: Deploy payment-evidence (no-verify-jwt for public submissions)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || env.DEFAULT_PROJECT_REF }}
+        run: supabase functions deploy payment-evidence --project-ref "$SUPABASE_PROJECT_REF" --use-api --no-verify-jwt
+
+      - name: Deploy public-support-chat (no-verify-jwt for website visitors)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || env.DEFAULT_PROJECT_REF }}
+        run: supabase functions deploy public-support-chat --project-ref "$SUPABASE_PROJECT_REF" --use-api --no-verify-jwt
+
+      - name: Deploy gemini-chat (no-verify-jwt for public study assistant)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || env.DEFAULT_PROJECT_REF }}
+        run: supabase functions deploy gemini-chat --project-ref "$SUPABASE_PROJECT_REF" --use-api --no-verify-jwt
+
+      # 2. Authenticated Edge Functions (verify_jwt preserved)
+      - name: Deploy bca-admin (verify-jwt preserved)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || env.DEFAULT_PROJECT_REF }}
+        run: supabase functions deploy bca-admin --project-ref "$SUPABASE_PROJECT_REF" --use-api
+
+      - name: Deploy student-note-signed-url (verify-jwt preserved)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || env.DEFAULT_PROJECT_REF }}
+        run: supabase functions deploy student-note-signed-url --project-ref "$SUPABASE_PROJECT_REF" --use-api
+
+      - name: Deploy student-learning-chat (verify-jwt preserved)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || env.DEFAULT_PROJECT_REF }}
+        run: supabase functions deploy student-learning-chat --project-ref "$SUPABASE_PROJECT_REF" --use-api
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 4: POST-DEPLOYMENT VERIFICATION
+  # ─────────────────────────────────────────────────────────────
+  verification:
+    name: Deployment Verification
+    needs: [ci, database-migrations, edge-functions]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify Edge Function availability
+        env:
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || env.DEFAULT_PROJECT_REF }}
+        run: |
+          ENDPOINT="https://${SUPABASE_PROJECT_REF}.supabase.co/functions/v1/email-admin"
+          echo "Testing OPTIONS preflight on $ENDPOINT..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X OPTIONS "$ENDPOINT" \
+            -H "Origin: https://bca-vault.portalbcavault.workers.dev")
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "::error::Edge function returned status $HTTP_STATUS, expected 200."
+            exit 1
+          fi
+          echo "Edge function responded with HTTP 200."
+
+      - name: Record Deployment Summary
+        run: |
+          echo "### Production Deployment Successful 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit SHA:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Frontend:** Deployed via Cloudflare Git Integration (\`https://bca-vault.portalbcavault.workers.dev\`)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Database:** Migrations applied via Supabase CLI (\`supabase db push\`)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Edge Functions:** Deployed via Supabase Management API (\`--use-api\`)" >> $GITHUB_STEP_SUMMARY
