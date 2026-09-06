@@ -74,3 +74,8 @@ declare namespace Deno {
     toObject(): Record<string, string>;
   };
 }
+
+declare namespace EdgeRuntime {
+  export function waitUntil(promise: Promise<any>): void;
+}
+

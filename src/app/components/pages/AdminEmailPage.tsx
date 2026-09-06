@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router";
 import {
   Mail,
   RefreshCw,
-  Sparkles,
   Save,
   Send,
   CheckCircle2,
@@ -196,31 +195,18 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
     setTextBody("");
   };
 
-  const handleGenerate = async () => {
-    setActionLoading(true);
-    try {
-      if (isComposing) {
-        const res = await apiCall("/generate", {
-          event_type: composeEventType,
-          recipient_email: composeRecipient.trim() || "bcavault07@gmail.com",
-        });
-        if (res.data) {
-          setSubject(res.data.subject || "");
-          setHtmlBody(res.data.html_body || "");
-          setTextBody(res.data.text_body || "");
-        }
-        toast.success("Gemini generated the email draft.");
-      } else if (selectedJob) {
-        const res = await apiCall("/generate", { id: selectedJob.id });
-        const updated: OutboxItem = res.data;
-        selectJob(updated);
-        setQueue((prev) => prev.map((j) => (j.id === updated.id ? updated : j)));
-        toast.success("Gemini generated the email draft.");
+  const loadDefaultTemplate = () => {
+    if (isComposing) {
+      if (composeEventType === "test_email") {
+        setSubject("BCA Vault — Gmail API Test Email");
+        setTextBody("This is an operational test email from BCA Vault to verify transactional delivery via Gmail API.\n\nRegards,\nBCA Vault Team\nbcavault07@gmail.com");
+        setHtmlBody("<p style='font-family: Arial, sans-serif; color: #1e293b; padding: 16px;'>This is an operational test email from BCA Vault to verify transactional delivery via Gmail API.<br><br>Regards,<br><strong>BCA Vault Team</strong><br>bcavault07@gmail.com</p>");
+      } else {
+        setSubject("BCA Vault — Notification");
+        setTextBody("Official notification from BCA Vault Team.\n\nRegards,\nBCA Vault Team\nbcavault07@gmail.com");
+        setHtmlBody("<p style='font-family: Arial, sans-serif; color: #1e293b; padding: 16px;'>Official notification from BCA Vault Team.<br><br>Regards,<br><strong>BCA Vault Team</strong><br>bcavault07@gmail.com</p>");
       }
-    } catch (err: any) {
-      toast.error(err.message || "Gemini email generation failed.");
-    } finally {
-      setActionLoading(false);
+      toast.success("Loaded default email template.");
     }
   };
 
@@ -278,13 +264,13 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
     }
 
     if (!subject.trim() || !htmlBody.trim() || !textBody.trim()) {
-      toast.error("Please generate or enter the email subject, HTML, and text before sending.");
+      toast.error("Please enter the email subject, HTML, and text before sending.");
       return;
     }
 
     const isPaymentApproved = (selectedJob?.event_type === "payment_approved") || (isComposing && composeEventType === "payment_approved");
     const confirmMessage = isPaymentApproved
-      ? `Send this payment approval email with the PDF receipt to ${targetRecipient}?`
+      ? `Send this payment approval email to ${targetRecipient}?`
       : `Are you sure you want to send this email via Gmail API to ${targetRecipient}?`;
 
     const confirmed = window.confirm(confirmMessage);
@@ -314,10 +300,7 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
         const exists = prev.some((j) => j.id === updated.id);
         return exists ? prev.map((j) => (j.id === updated.id ? updated : j)) : [updated, ...prev];
       });
-      const successToast = isPaymentApproved
-        ? "✓ Email sent successfully via Gmail API with payment receipt attached!"
-        : "✓ Email sent successfully via Gmail API!";
-      toast.success(successToast);
+      toast.success("✓ Email sent successfully via Gmail API!");
     } catch (err: any) {
       toast.error(err.message || "Failed to send email via Gmail.");
       await loadQueue();
@@ -372,7 +355,7 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
               <div>
                 <h1 className="text-2xl font-black tracking-tight">Super Admin Email Console</h1>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Gemini-generated drafts • Gmail API delivery • Full outbox audit logs
+                  Deterministic email automation • Gmail API delivery • Full outbox audit logs
                 </p>
               </div>
             </div>
@@ -560,18 +543,18 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                     </div>
                     <h2 className="text-xl font-black text-white mt-1">Compose Email</h2>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      Draft a test message or notification, generate with Gemini, and dispatch via Gmail API.
+                      Draft a test message or notification, preview, and dispatch via Gmail API.
                     </p>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => void handleGenerate()}
+                      onClick={() => loadDefaultTemplate()}
                       disabled={actionLoading}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-500 disabled:opacity-50 transition shadow-md shadow-indigo-600/20"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-slate-800 border border-slate-700 px-3.5 py-2 text-xs font-bold text-slate-200 hover:bg-slate-700 disabled:opacity-50 transition shadow-sm"
                     >
-                      <Sparkles className="h-3.5 w-3.5" />
-                      Generate with Gemini
+                      <RefreshCw className="h-3.5 w-3.5" />
+                      Load Default Template
                     </button>
                   </div>
                 </div>
@@ -670,7 +653,7 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                       <textarea
                         value={htmlBody}
                         onChange={(e) => setHtmlBody(e.target.value)}
-                        placeholder="Click 'Generate with Gemini' or enter HTML here..."
+                        placeholder="Enter HTML email content here, or click 'Load Default Template'..."
                         className="h-72 w-full rounded-xl border border-slate-700 bg-slate-950 p-3 font-mono text-[11px] leading-relaxed text-slate-300 outline-none focus:border-indigo-500"
                       />
                     </div>
@@ -687,7 +670,7 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                           sandbox=""
                           srcDoc={
                             htmlBody ||
-                            "<p style='font-family: Arial, sans-serif; padding: 24px; color: #64748b;'>Click <strong>'Generate with Gemini'</strong> to automatically craft a professional email, or type HTML on the left.</p>"
+                            "<p style='font-family: Arial, sans-serif; padding: 24px; color: #64748b;'>Enter HTML on the left or click 'Load Default Template'.</p>"
                           }
                           className="h-full w-full border-0"
                         />
@@ -713,11 +696,11 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/80 pt-4">
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => void handleGenerate()}
+                      onClick={() => loadDefaultTemplate()}
                       disabled={actionLoading}
-                      className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black text-white hover:bg-indigo-500 disabled:opacity-50 transition"
+                      className="inline-flex items-center gap-2 rounded-xl bg-slate-800 border border-slate-700 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-slate-700 disabled:opacity-50 transition"
                     >
-                      <Sparkles className="h-4 w-4" /> Generate with Gemini
+                      <RefreshCw className="h-4 w-4" /> Load Template
                     </button>
 
                     <button
@@ -795,12 +778,12 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                   {/* Quick Action in Header */}
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => void handleGenerate()}
-                      disabled={actionLoading || selectedJob.status === "sent"}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-500 disabled:opacity-50 transition"
+                      onClick={() => void loadQueue()}
+                      disabled={loading}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-slate-800 border border-slate-700 px-3.5 py-2 text-xs font-bold text-slate-200 hover:bg-slate-700 disabled:opacity-50 transition"
                     >
-                      <Sparkles className="h-3.5 w-3.5" />
-                      Generate with Gemini
+                      <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+                      Refresh
                     </button>
                   </div>
                 </div>
@@ -812,11 +795,6 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                       <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">
                         Verified Event Parameters (Database-Derived)
                       </p>
-                      {selectedJob.event_type === "payment_approved" && (
-                        <span className="inline-flex items-center gap-1 rounded bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
-                          📄 PDF Receipt Attached
-                        </span>
-                      )}
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
                       {selectedJob.payload.student_name && (
@@ -878,12 +856,6 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                         </div>
                       )}
                     </div>
-                    {selectedJob.payload.receipt_filename && (
-                      <div className="mt-2.5 rounded bg-slate-900 border border-slate-800 px-2.5 py-1.5 flex items-center justify-between">
-                        <span className="text-slate-400 text-[10px]">Generated Receipt File:</span>
-                        <span className="font-mono text-[11px] text-emerald-300 font-bold">{selectedJob.payload.receipt_filename}</span>
-                      </div>
-                    )}
                   </div>
                 )}
 
@@ -906,7 +878,7 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                     type="text"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    placeholder="e.g. Payment Approved: BCA Sem 2 Notes"
+                    placeholder="e.g. BCA Vault — Payment Approved & Access Activated"
                     className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-xs font-semibold text-white outline-none focus:border-indigo-500 transition"
                   />
                 </div>
@@ -943,7 +915,7 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                       <textarea
                         value={htmlBody}
                         onChange={(e) => setHtmlBody(e.target.value)}
-                        placeholder="Generate with Gemini or enter HTML here..."
+                        placeholder="Email HTML content..."
                         className="h-72 w-full rounded-xl border border-slate-700 bg-slate-950 p-3 font-mono text-[11px] leading-relaxed text-slate-300 outline-none focus:border-indigo-500"
                       />
                     </div>
@@ -960,7 +932,7 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                           sandbox=""
                           srcDoc={
                             htmlBody ||
-                            "<p style='font-family: Arial, sans-serif; padding: 24px; color: #64748b;'>Click 'Generate with Gemini' to generate email content, or type HTML on the left.</p>"
+                            "<p style='font-family: Arial, sans-serif; padding: 24px; color: #64748b;'>HTML content will render here.</p>"
                           }
                           className="h-full w-full border-0"
                         />
@@ -986,14 +958,6 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/80 pt-4">
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => void handleGenerate()}
-                      disabled={actionLoading || selectedJob.status === "sent"}
-                      className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black text-white hover:bg-indigo-500 disabled:opacity-50 transition"
-                    >
-                      <Sparkles className="h-4 w-4" /> Generate with Gemini
-                    </button>
-
-                    <button
                       onClick={() => void handleSaveDraft()}
                       disabled={actionLoading || selectedJob.status === "sent"}
                       className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-black text-slate-200 hover:bg-slate-700 disabled:opacity-50 transition"
@@ -1014,7 +978,7 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                     className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-black text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 disabled:opacity-50 transition"
                   >
                     <Send className="h-4 w-4" />
-                    {selectedJob.status === "sent" ? "Email Already Sent" : "Send via Gmail API"}
+                    {selectedJob.status === "sent" ? "Email Already Sent" : selectedJob.status === "failed" ? "Retry via Gmail API" : "Send via Gmail API"}
                   </button>
                 </div>
               </div>

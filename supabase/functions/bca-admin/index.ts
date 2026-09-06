@@ -60,6 +60,43 @@ async function log(actorId: string, action: string, targetType?: string, targetI
   await admin.from("activity_logs").insert({ actor_id: actorId, action, target_type: targetType ?? null, target_id: targetId ?? null, metadata });
 }
 
+async function triggerEmailDispatcher(outboxId?: string, paymentId?: string) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceRoleKey) return;
+
+  try {
+    const url = `${supabaseUrl}/functions/v1/email-dispatcher`;
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${serviceRoleKey}`,
+    };
+    const dispatcherSecret = Deno.env.get("DISPATCHER_SECRET") || Deno.env.get("CRON_SECRET");
+    if (dispatcherSecret) {
+      headers["x-dispatcher-secret"] = dispatcherSecret;
+    }
+
+    const body: Record<string, string> = {};
+    if (outboxId) body.outbox_id = outboxId;
+    if (paymentId) body.payment_id = paymentId;
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      console.warn("[bca-admin] email-dispatcher async trigger returned HTTP", res.status, d?.error || d);
+    } else {
+      console.log("[bca-admin] email-dispatcher invoked successfully for payment:", paymentId || outboxId || "sweep");
+    }
+  } catch (err: any) {
+    // Failure isolation: log sanitized notice, never throw
+    console.warn("[bca-admin] email-dispatcher background invocation notice:", err?.message || err);
+  }
+}
+
 Deno.serve(async (request: Request) => {
   const corsHeaders = getCorsHeaders(request);
 
@@ -345,52 +382,14 @@ Deno.serve(async (request: Request) => {
 
       if (!rpcResult.error) {
         if (status === "approved") {
-          try {
-            const { data: pData } = await admin.from("payment_submissions").select("id,reference_id,user_id,full_name,email,amount,utr,course,semester,bundle_id,bundles(title)").eq("id", id).maybeSingle();
-            if (pData) {
-              const bundleTitle = (pData.bundles as any)?.title || "BCA Vault Bundle";
-              const targetUser = pData.user_id || (rpcResult.data as any)?.user_id;
-              const { data: sProfile } = targetUser ? await admin.from("profiles").select("full_name,email").eq("user_id", targetUser).maybeSingle() : { data: null };
-              const studentName = sProfile?.full_name?.trim() || pData.full_name?.trim() || "Student";
-              const studentEmail = sProfile?.email?.trim() || pData.email?.trim();
-              if (studentEmail) {
-                const eventKey = `payment-approved:${pData.id}`;
-                const payload = {
-                  payment_id: pData.id,
-                  reference_id: pData.reference_id,
-                  reference_last4: (pData.reference_id || "").slice(-4),
-                  user_id: targetUser,
-                  student_name: studentName,
-                  recipient_email: studentEmail,
-                  course: pData.course || "BCA",
-                  semester: pData.semester,
-                  bundle_id: pData.bundle_id,
-                  bundle_name: bundleTitle,
-                  amount: pData.amount,
-                  utr: pData.utr,
-                  payment_status: "approved",
-                  approved_at: new Date().toISOString(),
-                  verified_by: access.user.id,
-                  access_granted: true,
-                  receipt_filename: `BCA-Vault-Payment-Receipt-${pData.reference_id || pData.id}.pdf`
-                };
-                await admin.from("email_outbox").upsert({
-                  event_key: eventKey,
-                  event_type: "payment_approved",
-                  recipient_user_id: targetUser,
-                  recipient_email: studentEmail,
-                  sender_name: "BCA Vault",
-                  sender_email: "bcavault07@gmail.com",
-                  status: "pending",
-                  subject: "Payment Approved — BCA Vault Access Activated",
-                  payload,
-                  approved_at: new Date().toISOString(),
-                  approved_by: access.user.id,
-                }, { onConflict: "event_key" });
-              }
-            }
-          } catch (outboxErr) {
-            console.warn("[bca-admin] email_outbox draft notice:", outboxErr);
+          const targetPaymentId = id;
+          const trigger = async () => {
+            await triggerEmailDispatcher(undefined, targetPaymentId);
+          };
+          if (typeof EdgeRuntime !== "undefined" && typeof EdgeRuntime.waitUntil === "function") {
+            EdgeRuntime.waitUntil(trigger());
+          } else {
+            trigger().catch((err) => console.warn("[bca-admin] Dispatcher trigger notice:", err));
           }
         }
         return respond({ success: true, payment: rpcResult.data }, 200, corsHeaders);
@@ -487,25 +486,27 @@ Deno.serve(async (request: Request) => {
           const studentEmail = studentProf?.email?.trim() || payment.email?.trim();
           if (studentEmail) {
             const eventKey = `payment-approved:${payment.id}`;
+            const paymentRef = payment.reference_id || payment.utr || payment.id;
+            const amountText = payment.amount ? `₹${payment.amount}` : "₹0";
             const payload = {
               payment_id: payment.id,
-              reference_id: payment.reference_id,
-              reference_last4: (payment.reference_id || "").slice(-4),
               user_id: targetUserId,
-              student_name: studentName,
-              recipient_email: studentEmail,
-              course: payment.course || "BCA",
-              semester: payment.semester,
               bundle_id: payment.bundle_id,
+              semester: payment.semester,
+              student_name: studentName,
+              student_email: studentEmail,
+              payment_reference: paymentRef,
+              amount_paid: amountText,
               bundle_name: bundleTitle,
-              amount: payment.amount,
-              utr: payment.utr,
-              payment_status: "approved",
               approved_at: new Date().toISOString(),
               verified_by: access.user.id,
               access_granted: true,
-              receipt_filename: `BCA-Vault-Payment-Receipt-${payment.reference_id || payment.id}.pdf`
             };
+
+            const fixedTextBody = `Hi ${studentName},\n\nYour payment for BCA Vault has been successfully verified and approved.\n\nPayment Details\n\n• Student: ${studentName}\n• Email: ${studentEmail}\n• Payment Reference: ${paymentRef}\n• Amount Paid: ${amountText}\n• Payment Status: Approved\n\nAccess Details\n\n• Bundle: ${bundleTitle}\n• Access Status: Activated\n• Your BCA Vault resources are now available in your account.\n\nYou can now log in to BCA Vault and access your assigned study materials.\n\nRegards,\n\nBCA Vault Team\nbcavault07@gmail.com`;
+
+            const fixedHtmlBody = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>BCA Vault — Payment Approved & Access Activated</title></head><body style="margin:0;padding:0;background-color:#0b0f19;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#f3f4f6;"><table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="padding:40px 16px;"><tr><td align="center"><table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width:580px;background-color:#111827;border:1px solid #1f2937;border-radius:12px;padding:32px;"><tr><td><h1 style="color:#ffffff;font-size:20px;margin-bottom:16px;">Payment Approved &amp; Access Activated</h1><p style="color:#e5e7eb;font-size:15px;">Hi <strong>${studentName}</strong>,</p><p style="color:#9ca3af;font-size:14px;">Your payment for BCA Vault has been successfully verified and approved.</p><div style="background-color:#1a2234;border:1px solid #283548;border-radius:8px;padding:18px;margin:20px 0;"><h3 style="color:#818cf8;font-size:13px;margin:0 0 10px;">Payment Details</h3><p style="margin:4px 0;font-size:13px;color:#f3f4f6;">• Student: ${studentName}</p><p style="margin:4px 0;font-size:13px;color:#f3f4f6;">• Email: ${studentEmail}</p><p style="margin:4px 0;font-size:13px;color:#f3f4f6;">• Payment Reference: ${paymentRef}</p><p style="margin:4px 0;font-size:13px;color:#34d399;font-weight:bold;">• Amount Paid: ${amountText}</p><p style="margin:4px 0;font-size:13px;color:#10b981;font-weight:bold;">• Payment Status: Approved</p></div><div style="background-color:#1a2234;border:1px solid #283548;border-radius:8px;padding:18px;margin:20px 0;"><h3 style="color:#818cf8;font-size:13px;margin:0 0 10px;">Access Details</h3><p style="margin:4px 0;font-size:13px;color:#f3f4f6;">• Bundle: ${bundleTitle}</p><p style="margin:4px 0;font-size:13px;color:#10b981;font-weight:bold;">• Access Status: Activated</p><p style="margin:10px 0 0;font-size:13px;color:#9ca3af;">• Your BCA Vault resources are now available in your account.</p></div><p style="color:#e5e7eb;font-size:14px;margin-top:24px;">You can now log in to BCA Vault and access your assigned study materials.</p><p style="color:#9ca3af;font-size:13px;margin-top:24px;border-top:1px solid #1f2937;padding-top:16px;">Regards,<br><strong style="color:#ffffff;">BCA Vault Team</strong><br>bcavault07@gmail.com</p></td></tr></table></td></tr></table></body></html>`;
+
             await admin.from("email_outbox").upsert({
               event_key: eventKey,
               event_type: "payment_approved",
@@ -514,11 +515,24 @@ Deno.serve(async (request: Request) => {
               sender_name: "BCA Vault",
               sender_email: "bcavault07@gmail.com",
               status: "pending",
-              subject: "Payment Approved — BCA Vault Access Activated",
+              subject: "BCA Vault — Payment Approved & Access Activated",
+              text_body: fixedTextBody,
+              html_body: fixedHtmlBody,
               payload,
               approved_at: new Date().toISOString(),
               approved_by: access.user.id,
             }, { onConflict: "event_key" });
+
+            // Asynchronously trigger dispatcher in the background
+            const targetPaymentId = payment.id;
+            const trigger = async () => {
+              await triggerEmailDispatcher(undefined, targetPaymentId);
+            };
+            if (typeof EdgeRuntime !== "undefined" && typeof EdgeRuntime.waitUntil === "function") {
+              EdgeRuntime.waitUntil(trigger());
+            } else {
+              trigger().catch((err) => console.warn("[bca-admin] Fallback dispatcher trigger notice:", err));
+            }
           }
         } catch (outboxErr) {
           console.warn("[bca-admin] email_outbox draft fallback notice:", outboxErr);
@@ -528,6 +542,18 @@ Deno.serve(async (request: Request) => {
       await log(access.user.id, `payment_${status}`, "payment", id, { bundle_id: payment.bundle_id, student_user_id: targetUserId });
 
       return respond({ success: true, payment: { id, status, bundle_id: payment.bundle_id, user_id: targetUserId } }, 200, corsHeaders);
+    }
+
+    if (request.method === "POST" && pathname === "/emails/sweep") {
+      const trigger = async () => {
+        await triggerEmailDispatcher();
+      };
+      if (typeof EdgeRuntime !== "undefined" && typeof EdgeRuntime.waitUntil === "function") {
+        EdgeRuntime.waitUntil(trigger());
+      } else {
+        trigger().catch((err) => console.warn("[bca-admin] Sweep trigger notice:", err));
+      }
+      return respond({ success: true, message: "Background email sweep initiated." }, 200, corsHeaders);
     }
 
     if (request.method === "POST" && pathname === "/access/grant") {

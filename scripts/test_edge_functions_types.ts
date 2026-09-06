@@ -65,6 +65,7 @@ async function main() {
     "gemini-chat/index.ts",
     "student-learning-chat/index.ts",
     "public-support-chat/index.ts",
+    "email-dispatcher/index.ts",
   ];
 
   for (const fn of targetFunctions) {
