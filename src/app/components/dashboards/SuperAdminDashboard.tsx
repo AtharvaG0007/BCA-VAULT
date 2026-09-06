@@ -16,6 +16,7 @@ import {
   KeyRound,
   Loader2,
   LogOut,
+  Mail,
   Package,
   Plus,
   RefreshCw,
@@ -31,6 +32,7 @@ import { adminApi } from "@/lib/supabase/adminService";
 import { supabase } from "@/lib/supabase/client";
 import { useAdminAuth } from "../auth/AdminAuthContext";
 import { availableSubjects } from "../../data/syllabus";
+import { AdminEmailPage } from "../pages/AdminEmailPage";
 
 /** Generate a cryptographically strong random password (16 chars, mixed case + digits + symbols). */
 function generateStrongPassword(): string {
@@ -50,6 +52,7 @@ const PAGES = [
   { key: "bundles", label: "Bundles", icon: Package, group: "CONTENT" },
   { key: "notes", label: "Study Notes", icon: BookOpen, group: "CONTENT" },
   { key: "access", label: "Access Control", icon: KeyRound, group: "CONTENT" },
+  { key: "email", label: "Email Console", icon: Mail, group: "SYSTEM" },
   { key: "activity", label: "Activity Logs", icon: Clock, group: "SYSTEM" },
 ] as const;
 
@@ -1223,6 +1226,10 @@ export function SuperAdminDashboard() {
                   </div>
                 )}
               </div>
+            )}
+
+            {activeTab === "email" && (
+              <AdminEmailPage embedded />
             )}
           </>
         )}
