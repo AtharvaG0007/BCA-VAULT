@@ -58,6 +58,7 @@ DECLARE
   v_student_email text;
   v_bundle public.bundles;
   v_bundle_title text := 'BCA Vault Bundle';
+  v_course text := 'BCA';
   v_sem1_bundle_id uuid;
   v_sem2_bundle_id uuid;
   v_is_sem1_eligible boolean := false;
@@ -187,6 +188,10 @@ BEGIN
     -- 8. Resolve authoritative payment reference and amount
     v_payment_reference := COALESCE(NULLIF(TRIM(v_payment.reference_id), ''), NULLIF(TRIM(v_payment.utr), ''), v_payment.id::text);
 
+    IF v_payment.course IS NOT NULL AND TRIM(v_payment.course) <> '' THEN
+      v_course := TRIM(v_payment.course);
+    END IF;
+
     v_amount_text := CASE 
       WHEN v_payment.amount IS NULL THEN '₹0'
       WHEN (v_payment.amount::text) LIKE '₹%' THEN v_payment.amount::text
@@ -197,70 +202,44 @@ BEGIN
     v_subject := 'BCA Vault — Payment Approved & Access Activated';
 
     -- 10. Render deterministic fixed plain-text body
-    v_text_body := 'Hi ' || v_student_name || E',\n\n' ||
-      E'Your payment for BCA Vault has been successfully verified and approved.\n\n' ||
+    v_text_body := 'Dear ' || v_student_name || E',\n\n' ||
+      E'We are pleased to inform you that your payment has been successfully approved.\n\n' ||
       E'Payment Details\n\n' ||
-      E'• Student: ' || v_student_name || E'\n' ||
-      E'• Email: ' || v_student_email || E'\n' ||
-      E'• Payment Reference: ' || v_payment_reference || E'\n' ||
-      E'• Amount Paid: ' || v_amount_text || E'\n' ||
-      E'• Payment Status: Approved\n\n' ||
-      E'Access Details\n\n' ||
+      E'• Course: ' || v_course || E'\n' ||
       E'• Bundle: ' || v_bundle_title || E'\n' ||
-      E'• Access Status: Activated\n' ||
-      E'• Your BCA Vault resources are now available in your account.\n\n' ||
-      E'You can now log in to BCA Vault and access your assigned study materials.\n\n' ||
-      E'Regards,\n\n' ||
-      E'BCA Vault Team\n' ||
-      E'bcavault07@gmail.com';
+      E'• Amount: ' || v_amount_text || E'\n' ||
+      E'• Status: Approved\n\n' ||
+      E'Thank you for choosing BCA Vault for your studies.\n\n' ||
+      E'Warm regards,\n\n' ||
+      E'BCA Vault Team';
 
     -- 11. Render clean equivalent HTML body (with HTML escaping)
-    v_html_body := '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>BCA Vault — Payment Approved &amp; Access Activated</title></head>' ||
-      '<body style="margin: 0; padding: 0; background-color: #0b0f19; font-family: -apple-system, BlinkMacSystemFont, ''Segoe UI'', Roboto, Helvetica, Arial, sans-serif; color: #f3f4f6;">' ||
-      '<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #0b0f19; padding: 40px 16px;">' ||
-      '<tr><td align="center">' ||
-      '<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background-color: #111827; border: 1px solid #1f2937; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">' ||
-      '<tr><td style="padding: 28px 32px 20px; background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); border-bottom: 1px solid #1f2937;">' ||
-      '<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0"><tr>' ||
-      '<td><span style="font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: #ffffff;">BCA <span style="color: #6366f1;">VAULT</span></span></td>' ||
-      '<td align="right"><span style="display: inline-block; padding: 4px 12px; font-size: 11px; font-weight: 700; color: #10b981; background-color: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px;">Approved</span></td>' ||
-      '</tr></table>' ||
-      '<h1 style="margin: 20px 0 0; font-size: 20px; font-weight: 700; color: #ffffff; line-height: 1.3;">Payment Approved &amp; Access Activated</h1>' ||
-      '</td></tr>' ||
-      '<tr><td style="padding: 32px;">' ||
-      '<p style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #e5e7eb;">Hi <strong style="color: #ffffff;">' || public.escape_html(v_student_name) || '</strong>,</p>' ||
-      '<p style="margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #9ca3af;">Your payment for BCA Vault has been successfully verified and approved.</p>' ||
-      '<div style="margin-bottom: 20px; background-color: #1a2234; border: 1px solid #283548; border-radius: 8px; padding: 18px 20px;">' ||
-      '<h2 style="margin: 0 0 14px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #818cf8;">Payment Details</h2>' ||
-      '<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size: 13px; line-height: 1.8;">' ||
-      '<tr><td style="color: #9ca3af; width: 42%; padding: 3px 0;">• Student:</td><td style="color: #f3f4f6; font-weight: 600; padding: 3px 0;">' || public.escape_html(v_student_name) || '</td></tr>' ||
-      '<tr><td style="color: #9ca3af; padding: 3px 0;">• Email:</td><td style="color: #f3f4f6; padding: 3px 0;">' || public.escape_html(v_student_email) || '</td></tr>' ||
-      '<tr><td style="color: #9ca3af; padding: 3px 0;">• Payment Reference:</td><td style="color: #f3f4f6; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; padding: 3px 0;">' || public.escape_html(v_payment_reference) || '</td></tr>' ||
-      '<tr><td style="color: #9ca3af; padding: 3px 0;">• Amount Paid:</td><td style="color: #34d399; font-weight: 700; padding: 3px 0;">' || public.escape_html(v_amount_text) || '</td></tr>' ||
-      '<tr><td style="color: #9ca3af; padding: 3px 0;">• Payment Status:</td><td style="color: #10b981; font-weight: 700; padding: 3px 0;">Approved</td></tr>' ||
-      '</table></div>' ||
-      '<div style="margin-bottom: 24px; background-color: #1a2234; border: 1px solid #283548; border-radius: 8px; padding: 18px 20px;">' ||
-      '<h2 style="margin: 0 0 14px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #818cf8;">Access Details</h2>' ||
-      '<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size: 13px; line-height: 1.8;">' ||
-      '<tr><td style="color: #9ca3af; width: 42%; padding: 3px 0;">• Bundle:</td><td style="color: #f3f4f6; font-weight: 600; padding: 3px 0;">' || public.escape_html(v_bundle_title) || '</td></tr>' ||
-      '<tr><td style="color: #9ca3af; padding: 3px 0;">• Access Status:</td><td style="color: #10b981; font-weight: 700; padding: 3px 0;">Activated</td></tr>' ||
-      '</table>' ||
-      '<p style="margin: 12px 0 0; font-size: 13px; color: #9ca3af; line-height: 1.5;">• Your BCA Vault resources are now available in your account.</p>' ||
-      '</div>' ||
-      '<p style="margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #e5e7eb;">You can now log in to BCA Vault and access your assigned study materials.</p>' ||
-      '<table role="presentation" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 28px;"><tr>' ||
-      '<td align="center" style="border-radius: 6px; background-color: #4f46e5;">' ||
-      '<a href="https://bca-vault.portalbcavault.workers.dev" target="_blank" style="display: inline-block; padding: 12px 24px; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 6px;">Go to BCA Vault</a>' ||
-      '</td></tr></table>' ||
-      '<div style="border-top: 1px solid #1f2937; padding-top: 20px; font-size: 13px; line-height: 1.6; color: #9ca3af;">' ||
-      '<p style="margin: 0;">Regards,<br><strong style="color: #ffffff;">BCA Vault Team</strong><br><a href="mailto:bcavault07@gmail.com" style="color: #818cf8; text-decoration: none;">bcavault07@gmail.com</a></p>' ||
-      '</div></td></tr></table></td></tr></table></body></html>';
+    v_html_body := '<div style="font-family: Arial, sans-serif; color: #333333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">' || E'\n' ||
+      '  <h2 style="color: #2e7d32; margin-top: 0;">Payment Approved</h2>' || E'\n\n' ||
+      '  <p>Dear ' || public.escape_html(v_student_name) || ',</p>' || E'\n\n' ||
+      '  <p>We are pleased to inform you that your payment has been successfully approved.</p>' || E'\n\n' ||
+      '  <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">' || E'\n' ||
+      '    <p style="margin: 5px 0;"><strong>Course:</strong> ' || public.escape_html(v_course) || '</p>' || E'\n' ||
+      '    <p style="margin: 5px 0;"><strong>Bundle:</strong> ' || public.escape_html(v_bundle_title) || '</p>' || E'\n' ||
+      '    <p style="margin: 5px 0;"><strong>Amount:</strong> ' || public.escape_html(v_amount_text) || '</p>' || E'\n' ||
+      '    <p style="margin: 5px 0;">' || E'\n' ||
+      '      <strong>Status:</strong>' || E'\n' ||
+      '      <span style="color: #2e7d32; font-weight: bold;">Approved</span>' || E'\n' ||
+      '    </p>' || E'\n' ||
+      '  </div>' || E'\n\n' ||
+      '  <p>Thank you for choosing BCA Vault for your studies.</p>' || E'\n\n' ||
+      '  <p style="margin-bottom: 0;">' || E'\n' ||
+      '    Warm regards,<br>' || E'\n' ||
+      '    <strong>BCA Vault Team</strong>' || E'\n' ||
+      '  </p>' || E'\n' ||
+      '</div>';
 
     -- 12. Construct authoritative verified payment payload (clean: no PDF receipt fields)
     v_email_payload := jsonb_build_object(
       'payment_id', v_payment.id,
       'user_id', v_target_user_id,
       'bundle_id', v_payment.bundle_id,
+      'course', v_course,
       'semester', v_payment.semester,
       'student_name', v_student_name,
       'student_email', v_student_email,

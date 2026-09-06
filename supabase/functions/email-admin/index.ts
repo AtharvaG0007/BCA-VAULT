@@ -45,15 +45,38 @@ async function requireAdmin(req: Request) {
 function generateDeterministicEmail(eventType: string, payload: Record<string, unknown>) {
   if (eventType === "payment_approved") {
     const studentName = String(payload.student_name || "Student").trim();
-    const studentEmail = String(payload.recipient_email || payload.student_email || "").trim();
-    const paymentRef = String(payload.payment_reference || payload.reference_id || "Approved").trim();
-    const amountPaid = payload.amount_paid ? String(payload.amount_paid) : payload.amount ? `₹${payload.amount}` : "₹0";
+    const course = String(payload.course || "BCA").trim();
+    const rawAmount = payload.amount_paid ? String(payload.amount_paid) : payload.amount ? `₹${payload.amount}` : "₹499";
+    const amountPaid = rawAmount.startsWith("₹") ? rawAmount : `₹${rawAmount}`;
     const bundleName = String(payload.bundle_name || "BCA Vault Bundle").trim();
 
     const subject = "BCA Vault — Payment Approved & Access Activated";
-    const text_body = `Hi ${studentName},\n\nYour payment for BCA Vault has been successfully verified and approved.\n\nPayment Details\n\n• Student: ${studentName}\n• Email: ${studentEmail}\n• Payment Reference: ${paymentRef}\n• Amount Paid: ${amountPaid}\n• Payment Status: Approved\n\nAccess Details\n\n• Bundle: ${bundleName}\n• Access Status: Activated\n• Your BCA Vault resources are now available in your account.\n\nYou can now log in to BCA Vault and access your assigned study materials.\n\nRegards,\n\nBCA Vault Team\nbcavault07@gmail.com`;
+    const text_body = `Dear ${studentName},\n\nWe are pleased to inform you that your payment has been successfully approved.\n\nPayment Details\n\n• Course: ${course}\n• Bundle: ${bundleName}\n• Amount: ${amountPaid}\n• Status: Approved\n\nThank you for choosing BCA Vault for your studies.\n\nWarm regards,\n\nBCA Vault Team`;
 
-    const html_body = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>BCA Vault — Payment Approved & Access Activated</title></head><body style="margin:0;padding:0;background-color:#0b0f19;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#f3f4f6;"><table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="padding:40px 16px;"><tr><td align="center"><table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width:580px;background-color:#111827;border:1px solid #1f2937;border-radius:12px;padding:32px;"><tr><td><h1 style="color:#ffffff;font-size:20px;margin-bottom:16px;">Payment Approved &amp; Access Activated</h1><p style="color:#e5e7eb;font-size:15px;">Hi <strong>${esc(studentName)}</strong>,</p><p style="color:#9ca3af;font-size:14px;">Your payment for BCA Vault has been successfully verified and approved.</p><div style="background-color:#1a2234;border:1px solid #283548;border-radius:8px;padding:18px;margin:20px 0;"><h3 style="color:#818cf8;font-size:13px;margin:0 0 10px;">Payment Details</h3><p style="margin:4px 0;font-size:13px;color:#f3f4f6;">• Student: ${esc(studentName)}</p><p style="margin:4px 0;font-size:13px;color:#f3f4f6;">• Email: ${esc(studentEmail)}</p><p style="margin:4px 0;font-size:13px;color:#f3f4f6;">• Payment Reference: ${esc(paymentRef)}</p><p style="margin:4px 0;font-size:13px;color:#34d399;font-weight:bold;">• Amount Paid: ${esc(amountPaid)}</p><p style="margin:4px 0;font-size:13px;color:#10b981;font-weight:bold;">• Payment Status: Approved</p></div><div style="background-color:#1a2234;border:1px solid #283548;border-radius:8px;padding:18px;margin:20px 0;"><h3 style="color:#818cf8;font-size:13px;margin:0 0 10px;">Access Details</h3><p style="margin:4px 0;font-size:13px;color:#f3f4f6;">• Bundle: ${esc(bundleName)}</p><p style="margin:4px 0;font-size:13px;color:#10b981;font-weight:bold;">• Access Status: Activated</p><p style="margin:10px 0 0;font-size:13px;color:#9ca3af;">• Your BCA Vault resources are now available in your account.</p></div><p style="color:#e5e7eb;font-size:14px;margin-top:24px;">You can now log in to BCA Vault and access your assigned study materials.</p><p style="color:#9ca3af;font-size:13px;margin-top:24px;border-top:1px solid #1f2937;padding-top:16px;">Regards,<br><strong style="color:#ffffff;">BCA Vault Team</strong><br>bcavault07@gmail.com</p></td></tr></table></td></tr></table></body></html>`;
+    const html_body = `<div style="font-family: Arial, sans-serif; color: #333333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+  <h2 style="color: #2e7d32; margin-top: 0;">Payment Approved</h2>
+
+  <p>Dear ${esc(studentName)},</p>
+
+  <p>We are pleased to inform you that your payment has been successfully approved.</p>
+
+  <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+    <p style="margin: 5px 0;"><strong>Course:</strong> ${esc(course)}</p>
+    <p style="margin: 5px 0;"><strong>Bundle:</strong> ${esc(bundleName)}</p>
+    <p style="margin: 5px 0;"><strong>Amount:</strong> ${esc(amountPaid)}</p>
+    <p style="margin: 5px 0;">
+      <strong>Status:</strong>
+      <span style="color: #2e7d32; font-weight: bold;">Approved</span>
+    </p>
+  </div>
+
+  <p>Thank you for choosing BCA Vault for your studies.</p>
+
+  <p style="margin-bottom: 0;">
+    Warm regards,<br>
+    <strong>BCA Vault Team</strong>
+  </p>
+</div>`;
 
     return { subject, text_body, html_body };
   }

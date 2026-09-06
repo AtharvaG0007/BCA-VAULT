@@ -116,6 +116,81 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+const DEFAULT_PAYMENT_APPROVED_SUBJECT = "BCA Vault — Payment Approved & Access Activated";
+
+const DEFAULT_PAYMENT_APPROVED_HTML = `<div style="font-family: Arial, sans-serif; color: #333333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+  <h2 style="color: #2e7d32; margin-top: 0;">Payment Approved</h2>
+
+  <p>Dear Student,</p>
+
+  <p>We are pleased to inform you that your payment has been successfully approved.</p>
+
+  <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+    <p style="margin: 5px 0;"><strong>Course:</strong> BCA</p>
+    <p style="margin: 5px 0;"><strong>Bundle:</strong> BCA Vault Bundle</p>
+    <p style="margin: 5px 0;"><strong>Amount:</strong> ₹499</p>
+    <p style="margin: 5px 0;">
+      <strong>Status:</strong>
+      <span style="color: #2e7d32; font-weight: bold;">Approved</span>
+    </p>
+  </div>
+
+  <p>Thank you for choosing BCA Vault for your studies.</p>
+
+  <p style="margin-bottom: 0;">
+    Warm regards,<br>
+    <strong>BCA Vault Team</strong>
+  </p>
+</div>`;
+
+const DEFAULT_PAYMENT_APPROVED_TEXT = `Dear Student,
+
+We are pleased to inform you that your payment has been successfully approved.
+
+Payment Details
+
+• Course: BCA
+• Bundle: BCA Vault Bundle
+• Amount: ₹499
+• Status: Approved
+
+Thank you for choosing BCA Vault for your studies.
+
+Warm regards,
+
+BCA Vault Team`;
+
+function getPaymentApprovedHtml(studentName = "Student", course = "BCA", bundle = "BCA Vault Bundle", amount = "₹499") {
+  return `<div style="font-family: Arial, sans-serif; color: #333333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+  <h2 style="color: #2e7d32; margin-top: 0;">Payment Approved</h2>
+
+  <p>Dear ${studentName},</p>
+
+  <p>We are pleased to inform you that your payment has been successfully approved.</p>
+
+  <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+    <p style="margin: 5px 0;"><strong>Course:</strong> ${course}</p>
+    <p style="margin: 5px 0;"><strong>Bundle:</strong> ${bundle}</p>
+    <p style="margin: 5px 0;"><strong>Amount:</strong> ${amount}</p>
+    <p style="margin: 5px 0;">
+      <strong>Status:</strong>
+      <span style="color: #2e7d32; font-weight: bold;">Approved</span>
+    </p>
+  </div>
+
+  <p>Thank you for choosing BCA Vault for your studies.</p>
+
+  <p style="margin-bottom: 0;">
+    Warm regards,<br>
+    <strong>BCA Vault Team</strong>
+  </p>
+</div>`;
+}
+
+function getPaymentApprovedText(studentName = "Student", course = "BCA", bundle = "BCA Vault Bundle", amount = "₹499") {
+  return `Dear ${studentName},\n\nWe are pleased to inform you that your payment has been successfully approved.\n\nPayment Details\n\n• Course: ${course}\n• Bundle: ${bundle}\n• Amount: ${amount}\n• Status: Approved\n\nThank you for choosing BCA Vault for your studies.\n\nWarm regards,\n\nBCA Vault Team`;
+}
+
 export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
   const navigate = useNavigate();
   const [queue, setQueue] = useState<OutboxItem[]>([]);
@@ -180,9 +255,33 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
   const selectJob = (job: OutboxItem) => {
     setIsComposing(false);
     setSelectedJob(job);
-    setSubject(job.subject || "");
-    setHtmlBody(job.html_body || "");
-    setTextBody(job.text_body || "");
+    setSubject(job.subject || (job.event_type === "payment_approved" ? DEFAULT_PAYMENT_APPROVED_SUBJECT : ""));
+
+    if (job.html_body) {
+      setHtmlBody(job.html_body);
+    } else if (job.event_type === "payment_approved") {
+      const studentName = job.payload?.student_name || "Student";
+      const course = job.payload?.course || "BCA";
+      const bundle = job.payload?.bundle_name || "BCA Vault Bundle";
+      const rawAmt = job.payload?.amount_paid || (job.payload?.amount ? `₹${job.payload.amount}` : "₹499");
+      const amount = String(rawAmt).startsWith("₹") ? String(rawAmt) : `₹${rawAmt}`;
+      setHtmlBody(getPaymentApprovedHtml(studentName, course, bundle, amount));
+    } else {
+      setHtmlBody("");
+    }
+
+    if (job.text_body) {
+      setTextBody(job.text_body);
+    } else if (job.event_type === "payment_approved") {
+      const studentName = job.payload?.student_name || "Student";
+      const course = job.payload?.course || "BCA";
+      const bundle = job.payload?.bundle_name || "BCA Vault Bundle";
+      const rawAmt = job.payload?.amount_paid || (job.payload?.amount ? `₹${job.payload.amount}` : "₹499");
+      const amount = String(rawAmt).startsWith("₹") ? String(rawAmt) : `₹${rawAmt}`;
+      setTextBody(getPaymentApprovedText(studentName, course, bundle, amount));
+    } else {
+      setTextBody("");
+    }
   };
 
   const startCompose = (type: "test_email" | "payment_approved" = "test_email") => {
@@ -190,9 +289,19 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
     setSelectedJob(null);
     setComposeEventType(type);
     setComposeRecipient("");
-    setSubject(type === "test_email" ? "BCA Vault — Gmail API Test Email" : "");
-    setHtmlBody("");
-    setTextBody("");
+    if (type === "test_email") {
+      setSubject("BCA Vault — Gmail API Test Email");
+      setHtmlBody("");
+      setTextBody("");
+    } else if (type === "payment_approved") {
+      setSubject(DEFAULT_PAYMENT_APPROVED_SUBJECT);
+      setHtmlBody(DEFAULT_PAYMENT_APPROVED_HTML);
+      setTextBody(DEFAULT_PAYMENT_APPROVED_TEXT);
+    } else {
+      setSubject("");
+      setHtmlBody("");
+      setTextBody("");
+    }
   };
 
   const loadDefaultTemplate = () => {
@@ -201,6 +310,10 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
         setSubject("BCA Vault — Gmail API Test Email");
         setTextBody("This is an operational test email from BCA Vault to verify transactional delivery via Gmail API.\n\nRegards,\nBCA Vault Team\nbcavault07@gmail.com");
         setHtmlBody("<p style='font-family: Arial, sans-serif; color: #1e293b; padding: 16px;'>This is an operational test email from BCA Vault to verify transactional delivery via Gmail API.<br><br>Regards,<br><strong>BCA Vault Team</strong><br>bcavault07@gmail.com</p>");
+      } else if (composeEventType === "payment_approved") {
+        setSubject(DEFAULT_PAYMENT_APPROVED_SUBJECT);
+        setTextBody(DEFAULT_PAYMENT_APPROVED_TEXT);
+        setHtmlBody(DEFAULT_PAYMENT_APPROVED_HTML);
       } else {
         setSubject("BCA Vault — Notification");
         setTextBody("Official notification from BCA Vault Team.\n\nRegards,\nBCA Vault Team\nbcavault07@gmail.com");
@@ -594,9 +707,18 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                     <select
                       value={composeEventType}
                       onChange={(e) => {
-                        setComposeEventType(e.target.value);
-                        if (e.target.value === "test_email") {
+                        const val = e.target.value;
+                        setComposeEventType(val);
+                        if (val === "test_email") {
                           setSubject("BCA Vault — Gmail API Test Email");
+                        } else if (val === "payment_approved") {
+                          setSubject(DEFAULT_PAYMENT_APPROVED_SUBJECT);
+                          if (!htmlBody) {
+                            setHtmlBody(DEFAULT_PAYMENT_APPROVED_HTML);
+                          }
+                          if (!textBody) {
+                            setTextBody(DEFAULT_PAYMENT_APPROVED_TEXT);
+                          }
                         }
                       }}
                       className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2 text-xs font-semibold text-white outline-none focus:border-indigo-500 transition"
