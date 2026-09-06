@@ -77,43 +77,31 @@ export function StudentReferralView({
       setError(null);
 
       try {
-        // 1. Fetch user's referral code from referral_codes
-        const { data: codeData, error: codeErr } = await supabase
-          .from("referral_codes")
-          .select("code, is_active")
-          .eq("user_id", user.id)
-          .maybeSingle();
+        // 1. Retrieve or generate user's referral code via secure RPC
+        let resolvedCode: string | null = null;
+        const { data: rpcCode, error: rpcErr } = await supabase.rpc("get_or_create_referral_code");
 
-        if (codeErr) {
-          console.warn("[StudentReferralView] Error fetching referral code:", codeErr);
-        }
-
-        if (codeData?.code) {
-          setReferralCode(codeData.code);
+        if (!rpcErr && rpcCode) {
+          resolvedCode = rpcCode;
         } else {
-          // If student doesn't have a code row yet, generate one
-          const generatedCode = `BV-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-          const { data: newCode, error: insertErr } = await supabase
+          if (rpcErr) {
+            console.warn("[StudentReferralView] get_or_create_referral_code notice:", rpcErr.message);
+          }
+          // Read-only fallback: fetch existing active code if RPC is pending cache or temporary hiccup
+          const { data: codeData } = await supabase
             .from("referral_codes")
-            .insert({
-              user_id: user.id,
-              code: generatedCode,
-              is_active: true,
-            })
             .select("code")
+            .eq("user_id", user.id)
+            .eq("is_active", true)
             .maybeSingle();
 
-          if (!insertErr && newCode?.code) {
-            setReferralCode(newCode.code);
-          } else {
-            // In case of conflict or policy restriction, retry read
-            const { data: retryData } = await supabase
-              .from("referral_codes")
-              .select("code")
-              .eq("user_id", user.id)
-              .maybeSingle();
-            if (retryData?.code) setReferralCode(retryData.code);
+          if (codeData?.code) {
+            resolvedCode = codeData.code;
           }
+        }
+
+        if (resolvedCode) {
+          setReferralCode(resolvedCode);
         }
 
         // 2. Fetch referrals where user is the referrer

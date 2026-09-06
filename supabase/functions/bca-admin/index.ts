@@ -97,6 +97,136 @@ async function triggerEmailDispatcher(outboxId?: string, paymentId?: string) {
   }
 }
 
+function renderPaymentApprovedHtml(
+  studentName: string,
+  studentEmail: string,
+  paymentRef: string,
+  amountText: string,
+  bundleTitle: string
+): string {
+  const escapeHtml = (s: string) =>
+    s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+
+  const safeName = escapeHtml(studentName);
+  const safeEmail = escapeHtml(studentEmail);
+  const safeRef = escapeHtml(paymentRef);
+  const safeAmount = escapeHtml(amountText);
+  const safeBundle = escapeHtml(bundleTitle);
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>BCA Vault — Payment Approved &amp; Access Activated</title></head><body style="margin: 0; padding: 0; background-color: #0b0f19; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f3f4f6;"><table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #0b0f19; padding: 40px 16px;"><tr><td align="center"><table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background-color: #111827; border: 1px solid #1f2937; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5);"><tr><td style="padding: 28px 32px 20px; background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); border-bottom: 1px solid #1f2937;"><table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0"><tr><td><span style="font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: #ffffff;">BCA <span style="color: #6366f1;">VAULT</span></span></td><td align="right"><span style="display: inline-block; padding: 4px 12px; font-size: 11px; font-weight: 700; color: #10b981; background-color: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px;">Approved</span></td></tr></table><h1 style="margin: 20px 0 0; font-size: 20px; font-weight: 700; color: #ffffff; line-height: 1.3;">Payment Approved &amp; Access Activated</h1></td></tr><tr><td style="padding: 32px;"><p style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #e5e7eb;">Hi <strong style="color: #ffffff;">${safeName}</strong>,</p><p style="margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #9ca3af;">Your payment for BCA Vault has been successfully verified and approved.</p><div style="margin-bottom: 20px; background-color: #1a2234; border: 1px solid #283548; border-radius: 8px; padding: 18px 20px;"><h2 style="margin: 0 0 14px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #818cf8;">Payment Details</h2><table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size: 13px; line-height: 1.8;"><tr><td style="color: #9ca3af; width: 42%; padding: 3px 0;">• Student:</td><td style="color: #f3f4f6; font-weight: 600; padding: 3px 0;">${safeName}</td></tr><tr><td style="color: #9ca3af; padding: 3px 0;">• Email:</td><td style="color: #f3f4f6; padding: 3px 0;">${safeEmail}</td></tr><tr><td style="color: #9ca3af; padding: 3px 0;">• Payment Reference:</td><td style="color: #f3f4f6; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; padding: 3px 0;">${safeRef}</td></tr><tr><td style="color: #9ca3af; padding: 3px 0;">• Amount Paid:</td><td style="color: #34d399; font-weight: 700; padding: 3px 0;">${safeAmount}</td></tr><tr><td style="color: #9ca3af; padding: 3px 0;">• Payment Status:</td><td style="color: #10b981; font-weight: 700; padding: 3px 0;">Approved</td></tr></table></div><div style="margin-bottom: 24px; background-color: #1a2234; border: 1px solid #283548; border-radius: 8px; padding: 18px 20px;"><h2 style="margin: 0 0 14px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #818cf8;">Access Details</h2><table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size: 13px; line-height: 1.8;"><tr><td style="color: #9ca3af; width: 42%; padding: 3px 0;">• Bundle:</td><td style="color: #f3f4f6; font-weight: 600; padding: 3px 0;">${safeBundle}</td></tr><tr><td style="color: #9ca3af; padding: 3px 0;">• Access Status:</td><td style="color: #10b981; font-weight: 700; padding: 3px 0;">Activated</td></tr></table><p style="margin: 12px 0 0; font-size: 13px; color: #9ca3af; line-height: 1.5;">• Your BCA Vault resources are now available in your account.</p></div><p style="margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #e5e7eb;">You can now log in to BCA Vault and access your assigned study materials.</p><table role="presentation" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 28px;"><tr><td align="center" style="border-radius: 6px; background-color: #4f46e5;"><a href="https://bca-vault.portalbcavault.workers.dev" target="_blank" style="display: inline-block; padding: 12px 24px; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 6px;">Go to BCA Vault</a></td></tr></table><div style="border-top: 1px solid #1f2937; padding-top: 20px; font-size: 13px; line-height: 1.6; color: #9ca3af;"><p style="margin: 0;">Regards,<br><strong style="color: #ffffff;">BCA Vault Team</strong><br><a href="mailto:bcavault07@gmail.com" style="color: #818cf8; text-decoration: none;">bcavault07@gmail.com</a></p></div></td></tr></table></td></tr></table></body></html>`;
+}
+
+async function ensurePaymentApprovedOutboxEntry(paymentId: string, verifiedByUserId: string) {
+  try {
+    const eventKey = `payment-approved:${paymentId}`;
+    const { data: existing } = await admin
+      .from("email_outbox")
+      .select("id, status")
+      .eq("event_key", eventKey)
+      .maybeSingle();
+
+    if (existing?.status === "sent") {
+      return existing;
+    }
+
+    const { data: payment } = await admin
+      .from("payment_submissions")
+      .select("id, status, amount, reference_id, utr, bundle_id, user_id, email, full_name, bundles(title)")
+      .eq("id", paymentId)
+      .maybeSingle();
+
+    if (!payment || payment.status !== "approved") return null;
+
+    let targetUserId = payment.user_id;
+    let studentProf: any = null;
+    if (targetUserId) {
+      const { data: p } = await admin
+        .from("profiles")
+        .select("user_id, full_name, email")
+        .eq("user_id", targetUserId)
+        .maybeSingle();
+      studentProf = p;
+    } else if (payment.email) {
+      const { data: p } = await admin
+        .from("profiles")
+        .select("user_id, full_name, email")
+        .ilike("email", payment.email)
+        .maybeSingle();
+      studentProf = p;
+      if (p?.user_id) targetUserId = p.user_id;
+    }
+
+    const studentName = studentProf?.full_name?.trim() || payment.full_name?.trim() || "Student";
+    const studentEmail = studentProf?.email?.trim() || payment.email?.trim();
+    if (!studentEmail) return null;
+
+    const paymentRef = payment.reference_id || payment.utr || payment.id;
+    const rawAmount = payment.amount != null ? String(payment.amount).trim() : "";
+    const amountText = !rawAmount ? "₹0" : (rawAmount.startsWith("₹") ? rawAmount : `₹${rawAmount}`);
+    const bundleTitle = (Array.isArray(payment.bundles) ? payment.bundles[0]?.title : payment.bundles?.title) || "BCA Vault Bundle";
+
+    const payload = {
+      payment_id: payment.id,
+      user_id: targetUserId,
+      bundle_id: payment.bundle_id,
+      semester: payment.semester,
+      student_name: studentName,
+      student_email: studentEmail,
+      payment_reference: paymentRef,
+      amount_paid: amountText,
+      bundle_name: bundleTitle,
+      approved_at: new Date().toISOString(),
+      verified_by: verifiedByUserId,
+      access_granted: true,
+    };
+
+    const fixedTextBody = `Hi ${studentName},\n\nYour payment for BCA Vault has been successfully verified and approved.\n\nPayment Details\n\n• Student: ${studentName}\n• Email: ${studentEmail}\n• Payment Reference: ${paymentRef}\n• Amount Paid: ${amountText}\n• Payment Status: Approved\n\nAccess Details\n\n• Bundle: ${bundleTitle}\n• Access Status: Activated\n• Your BCA Vault resources are now available in your account.\n\nYou can now log in to BCA Vault and access your assigned study materials.\n\nRegards,\n\nBCA Vault Team\nbcavault07@gmail.com`;
+
+    const fixedHtmlBody = renderPaymentApprovedHtml(studentName, studentEmail, paymentRef, amountText, bundleTitle);
+
+    if (!existing) {
+      const { data: inserted } = await admin
+        .from("email_outbox")
+        .insert({
+          event_key: eventKey,
+          event_type: "payment_approved",
+          recipient_user_id: targetUserId,
+          recipient_email: studentEmail,
+          sender_name: "BCA Vault",
+          sender_email: "bcavault07@gmail.com",
+          status: "pending",
+          subject: "BCA Vault — Payment Approved & Access Activated",
+          text_body: fixedTextBody,
+          html_body: fixedHtmlBody,
+          payload,
+          approved_at: new Date().toISOString(),
+          approved_by: verifiedByUserId,
+        })
+        .select("*")
+        .maybeSingle();
+      return inserted;
+    } else {
+      const { data: updated } = await admin
+        .from("email_outbox")
+        .update({
+          recipient_user_id: targetUserId,
+          recipient_email: studentEmail,
+          subject: "BCA Vault — Payment Approved & Access Activated",
+          text_body: fixedTextBody,
+          html_body: fixedHtmlBody,
+          payload,
+        })
+        .eq("id", existing.id)
+        .select("*")
+        .maybeSingle();
+      return updated;
+    }
+  } catch (err) {
+    console.warn("[bca-admin] ensurePaymentApprovedOutboxEntry notice:", err);
+    return null;
+  }
+}
+
 Deno.serve(async (request: Request) => {
   const corsHeaders = getCorsHeaders(request);
 
@@ -383,6 +513,9 @@ Deno.serve(async (request: Request) => {
       if (!rpcResult.error) {
         if (status === "approved") {
           const targetPaymentId = id;
+          // Ensure deterministic default email draft exists in email_outbox
+          await ensurePaymentApprovedOutboxEntry(targetPaymentId, access.user.id);
+
           const trigger = async () => {
             await triggerEmailDispatcher(undefined, targetPaymentId);
           };
@@ -480,62 +613,17 @@ Deno.serve(async (request: Request) => {
         }
 
         // Automatically populate payment_approved email draft into email_outbox
-        try {
-          const { data: studentProf } = await admin.from("profiles").select("full_name,email").eq("user_id", targetUserId).maybeSingle();
-          const studentName = studentProf?.full_name?.trim() || payment.full_name?.trim() || "Student";
-          const studentEmail = studentProf?.email?.trim() || payment.email?.trim();
-          if (studentEmail) {
-            const eventKey = `payment-approved:${payment.id}`;
-            const paymentRef = payment.reference_id || payment.utr || payment.id;
-            const amountText = payment.amount ? `₹${payment.amount}` : "₹0";
-            const payload = {
-              payment_id: payment.id,
-              user_id: targetUserId,
-              bundle_id: payment.bundle_id,
-              semester: payment.semester,
-              student_name: studentName,
-              student_email: studentEmail,
-              payment_reference: paymentRef,
-              amount_paid: amountText,
-              bundle_name: bundleTitle,
-              approved_at: new Date().toISOString(),
-              verified_by: access.user.id,
-              access_granted: true,
-            };
+        await ensurePaymentApprovedOutboxEntry(payment.id, access.user.id);
 
-            const fixedTextBody = `Hi ${studentName},\n\nYour payment for BCA Vault has been successfully verified and approved.\n\nPayment Details\n\n• Student: ${studentName}\n• Email: ${studentEmail}\n• Payment Reference: ${paymentRef}\n• Amount Paid: ${amountText}\n• Payment Status: Approved\n\nAccess Details\n\n• Bundle: ${bundleTitle}\n• Access Status: Activated\n• Your BCA Vault resources are now available in your account.\n\nYou can now log in to BCA Vault and access your assigned study materials.\n\nRegards,\n\nBCA Vault Team\nbcavault07@gmail.com`;
-
-            const fixedHtmlBody = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>BCA Vault — Payment Approved & Access Activated</title></head><body style="margin:0;padding:0;background-color:#0b0f19;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#f3f4f6;"><table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="padding:40px 16px;"><tr><td align="center"><table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width:580px;background-color:#111827;border:1px solid #1f2937;border-radius:12px;padding:32px;"><tr><td><h1 style="color:#ffffff;font-size:20px;margin-bottom:16px;">Payment Approved &amp; Access Activated</h1><p style="color:#e5e7eb;font-size:15px;">Hi <strong>${studentName}</strong>,</p><p style="color:#9ca3af;font-size:14px;">Your payment for BCA Vault has been successfully verified and approved.</p><div style="background-color:#1a2234;border:1px solid #283548;border-radius:8px;padding:18px;margin:20px 0;"><h3 style="color:#818cf8;font-size:13px;margin:0 0 10px;">Payment Details</h3><p style="margin:4px 0;font-size:13px;color:#f3f4f6;">• Student: ${studentName}</p><p style="margin:4px 0;font-size:13px;color:#f3f4f6;">• Email: ${studentEmail}</p><p style="margin:4px 0;font-size:13px;color:#f3f4f6;">• Payment Reference: ${paymentRef}</p><p style="margin:4px 0;font-size:13px;color:#34d399;font-weight:bold;">• Amount Paid: ${amountText}</p><p style="margin:4px 0;font-size:13px;color:#10b981;font-weight:bold;">• Payment Status: Approved</p></div><div style="background-color:#1a2234;border:1px solid #283548;border-radius:8px;padding:18px;margin:20px 0;"><h3 style="color:#818cf8;font-size:13px;margin:0 0 10px;">Access Details</h3><p style="margin:4px 0;font-size:13px;color:#f3f4f6;">• Bundle: ${bundleTitle}</p><p style="margin:4px 0;font-size:13px;color:#10b981;font-weight:bold;">• Access Status: Activated</p><p style="margin:10px 0 0;font-size:13px;color:#9ca3af;">• Your BCA Vault resources are now available in your account.</p></div><p style="color:#e5e7eb;font-size:14px;margin-top:24px;">You can now log in to BCA Vault and access your assigned study materials.</p><p style="color:#9ca3af;font-size:13px;margin-top:24px;border-top:1px solid #1f2937;padding-top:16px;">Regards,<br><strong style="color:#ffffff;">BCA Vault Team</strong><br>bcavault07@gmail.com</p></td></tr></table></td></tr></table></body></html>`;
-
-            await admin.from("email_outbox").upsert({
-              event_key: eventKey,
-              event_type: "payment_approved",
-              recipient_user_id: targetUserId,
-              recipient_email: studentEmail,
-              sender_name: "BCA Vault",
-              sender_email: "bcavault07@gmail.com",
-              status: "pending",
-              subject: "BCA Vault — Payment Approved & Access Activated",
-              text_body: fixedTextBody,
-              html_body: fixedHtmlBody,
-              payload,
-              approved_at: new Date().toISOString(),
-              approved_by: access.user.id,
-            }, { onConflict: "event_key" });
-
-            // Asynchronously trigger dispatcher in the background
-            const targetPaymentId = payment.id;
-            const trigger = async () => {
-              await triggerEmailDispatcher(undefined, targetPaymentId);
-            };
-            if (typeof EdgeRuntime !== "undefined" && typeof EdgeRuntime.waitUntil === "function") {
-              EdgeRuntime.waitUntil(trigger());
-            } else {
-              trigger().catch((err) => console.warn("[bca-admin] Fallback dispatcher trigger notice:", err));
-            }
-          }
-        } catch (outboxErr) {
-          console.warn("[bca-admin] email_outbox draft fallback notice:", outboxErr);
+        // Asynchronously trigger dispatcher in the background
+        const targetPaymentId = payment.id;
+        const trigger = async () => {
+          await triggerEmailDispatcher(undefined, targetPaymentId);
+        };
+        if (typeof EdgeRuntime !== "undefined" && typeof EdgeRuntime.waitUntil === "function") {
+          EdgeRuntime.waitUntil(trigger());
+        } else {
+          trigger().catch((err) => console.warn("[bca-admin] Fallback dispatcher trigger notice:", err));
         }
       }
 
