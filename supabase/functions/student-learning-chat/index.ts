@@ -380,28 +380,37 @@ Deno.serve(async (request: Request) => {
       );
     }
 
-    // ── Fetch student profile (server-side) ────────────────────
+    // ── Fetch student profile or admin role (server-side) ──────
+    const { data: adminProfile } = await admin
+      .from("admin_profiles")
+      .select("role, status")
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .maybeSingle();
+
+    const isAdmin = !!adminProfile && ["admin", "superadmin"].includes(adminProfile.role);
+
     const { data: profile } = await admin
       .from("profiles")
       .select("full_name, email, course, semester, status")
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (!profile || profile.status !== "active") {
+    if (profile?.status === "suspended") {
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Your student account is not active. Please contact support at bcavault07@gmail.com.",
+          error: "Your student account has been suspended. Please contact support at bcavault07@gmail.com.",
         }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const studentProfile = {
-      name: profile.full_name || authData.user.email?.split("@")[0] || "Student",
-      course: profile.course || "BCA",
-      semester: profile.semester || 1,
-      email: profile.email || authData.user.email || "",
+      name: profile?.full_name || authData.user.user_metadata?.full_name || authData.user.email?.split("@")[0] || (isAdmin ? "Admin" : "Student"),
+      course: profile?.course || "BCA",
+      semester: profile?.semester || 1,
+      email: profile?.email || authData.user.email || "",
     };
 
     // ── Fetch authorized bundles & notes (server-side) ─────────
@@ -508,7 +517,7 @@ Deno.serve(async (request: Request) => {
       parts: [{ text: userMessage }],
     });
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${geminiKey}`;
 
     const geminiRes = await fetch(geminiUrl, {
       method: "POST",
