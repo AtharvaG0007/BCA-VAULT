@@ -35,6 +35,7 @@ import { PublicSupportChat } from "./components/chatbot/PublicSupportChat";
 import { WhatsAppFloatingButton } from "./components/support/WhatsAppFloatingButton";
 import { ReferralFloatingPromo } from "./components/marketing/ReferralFloatingPromo";
 
+// Admin email console route is intentionally kept in App.tsx so it deploys with the main SPA.
 function PageWrapper({ children }: { children: React.ReactNode }) {
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }}>
