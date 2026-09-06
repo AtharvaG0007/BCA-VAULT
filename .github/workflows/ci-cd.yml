@@ -61,10 +61,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Supabase CLI (pinned 2.116.0)
-        uses: supabase-community/setup-cli@v1
-        with:
-          version: 2.116.0
+      - name: Install Supabase CLI
+        run: |
+          npm install -g supabase@2.116.0
+          supabase --version
 
       - name: Validate database credentials
         env:
@@ -109,10 +109,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Supabase CLI (pinned 2.116.0)
-        uses: supabase-community/setup-cli@v1
-        with:
-          version: 2.116.0
+      - name: Install Supabase CLI
+        run: |
+          npm install -g supabase@2.116.0
+          supabase --version
 
       - name: Validate Supabase access token
         env:
