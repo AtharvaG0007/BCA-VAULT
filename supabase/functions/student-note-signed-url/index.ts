@@ -164,9 +164,27 @@ Deno.serve(async (request: Request) => {
       );
     }
 
-    // 3. Verify bundle exists and is published (if note is associated with a bundle)
-    let bundleTitle = "Independent Note";
-    if (note.bundle_id) {
+    // 3. Classify resource type & verify bundle if applicable
+    const REFERRAL_BONUS_QUESTION_NOTE_IDS = [
+      "33cc389f-4a00-4d3e-89dd-670e514e2ed3", // Foundation of Computing — Most Repeated Questions
+      "6d971cc5-5677-43f5-958f-add182553c87", // C Programming — Most Repeated Questions
+      "20af0ae2-66e3-46cb-bbc2-4ae8e12f0500", // Client-Side Web Technologies — Most Repeated Questions
+    ];
+
+    const isReferralQuestionResource =
+      REFERRAL_BONUS_QUESTION_NOTE_IDS.includes(note.id) ||
+      Boolean(
+        note.storage_path &&
+          (note.storage_path.toLowerCase().includes("repted_questions") ||
+            note.storage_path.toLowerCase().includes("refral_bouns") ||
+            note.storage_path.toLowerCase().includes("referral_bonus"))
+      );
+
+    let bundleTitle = isReferralQuestionResource
+      ? "Referral Reward: Most Repeated Questions"
+      : "Independent Note";
+
+    if (note.bundle_id && !isReferralQuestionResource) {
       const { data: bundle, error: bundleErr } = await admin
         .from("bundles")
         .select("id, title, published")
@@ -183,48 +201,16 @@ Deno.serve(async (request: Request) => {
       bundleTitle = bundle.title;
     }
 
-    // 4. Verify student authorization: bundle permission OR granular document access
+    // 4. Verify student authorization
+    // Strict distinction:
+    // - Paid bundle access (access_permissions) -> grants access ONLY to paid study notes & most repeated topics
+    // - Referral reward access (referral_rewards) -> grants access ONLY to the 3 referral most repeated questions
+    // - Document-specific access (student_document_access) -> grants note-specific access
     const nowIso = new Date().toISOString();
     let hasAccess = false;
 
-    if (note.bundle_id) {
-      const { data: permission } = await admin
-        .from("access_permissions")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("bundle_id", note.bundle_id)
-        .eq("status", "active")
-        .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
-        .maybeSingle();
-
-      if (permission) {
-        hasAccess = true;
-      }
-    }
-
-    // Check direct document-level access grant if not already granted via bundle
-    if (!hasAccess) {
-      const { data: directDocAccess } = await admin
-        .from("student_document_access")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("note_id", note.id)
-        .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
-        .maybeSingle();
-
-      if (directDocAccess) {
-        hasAccess = true;
-      }
-    }
-
-    // Check referral reward authorization for the 3 Most Repeated Topics notes
-    const REWARDABLE_MOST_REPEATED_TOPIC_NOTE_IDS = [
-      "33cc389f-4a00-4d3e-89dd-670e514e2ed3", // Most Repeated Topics — Foundation of Computing
-      "6d971cc5-5677-43f5-958f-add182553c87", // Most Repeated Topics — C Programming
-      "20af0ae2-66e3-46cb-bbc2-4ae8e12f0500", // Most Repeated Topics — HTML + CSS + JavaScript
-    ];
-
-    if (!hasAccess && REWARDABLE_MOST_REPEATED_TOPIC_NOTE_IDS.includes(note.id)) {
+    if (isReferralQuestionResource) {
+      // 4A. Exclusive Referral Reward Authorization
       const { data: rewardAccess } = await admin
         .from("referral_rewards")
         .select("id")
@@ -235,6 +221,50 @@ Deno.serve(async (request: Request) => {
 
       if (rewardAccess) {
         hasAccess = true;
+      }
+
+      if (!hasAccess) {
+        const { data: directDocAccess } = await admin
+          .from("student_document_access")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("note_id", note.id)
+          .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+          .maybeSingle();
+
+        if (directDocAccess) {
+          hasAccess = true;
+        }
+      }
+    } else {
+      // 4B. Paid Bundle Course Authorization
+      if (note.bundle_id) {
+        const { data: permission } = await admin
+          .from("access_permissions")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("bundle_id", note.bundle_id)
+          .eq("status", "active")
+          .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+          .maybeSingle();
+
+        if (permission) {
+          hasAccess = true;
+        }
+      }
+
+      if (!hasAccess) {
+        const { data: directDocAccess } = await admin
+          .from("student_document_access")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("note_id", note.id)
+          .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+          .maybeSingle();
+
+        if (directDocAccess) {
+          hasAccess = true;
+        }
       }
     }
 
@@ -249,7 +279,10 @@ Deno.serve(async (request: Request) => {
           metadata: {
             note_title: note.title,
             bundle_id: note.bundle_id,
-            reason: "no_active_access_permission",
+            is_referral_reward: isReferralQuestionResource,
+            reason: isReferralQuestionResource
+              ? "referral_reward_locked"
+              : "no_active_access_permission",
           },
         });
       } catch (logErr) {
@@ -259,7 +292,9 @@ Deno.serve(async (request: Request) => {
       return respond(
         {
           success: false,
-          error: "You do not have active access to this note. Please verify your course bundle access.",
+          error: isReferralQuestionResource
+            ? "This resource is an exclusive referral reward. Invite friends to BCA Vault to unlock your Most Repeated Questions bonus."
+            : "You do not have active access to this note. Please verify your course bundle access.",
         },
         403,
         corsHeaders
@@ -288,6 +323,37 @@ Deno.serve(async (request: Request) => {
       candidatePaths.push(
         rawPath.replace("BCA_Vault_Algorithms_and_Programming_Design_using_C_Corrected.pdf", "C_Programming_Complete_Notes.pdf")
       );
+    }
+
+    // Map referral-bonus question files to verified storage paths
+    if (
+      rawPath.includes("Algorithms_and_Program_Design_Using_C_repted_questions_refral_bouns.pdf") ||
+      note.id === "6d971cc5-5677-43f5-958f-add182553c87"
+    ) {
+      candidatePaths.push(
+        "BCA SEM1/BCA_Vault_Referral_Bonus_C_Programming_Most_Repeated_Questions.pdf"
+      );
+    }
+    if (
+      rawPath.includes("Foundations_of_Computing_repted_questions_refral_bouns.pdf") ||
+      note.id === "33cc389f-4a00-4d3e-89dd-670e514e2ed3"
+    ) {
+      candidatePaths.push(
+        "BCA SEM1/BCA_Vault_Referral_Bonus_Foundations_of_Computing_Most_Repeated_Questions.pdf"
+      );
+    }
+    if (
+      rawPath.includes("Client_Side_Web_Technologies_repted_questions_refral_bouns.pdf") ||
+      note.id === "20af0ae2-66e3-46cb-bbc2-4ae8e12f0500"
+    ) {
+      candidatePaths.push(
+        "BCA SEM1/BCA_Vault_Referral_Bonus_Client_Side_Web_Technologies_Most_Repeated_Questions.pdf"
+      );
+    }
+
+    // Ensure BCA SEM1 folder prefix is attempted if rawPath lacks it
+    if (rawPath === "Foundation_of_Computing_Most_Repeated_Topics.pdf") {
+      candidatePaths.push("BCA SEM1/Foundation_of_Computing_Most_Repeated_Topics.pdf");
     }
 
     const uniquePaths = Array.from(new Set(candidatePaths.filter(Boolean)));

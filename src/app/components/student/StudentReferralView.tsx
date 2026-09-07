@@ -60,11 +60,32 @@ export function StudentReferralView({
     "Student";
   const studentDms = `${studentName} DMS`;
 
-  const REWARD_NOTE_IDS = [
-    "33cc389f-4a00-4d3e-89dd-670e514e2ed3", // Foundation of Computing
-    "6d971cc5-5677-43f5-958f-add182553c87", // C Programming
-    "20af0ae2-66e3-46cb-bbc2-4ae8e12f0500", // HTML + CSS + JavaScript
+  const REFERRAL_REWARD_NOTE_IDS = [
+    "6d971cc5-5677-43f5-958f-add182553c87", // C Programming — Most Repeated Questions
+    "33cc389f-4a00-4d3e-89dd-670e514e2ed3", // Foundation of Computing — Most Repeated Questions
+    "20af0ae2-66e3-46cb-bbc2-4ae8e12f0500", // Client-Side Web Technologies — Most Repeated Questions
   ];
+
+  const REFERRAL_REWARD_META: Record<
+    string,
+    { title: string; subject: string; description: string }
+  > = {
+    "6d971cc5-5677-43f5-958f-add182553c87": {
+      title: "C Programming — Most Repeated Questions",
+      subject: "C Programming",
+      description: "Curated high-frequency exam questions for C Programming & Algorithm Design.",
+    },
+    "33cc389f-4a00-4d3e-89dd-670e514e2ed3": {
+      title: "Foundation of Computing — Most Repeated Questions",
+      subject: "Foundation of Computing",
+      description: "Curated high-frequency exam questions for Foundation of Computing.",
+    },
+    "20af0ae2-66e3-46cb-bbc2-4ae8e12f0500": {
+      title: "Client-Side Web Technologies — Most Repeated Questions",
+      subject: "Client-Side Web Technologies",
+      description: "Curated high-frequency exam questions for Client-Side Web Technologies (HTML, CSS, JS).",
+    },
+  };
 
   useEffect(() => {
     async function fetchReferralData() {
@@ -96,15 +117,25 @@ export function StudentReferralView({
           setReward(rewardData as RewardRow);
         }
 
-        // 3. Fetch the 3 specific Most Repeated Topics notes
+        // 3. Fetch the 3 specific referral Most Repeated Questions resources
         const { data: notesData } = await supabase
           .from("notes")
           .select("id, title, subject, semester, description, storage_bucket, storage_path, priority")
-          .in("id", REWARD_NOTE_IDS);
+          .in("id", REFERRAL_REWARD_NOTE_IDS);
 
         if (notesData) {
-          // Order them logically: Foundation, C Programming, Web Dev
-          const ordered = REWARD_NOTE_IDS.map((id) => notesData.find((n) => n.id === id)).filter(Boolean) as NoteItem[];
+          // Order them logically: C Programming, Foundation of Computing, Client-Side Web Technologies
+          const ordered = REFERRAL_REWARD_NOTE_IDS.map((id) => {
+            const raw = notesData.find((n) => n.id === id);
+            if (!raw) return null;
+            const meta = REFERRAL_REWARD_META[id];
+            return {
+              ...raw,
+              title: meta?.title || raw.title,
+              subject: meta?.subject || raw.subject,
+              description: meta?.description || raw.description,
+            };
+          }).filter(Boolean) as NoteItem[];
           setRewardNotes(ordered);
         }
       } catch (err: any) {
@@ -239,7 +270,7 @@ export function StudentReferralView({
               </h2>
             </div>
             <p className="text-xs text-slate-500">
-              High-frequency exam topics across Foundation of Computing, C Programming, and HTML + CSS + JavaScript.
+              High-frequency exam questions across C Programming, Foundation of Computing, and Client-Side Web Technologies.
             </p>
           </div>
 
@@ -271,7 +302,7 @@ export function StudentReferralView({
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <span className="bg-amber-50 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-md border border-amber-200">
-                      Most Repeated
+                      Most Repeated Questions
                     </span>
                     <span className="text-[10px] font-semibold text-slate-400">
                       Semester 1
@@ -295,11 +326,11 @@ export function StudentReferralView({
                     >
                       {openingId === note.id ? (
                         <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Opening…
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Opening Questions…
                         </>
                       ) : (
                         <>
-                          <Download className="w-3.5 h-3.5" /> Read Note
+                          <Download className="w-3.5 h-3.5" /> Read Questions
                         </>
                       )}
                     </button>
@@ -313,7 +344,7 @@ export function StudentReferralView({
             ))
           ) : (
             <div className="col-span-3 text-center py-6 text-xs text-slate-400">
-              Most Repeated Topics materials are synchronized with your account.
+              Most Repeated Questions materials are synchronized with your account.
             </div>
           )}
         </div>

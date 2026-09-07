@@ -75,7 +75,7 @@ export function StudentDashboard() {
 
   const [access, setAccess] = useState<AccessItem[]>([]);
   const [notes, setNotes] = useState<NoteItem[]>([]);
-  const [noteCategory, setNoteCategory] = useState<"all" | "repeated" | "theory" | "pyq">("all");
+  const [noteCategory, setNoteCategory] = useState<"all" | "repeated" | "theory">("all");
   const [noteSearch, setNoteSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [openingId, setOpeningId] = useState<string | null>(null);
@@ -484,31 +484,41 @@ export function StudentDashboard() {
 
             {/* ── Materials Categorization & Display ──────────────────────── */}
             {(() => {
+              const SEM1_MOST_REPEATED_TOPIC_NOTE_IDS = [
+                "9e59ab23-0de4-480e-a657-6a5de642c5e9", // Most Repeated Topics — C Programming
+                "67223491-a665-44b0-8307-b2a22dd30de2", // Most Repeated Topics — Algorithm & Program Design Using C
+                "480f00c8-b176-4d31-a030-2539e378a3c4", // Most Repeated Topics — Foundation of Computing
+              ];
+
+              const REFERRAL_BONUS_QUESTION_NOTE_IDS = [
+                "6d971cc5-5677-43f5-958f-add182553c87", // C Programming — Most Repeated Questions
+                "33cc389f-4a00-4d3e-89dd-670e514e2ed3", // Foundation of Computing — Most Repeated Questions
+                "20af0ae2-66e3-46cb-bbc2-4ae8e12f0500", // Client-Side Web Technologies — Most Repeated Questions
+              ];
+
               const isReferralReward = (n: NoteItem) =>
+                REFERRAL_BONUS_QUESTION_NOTE_IDS.includes(n.id) ||
                 n.storage_path?.toLowerCase().includes("refral_bouns") ||
                 n.storage_path?.toLowerCase().includes("repted_questions") ||
                 n.storage_path?.toLowerCase().includes("questions_complete");
 
               const isMostRepeatedTopic = (n: NoteItem) =>
-                n.storage_path?.toLowerCase().includes("most_repeated_topics") ||
-                (n.title.toLowerCase().includes("repeated") &&
-                  n.title.toLowerCase().includes("topic") &&
+                SEM1_MOST_REPEATED_TOPIC_NOTE_IDS.includes(n.id) ||
+                (n.storage_path?.toLowerCase().includes("most_repeated_topics") &&
                   !isReferralReward(n));
 
-              const isPYQ = (n: NoteItem) =>
-                n.title.toLowerCase().includes("pyq") || n.title.toLowerCase().includes("previous");
+              const isStudyNote = (n: NoteItem) =>
+                !isMostRepeatedTopic(n) && !isReferralReward(n);
 
-              const isTheory = (n: NoteItem) =>
-                !isMostRepeatedTopic(n) && !isReferralReward(n) && !isPYQ(n);
-
-              // Exclude referral rewards from the standard study-materials hub (referral rewards live in the Referral tab)
-              const displayableNotes = notes.filter((n) => !isReferralReward(n));
+              // Strictly Semester 1: exclude Semester 2 and exclude referral rewards (which belong in the Referral tab)
+              const displayableNotes = notes.filter(
+                (n) => (n.semester === 1 || n.semester === null) && !isReferralReward(n)
+              );
 
               const topicSortOrder = (n: NoteItem) => {
-                const p = n.storage_path.toLowerCase();
-                if (p.includes("c_programming")) return 1;
-                if (p.includes("algorithm")) return 2;
-                if (p.includes("foundation")) return 3;
+                if (n.id === "9e59ab23-0de4-480e-a657-6a5de642c5e9") return 1;
+                if (n.id === "67223491-a665-44b0-8307-b2a22dd30de2") return 2;
+                if (n.id === "480f00c8-b176-4d31-a030-2539e378a3c4") return 3;
                 return 4;
               };
 
@@ -518,8 +528,7 @@ export function StudentDashboard() {
 
               const filteredNotes = displayableNotes.filter((n) => {
                 if (noteCategory === "repeated" && !isMostRepeatedTopic(n)) return false;
-                if (noteCategory === "pyq" && !isPYQ(n)) return false;
-                if (noteCategory === "theory" && !isTheory(n)) return false;
+                if (noteCategory === "theory" && !isStudyNote(n)) return false;
                 if (noteSearch.trim()) {
                   const q = noteSearch.toLowerCase().trim();
                   const matchTitle = n.title.toLowerCase().includes(q);
@@ -675,17 +684,7 @@ export function StudentDashboard() {
                               : "text-slate-600 hover:text-slate-900"
                           }`}
                         >
-                          Study Notes ({displayableNotes.filter(isTheory).length})
-                        </button>
-                        <button
-                          onClick={() => setNoteCategory("pyq")}
-                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
-                            noteCategory === "pyq"
-                              ? "bg-white text-indigo-700 shadow-xs"
-                              : "text-slate-600 hover:text-slate-900"
-                          }`}
-                        >
-                          Solved PYQs ({displayableNotes.filter(isPYQ).length})
+                          Study Notes ({displayableNotes.filter(isStudyNote).length})
                         </button>
                       </div>
 
@@ -720,7 +719,6 @@ export function StudentDashboard() {
                       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {filteredNotes.map((note) => {
                           const isTopic = isMostRepeatedTopic(note);
-                          const isPyq = isPYQ(note);
                           return (
                             <article
                               key={note.id}
@@ -734,8 +732,6 @@ export function StudentDashboard() {
                                     className={`grid h-9 w-9 place-items-center rounded-xl ${
                                       isTopic
                                         ? "bg-amber-100 text-amber-700"
-                                        : isPyq
-                                        ? "bg-purple-100 text-purple-700"
                                         : "bg-indigo-50 text-indigo-600"
                                     }`}
                                   >
@@ -761,8 +757,6 @@ export function StudentDashboard() {
                                   className={`mt-1 text-[11px] font-semibold ${
                                     isTopic
                                       ? "text-amber-800"
-                                      : isPyq
-                                      ? "text-purple-700"
                                       : "text-indigo-600"
                                   }`}
                                 >
