@@ -1,8 +1,10 @@
 import { ArrowRight, BookOpen, CheckCircle2, Sparkles } from "lucide-react";
 import { Link } from "react-router";
-import { availableSubjects } from "../../data/syllabus";
+import { syllabus2026_27 } from "../../data/syllabus";
 
 export function TopNotes() {
+  const sem1Subjects = syllabus2026_27.semesters[1].subjects;
+
   return (
     <section className="bg-white py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
@@ -15,7 +17,7 @@ export function TopNotes() {
               See What You’re Getting
             </h2>
             <p className="mt-2 text-sm text-slate-500 max-w-xl leading-relaxed">
-              Don’t buy based only on promises. Explore the type of notes, PYQs and analysis included in BCA Vault.
+              Don’t buy based only on promises. Explore the type of notes and most repeated topics included in BCA Vault.
             </p>
           </div>
           <Link
@@ -26,8 +28,8 @@ export function TopNotes() {
           </Link>
         </div>
 
-        <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          {availableSubjects.map((subject) => (
+        <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {sem1Subjects.map((subject) => (
             <Link
               key={subject.courseCode}
               to={`/notes?subject=${subject.courseCode}`}

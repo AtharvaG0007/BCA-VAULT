@@ -244,7 +244,7 @@ export function ReferralPage() {
           {/* Important note */}
           <div className="max-w-2xl mx-auto mt-10 p-4 rounded-2xl bg-blue-50/60 border border-blue-200/70 text-center">
             <p className="text-xs text-slate-700 leading-relaxed">
-              <strong className="text-[#1E40AF] font-bold">Note on Access:</strong> The referral reward grants complete, high-priority access to these three Most Repeated Topics resources with our secure PDF reader. It does not include the full ₹499 Semester 1 bundle.
+              <strong className="text-[#1E40AF] font-bold">Note on Access:</strong> The referral reward grants complete, high-priority access to these three Most Repeated Questions resources with our secure PDF reader. It does not include the full ₹499 Semester 1 bundle.
             </p>
           </div>
         </div>

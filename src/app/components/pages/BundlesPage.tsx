@@ -7,18 +7,22 @@ import {
 
 // Single fixed product — no DB fetch required
 const INCLUDES = [
-  "Complete Theory Notes",
-  "Semester 1 & 2 Theory Subjects",
-  "Unit-Wise & Topic-Wise Notes",
-  "Previous Year Questions (PYQs)",
-  "PYQ Analysis",
-  "Most Repeated Questions",
-  "Important Exam Topics",
-  "Exam-Oriented Preparation",
+  "Semester 1 BCA Study Notes",
+  "Semester 1 Most Repeated Topics",
+  "Unit-Wise & Topic-Wise Theory Notes",
+  "Exam-Oriented Preparation Format",
   "Regular Content Updates",
 ];
 
-const EXCLUDES = ["Mathematics", "Lab / Practical Subjects", "Projects"];
+const EXCLUDES = [
+  "Semester 2 Material (Future Release)",
+  "Most Repeated Questions (Referral Reward)",
+  "Previous Year Questions (PYQs)",
+  "PYQ Analysis",
+  "Mathematics",
+  "Lab / Practical Subjects",
+  "Projects",
+];
 
 const HOW_IT_WORKS = [
   { icon: BookOpen,      step: "01", label: "Choose Bundle",   desc: "Select the BCA Vault theory bundle" },
@@ -45,10 +49,10 @@ export function BundlesPage() {
             First-Batch Student Offer
           </h1>
           <p className="text-gray-600 max-w-xl mx-auto text-base lg:text-lg mb-5 leading-relaxed">
-            Complete theory preparation bundle for eligible Semester 1 & Semester 2 theory subjects.
+            Complete theory preparation bundle for eligible Semester 1 theory subjects.
           </p>
           <div className="flex flex-wrap justify-center gap-2">
-            {["Theory Notes", "PYQ Papers", "Most Repeated Qs", "Semester 1 & 2"].map((tag) => (
+            {["Theory Notes", "Most Repeated Topics", "Semester 1", "Unit-Wise"].map((tag) => (
               <span key={tag} className="flex items-center gap-1 text-xs bg-white border border-gray-200 text-gray-700 px-3 py-1 rounded-full shadow-sm font-medium">
                 <Check className="w-3 h-3 text-emerald-500" /> {tag}
               </span>
@@ -70,7 +74,7 @@ export function BundlesPage() {
             <div>
               <p className="text-white/70 text-xs font-bold uppercase tracking-widest mb-0.5">BCA Vault</p>
               <p className="text-white font-black text-xl" style={{ fontFamily: "var(--font-display)" }}>
-                Complete Theory Bundle
+                Semester 1 Bundle
               </p>
             </div>
             <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full border border-white/20">
@@ -80,7 +84,7 @@ export function BundlesPage() {
 
           <div className="p-8">
             <p className="text-sm text-gray-600 mb-7 leading-relaxed">
-              Theory Notes + PYQs + Most Repeated Questions for eligible Semester 1 and Semester 2 theory subjects.
+              Semester 1 Notes + Most Repeated Topics for eligible Semester 1 theory subjects.
             </p>
 
             <div className="sm:flex gap-8">

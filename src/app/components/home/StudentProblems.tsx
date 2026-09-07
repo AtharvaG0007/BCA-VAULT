@@ -31,9 +31,9 @@ const problems = [
   },
   {
     icon: AlertCircle,
-    tag: "Unanalyzed PYQs",
-    title: "Raw question papers without structured breakdown",
-    body: "Browsing old papers without knowing topic-wise weightage or standard exam model answers.",
+    tag: "Exam Topic Chaos",
+    title: "Vague syllabus without high-priority focus",
+    body: "Attempting to memorize entire textbooks without clear guidance on core exam topics.",
     color: "text-violet-400",
     bg: "bg-violet-500/10",
     border: "border-violet-500/20",
@@ -41,12 +41,10 @@ const problems = [
 ];
 
 const highlights = [
-  "Theory Notes",
+  "Semester 1 Theory Notes",
   "Unit-Wise Preparation",
-  "Previous Year Questions",
-  "PYQ Analysis",
-  "Most Repeated Questions",
-  "Important Exam Topics",
+  "Semester 1 Most Repeated Topics",
+  "Important Exam Concepts",
   "Exam-Oriented Preparation",
   "Regular Content Updates",
 ];
@@ -82,7 +80,7 @@ export function StudentProblems() {
               Stop Searching. Start Studying.
             </h2>
             <p className="text-slate-300 text-base leading-relaxed mb-4">
-              Preparing for exams often means collecting notes from different groups, searching old PYQs and trying to understand which questions actually matter.
+              Preparing for exams often means collecting notes from different groups and trying to understand which topics actually matter.
             </p>
             <p className="text-slate-400 text-sm leading-relaxed mb-8">
               BCA Vault brings your theory preparation together in one organised place.
@@ -103,7 +101,7 @@ export function StudentProblems() {
                 Everything in one place. No more guessing.
               </p>
               <p className="text-slate-400 text-xs">
-                Unit-wise theory notes, previous year question trends, and exam-focused revision.
+                Unit-wise theory notes and exam-focused revision for BCA Semester 1.
               </p>
             </div>
           </motion.div>

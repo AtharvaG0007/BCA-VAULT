@@ -5,7 +5,7 @@ import { Plus, Minus } from "lucide-react";
 const faqs = [
   {
     q: "What is included in the BCA Vault bundle?",
-    a: "The bundle includes eligible Semester 1 and Semester 2 theory notes, unit-wise/topic-wise material, previous year questions, PYQ analysis, most repeated questions and important exam topics.",
+    a: "The bundle includes eligible Semester 1 study notes, unit-wise/topic-wise material, and Semester 1 most repeated topics organized for theory exam preparation.",
   },
   {
     q: "Are Mathematics, labs and projects included?",

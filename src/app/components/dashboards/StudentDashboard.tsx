@@ -525,13 +525,18 @@ export function StudentDashboard() {
 
                 const chips = parsedChips.length > 0 ? parsedChips : defaultCoverage;
 
+                const hasQuestions = note.title.toLowerCase().includes("question");
+                const defaultTitle = hasQuestions ? "Most Repeated Questions" : "Most Repeated Topics";
                 return {
                   isRepeated: true,
-                  displayTitle: "Most Repeated Questions & Topics",
+                  displayTitle: note.title || defaultTitle,
                   subtitle: note.semester ? `BCA Semester ${note.semester}` : "BCA Semester 1",
                   chips,
                   description:
-                    "Exam-focused repeated questions and important topics collected from previous-year examination patterns for Semester 1 revision.",
+                    note.description ||
+                    (hasQuestions
+                      ? "Exam-focused repeated questions collected from previous-year examination patterns for Semester 1 revision."
+                      : "Exam-focused repeated topics and key concepts organized for Semester 1 revision."),
                 };
               };
 
@@ -613,7 +618,7 @@ export function StudentDashboard() {
                               </>
                             ) : (
                               <>
-                                <Flame className="h-4 w-4 text-slate-950" /> Read Most Repeated Questions
+                                <Flame className="h-4 w-4 text-slate-950" /> Read {featuredRepeatedNote.title.toLowerCase().includes("question") ? "Most Repeated Questions" : "Most Repeated Topics"}
                               </>
                             )}
                           </button>

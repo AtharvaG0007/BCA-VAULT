@@ -81,7 +81,7 @@ export function Newsletter() {
           </div>
 
           <p className="text-slate-400 text-xs mt-6">
-            Transparent scoring · Open to all BCA Semester 1 & 2 students
+            Transparent scoring · Open to all BCA students
           </p>
         </motion.div>
       </div>

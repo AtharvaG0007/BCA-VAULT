@@ -15,9 +15,9 @@ const testimonials = [
   {
     name: "Rohit Verma",
     college: "Bharati Vidyapeeth",
-    semester: "Semester 2 · 2026–27",
+    semester: "Semester 1 · 2026–27",
     result: "Distinction holder",
-    quote: "The Complete Theory Bundle saved me so much time and money. The notes are concise, exam-focused, and 100x better than anything I found on Studocu. My whole friend group now uses BCA Vault.",
+    quote: "The Semester 1 Bundle saved me so much time. The notes are concise, exam-focused, and 100x better than anything I found on random groups. My whole friend group now uses BCA Vault.",
     rating: 5,
     avatar: "RV",
     avatarColor: "bg-indigo-100 text-indigo-700",
@@ -25,7 +25,7 @@ const testimonials = [
   {
     name: "Anjali Patel",
     college: "Bharati Vidyapeeth",
-    semester: "Semester 2 · 2026–27",
+    semester: "Semester 1 · 2026–27",
     result: "Topped her batch",
     quote: "The unit-wise organization keeps my theory preparation focused and clear.",
     rating: 5,

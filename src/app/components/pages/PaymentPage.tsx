@@ -73,7 +73,7 @@ export function PaymentPage() {
   const upiUrl = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(
     UPI_NAME
   )}&am=${currentPrice}&cu=INR&tn=${encodeURIComponent(
-    `BCA Vault Complete Bundle${appliedCoupon ? ` (${appliedCoupon})` : ""}`
+    `BCA Vault Semester 1 Bundle${appliedCoupon ? ` (${appliedCoupon})` : ""}`
   )}`;
 
   const handleApplyCoupon = (codeToApply?: string) => {
@@ -126,7 +126,7 @@ export function PaymentPage() {
           <div className="flex items-center gap-2 font-medium">
             <Timer className="h-4 w-4 text-amber-400 animate-pulse" />
             <span>
-              BCA Semester 1 Complete Bundle: Standard price <strong className="text-emerald-300 font-bold">₹499</strong> · Quiz winners use code <strong className="text-amber-300 font-mono tracking-wider">WINNER150</strong> for <strong className="text-amber-300 font-bold">₹349</strong>!
+              BCA Semester 1 Bundle: Standard price <strong className="text-emerald-300 font-bold">₹499</strong> · Quiz winners use code <strong className="text-amber-300 font-mono tracking-wider">WINNER150</strong> for <strong className="text-amber-300 font-bold">₹349</strong>!
             </span>
           </div>
           <div className="flex items-center gap-3">
@@ -153,10 +153,10 @@ export function PaymentPage() {
           <aside className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5 sm:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">Official Curriculum</p>
             <h2 className="mt-2 text-2xl font-bold tracking-[-0.02em] text-slate-950">
-              BCA Semester 1 Complete Bundle
+              BCA Semester 1 Bundle
             </h2>
             <p className="mt-1 text-xs text-slate-500">
-              Theory Notes + PYQs + Analysis + Most Repeated Questions
+              Semester 1 Notes + Most Repeated Topics
             </p>
 
             {/* Price Box with Coupon Calculation */}
@@ -212,9 +212,9 @@ export function PaymentPage() {
 
             <div className="space-y-2.5 rounded-2xl bg-slate-50 p-4 text-xs text-slate-600">
               {[
-                "Semester 1 & Semester 2 Complete Materials",
-                "Unit-Wise Notes + Solved PYQs (2020–2025)",
-                "Most Repeated Questions for Exam Prep",
+                "Semester 1 Study Notes (All Theory Subjects)",
+                "Semester 1 Most Repeated Topics",
+                "Unit-Wise & Topic-Wise Exam Prep",
                 "Mathematics, labs & projects excluded",
               ].map((item) => (
                 <p key={item} className="flex gap-2 font-medium">

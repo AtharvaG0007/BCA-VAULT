@@ -7,8 +7,8 @@ const valueCards = [
     id: "01",
     icon: BookOpen,
     tag: "Core Material",
-    title: "Complete Theory Notes",
-    description: "Study organised unit-wise and topic-wise material.",
+    title: "Semester 1 Theory Notes",
+    description: "Study organised unit-wise and topic-wise theory material.",
     accentBg: "bg-[#1E40AF]",
     accentText: "text-[#1E40AF]",
     cardBg: "bg-blue-50/70",
@@ -17,9 +17,9 @@ const valueCards = [
   {
     id: "02",
     icon: FileText,
-    tag: "Exam Patterns",
-    title: "Previous Year Questions",
-    description: "Understand the type and pattern of questions asked in previous exams.",
+    tag: "Syllabus Structure",
+    title: "Unit-Wise Coverage",
+    description: "Comprehensive notes aligned with official university units.",
     accentBg: "bg-[#4F46E5]",
     accentText: "text-[#4F46E5]",
     cardBg: "bg-indigo-50/70",
@@ -28,9 +28,9 @@ const valueCards = [
   {
     id: "03",
     icon: BarChart3,
-    tag: "Exam Intelligence",
-    title: "PYQ Analysis",
-    description: "Identify important areas instead of preparing blindly.",
+    tag: "Exam Focus",
+    title: "Most Repeated Topics",
+    description: "Identify high-priority exam topics instead of preparing blindly.",
     accentBg: "bg-[#059669]",
     accentText: "text-[#059669]",
     cardBg: "bg-emerald-50/70",
@@ -40,8 +40,8 @@ const valueCards = [
     id: "04",
     icon: Zap,
     tag: "Smart Revision",
-    title: "Most Repeated Questions",
-    description: "Focus your revision on questions and topics that appear repeatedly.",
+    title: "High-Yield Concepts",
+    description: "Focus revision on core concepts that appear repeatedly in examinations.",
     accentBg: "bg-[#D97706]",
     accentText: "text-[#D97706]",
     cardBg: "bg-amber-50/70",
@@ -50,9 +50,9 @@ const valueCards = [
   {
     id: "05",
     icon: Sparkles,
-    tag: "Key Focus Areas",
-    title: "Important Exam Topics",
-    description: "Quickly identify areas that deserve extra attention.",
+    tag: "Exam Ready",
+    title: "Important Definitions & Code",
+    description: "Definitions, syntax, and theoretical concepts clearly explained.",
     accentBg: "bg-[#7C3AED]",
     accentText: "text-[#7C3AED]",
     cardBg: "bg-purple-50/70",
@@ -156,7 +156,7 @@ export function SuccessJourney() {
               First-Batch Student Offer is Active
             </p>
             <p className="text-sm text-gray-500 mt-0.5">
-              Get complete access for eligible Semester 1 & 2 theory subjects for ₹499 (Original ₹899).
+              Get complete access for eligible Semester 1 theory subjects for ₹499 (Original ₹899).
             </p>
           </div>
           <Link

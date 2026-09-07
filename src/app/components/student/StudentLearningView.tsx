@@ -56,7 +56,7 @@ const STARTER_PROMPTS = [
     title: "Most repeated 10-mark exam questions",
     subject: "Exam Preparation",
     icon: Award,
-    prompt: "What are the most repeated 5-mark and 10-mark exam questions across BCA Semester 1 and Semester 2?",
+    prompt: "What are the most repeated 5-mark and 10-mark exam questions across BCA Semester 1?",
   },
 ];
 
@@ -288,7 +288,7 @@ export function StudentLearningView({ onBackToDashboard }: StudentLearningViewPr
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 hidden sm:block">
-                Concept breakdown • Code examples • PYQ & 5/10-mark exam answers
+                Concept breakdown • Code examples • Exam focus & 5/10-mark model answers
               </p>
             </div>
           </div>
@@ -319,7 +319,7 @@ export function StudentLearningView({ onBackToDashboard }: StudentLearningViewPr
                 How can I help your BCA studies today?
               </h3>
               <p className="mt-1 text-xs sm:text-sm font-semibold text-indigo-700">
-                Trained on BCA Semester 1 & Semester 2 University Syllabus
+                Trained on BCA Semester 1 Official University Syllabus
               </p>
               <p className="mt-2 text-xs text-slate-500 max-w-lg mx-auto leading-relaxed">
                 Ask about programming in C, Java, Python, DBMS normalization, operating systems, web technologies, or request 5-mark and 10-mark model answers.

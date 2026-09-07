@@ -10,9 +10,9 @@ const navLinks = [
     label: "Notes",
     href: "/notes",
     children: [
-      { label: "All Notes", href: "/notes" },
-      { label: "Semester 1", href: "/semester/1" },
-      { label: "Semester 2", href: "/semester/2" },
+      { label: "Semester 1 Notes", href: "/semester/1" },
+      { label: "All Subjects", href: "/notes" },
+      { label: "Semester 2 (Coming Soon)", href: "/notes" },
     ],
   },
   {

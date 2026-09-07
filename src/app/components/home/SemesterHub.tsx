@@ -4,7 +4,7 @@ import { syllabus2026_27 } from "../../data/syllabus";
 
 export function SemesterHub() {
   const navigate = useNavigate();
-  const available = [syllabus2026_27.semesters[1], syllabus2026_27.semesters[2]];
+  const available = [syllabus2026_27.semesters[1]];
 
   return (
     <section id="syllabus" className="bg-[#f8fafc] py-20 sm:py-28">
@@ -14,10 +14,10 @@ export function SemesterHub() {
             <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-[#4f46e5]">BCA Syllabus 2026–27</p>
             <h2 className="text-3xl font-bold tracking-[-0.025em] text-slate-950 sm:text-4xl">Theory preparation, precisely mapped.</h2>
           </div>
-          <p className="max-w-md text-sm leading-6 text-slate-500">Semester 1 and Semester 2 are available now. Mathematics, labs, practicals and projects remain outside this theory-focused bundle.</p>
+          <p className="max-w-md text-sm leading-6 text-slate-500">Semester 1 is available now. Semester 2 is in preparation. Mathematics, labs, practicals and projects remain outside this theory-focused bundle.</p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="max-w-2xl mx-auto">
           {available.map((semester) => (
             <article key={semester.number} className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_12px_35px_rgba(15,23,42,0.06)]">
               <div className="flex items-start justify-between border-b border-slate-100 bg-slate-950 px-6 py-6 text-white">
@@ -41,8 +41,8 @@ export function SemesterHub() {
           ))}
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {[3, 4, 5, 6, 7, 8].map((semester) => <div key={semester} className="rounded-2xl border border-slate-200 bg-white px-5 py-5"><div className="flex items-center justify-between"><span className="text-sm font-bold text-slate-900">SEMESTER {semester}</span><LockKeyhole className="h-4 w-4 text-slate-400" /></div><p className="mt-4 text-base font-bold text-slate-700">Coming Soon</p><p className="mt-1 text-xs leading-5 text-slate-500">Theory notes and exam preparation for Semester {semester} are being prepared.</p></div>)}
+        <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {[2, 3, 4, 5, 6, 7, 8].map((semester) => <div key={semester} className="rounded-2xl border border-slate-200 bg-white px-5 py-5"><div className="flex items-center justify-between"><span className="text-sm font-bold text-slate-900">SEMESTER {semester}</span><LockKeyhole className="h-4 w-4 text-slate-400" /></div><p className="mt-4 text-base font-bold text-slate-700">Coming Soon</p><p className="mt-1 text-xs leading-5 text-slate-500">Theory notes and exam preparation for Semester {semester} are being prepared.</p></div>)}
         </div>
       </div>
     </section>

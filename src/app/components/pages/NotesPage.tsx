@@ -7,17 +7,69 @@ function SubjectDetail({ subject }: { subject: Subject }) {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-[#f8fafc]">
-      <div className="border-b border-slate-200 bg-slate-950"><div className="mx-auto max-w-6xl px-5 py-12 sm:px-8"><button onClick={() => navigate("/notes")} className="mb-6 text-xs font-bold uppercase tracking-[0.14em] text-indigo-200">← BCA Syllabus 2026–27</button><p className="font-mono text-sm font-bold text-indigo-300">{subject.courseCode} · SEMESTER {subject.semester}</p><h1 className="mt-3 max-w-3xl text-3xl font-bold tracking-[-0.025em] text-white sm:text-5xl">{subject.officialTitle}</h1><div className="mt-6 flex flex-wrap gap-2">{[subject.courseType, "Theory Notes Only", "2026–27"].map((label) => <span key={label} className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white">{label}</span>)}</div></div></div>
+      <div className="border-b border-slate-200 bg-slate-950">
+        <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
+          <button onClick={() => navigate("/notes")} className="mb-6 text-xs font-bold uppercase tracking-[0.14em] text-indigo-200">
+            ← BCA Syllabus 2026–27
+          </button>
+          <p className="font-mono text-sm font-bold text-indigo-300">
+            {subject.courseCode} · SEMESTER {subject.semester}
+          </p>
+          <h1 className="mt-3 max-w-3xl text-3xl font-bold tracking-[-0.025em] text-white sm:text-5xl">
+            {subject.officialTitle}
+          </h1>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {[subject.courseType, "Theory Notes Only", "2026–27"].map((label) => (
+              <span key={label} className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white">
+                {label}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-10 sm:px-8 lg:grid-cols-[1fr_280px]">
-        <div>{subject.units.length > 0 ? <div className="space-y-4">{subject.units.map((unit, index) => <section key={unit.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-start gap-4"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-indigo-50 font-mono text-xs font-bold text-indigo-600">{String(index + 1).padStart(2, "0")}</span><div><h2 className="text-lg font-bold text-slate-900">{unit.title}</h2><div className="mt-4 grid gap-2 sm:grid-cols-2">{unit.topics.map((topic) => <div key={topic} className="flex gap-2 text-sm leading-5 text-slate-600"><ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-indigo-500" />{topic}</div>)}</div></div></div></section>)}</div> : <div className="rounded-2xl border border-slate-200 bg-white p-8"><BookOpen className="h-8 w-8 text-indigo-600" /><h2 className="mt-4 text-xl font-bold text-slate-900">Subject structure is being prepared</h2><p className="mt-2 max-w-lg text-sm leading-6 text-slate-500">This official 2026–27 course is included in the Complete Theory Bundle. Unit-level content will be published from the official course detail before notes are released.</p></div>}</div>
+        <div>
+          {subject.units.length > 0 ? (
+            <div className="space-y-4">
+              {subject.units.map((unit, index) => (
+                <section key={unit.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="flex items-start gap-4">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-indigo-50 font-mono text-xs font-bold text-indigo-600">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-900">{unit.title}</h2>
+                      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                        {unit.topics.map((topic) => (
+                          <div key={topic} className="flex gap-2 text-sm leading-5 text-slate-600">
+                            <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-indigo-500" />
+                            {topic}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-slate-200 bg-white p-8">
+              <BookOpen className="h-8 w-8 text-indigo-600" />
+              <h2 className="mt-4 text-xl font-bold text-slate-900">Subject structure is being prepared</h2>
+              <p className="mt-2 max-w-lg text-sm leading-6 text-slate-500">
+                This official 2026–27 course is part of upcoming releases. Unit-level content will be published from the official course syllabus.
+              </p>
+            </div>
+          )}
+        </div>
         <aside className="space-y-4">
           <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-5">
             <p className="text-xs font-bold uppercase tracking-[0.13em] text-indigo-600">Inside this subject</p>
             <ul className="mt-4 space-y-3 text-sm font-medium text-slate-700">
               {[
                 { icon: Layers3, label: "Theory Notes" },
-                { icon: FileQuestion, label: "Previous Year Questions" },
-                { icon: Flame, label: "Most Repeated Questions" },
+                { icon: FileQuestion, label: "Exam Questions Guide" },
+                { icon: Flame, label: "Most Repeated Topics" },
               ].map(({ icon: Icon, label }) => (
                 <li key={label} className="flex gap-2">
                   <Icon className="h-4 w-4 text-indigo-600" />
@@ -25,7 +77,9 @@ function SubjectDetail({ subject }: { subject: Subject }) {
                 </li>
               ))}
             </ul>
-            <p className="mt-5 border-t border-indigo-100 pt-4 text-xs leading-5 text-slate-500">PYQ frequency and year details appear only after verified data is entered.</p>
+            <p className="mt-5 border-t border-indigo-100 pt-4 text-xs leading-5 text-slate-500">
+              Exam topic frequency details appear based on syllabus coverage.
+            </p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm leading-6 text-slate-500">
             Practical files, lab manuals, coding exercises and projects are not part of BCA Vault.
@@ -41,5 +95,75 @@ export function NotesPage() {
   const subjectCode = useMemo(() => new URLSearchParams(location.search).get("subject"), [location.search]);
   const subject = availableSubjects.find((item) => item.courseCode === subjectCode);
   if (subject) return <SubjectDetail subject={subject} />;
-  return <div className="min-h-screen bg-[#f8fafc] py-12 sm:py-16"><div className="mx-auto max-w-7xl px-5 sm:px-8"><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">BCA Syllabus 2026–27</p><h1 className="mt-3 text-3xl font-bold tracking-[-0.025em] text-slate-950 sm:text-5xl">Theory notes, structured around the official syllabus.</h1><p className="mt-4 text-base leading-7 text-slate-500">Select a Semester 1 or Semester 2 subject to view its theory preparation path. Mathematics, labs, practicals and projects are not included.</p></div><div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">{availableSubjects.map((item) => <a key={item.courseCode} href={`/notes?subject=${item.courseCode}`} className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-lg"><div className="flex justify-between"><span className="grid h-11 w-11 place-items-center rounded-xl bg-slate-950 font-mono text-sm font-bold text-white">{item.courseCode}</span><span className="text-xs font-bold text-slate-400">SEM {item.semester} · 2026–27</span></div><h2 className="mt-6 text-lg font-bold leading-6 text-slate-900">{item.officialTitle}</h2><p className="mt-2 text-sm text-slate-500">{item.courseType}</p><div className="mt-6 space-y-2 border-t border-slate-100 pt-4 text-sm text-slate-600">{["Theory Notes", "Unit-wise Content", "PYQs", "Most Repeated Questions"].map((line) => <p key={line} className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" />{line}</p>)}</div><span className="mt-6 inline-flex items-center gap-1 text-sm font-bold text-indigo-600">View Subject <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" /></span></a>)}</div><div className="mt-10 grid gap-4 md:grid-cols-2">{[1,2].map((sem) => <div key={sem} className="rounded-2xl border border-slate-200 bg-white p-5"><p className="font-bold text-slate-900">Semester {sem} exclusions</p><div className="mt-3 flex flex-wrap gap-2">{syllabus2026_27.semesters[sem as 1 | 2].excludedSubjects.map((item) => <span key={item.officialTitle} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs text-slate-500">{item.officialTitle}</span>)}</div></div>)}</div><div className="mt-8 grid gap-3 sm:grid-cols-3">{[3,4,5,6,7,8].map((sem) => <div key={sem} className="rounded-2xl border border-slate-200 bg-white p-4 text-sm"><LockKeyhole className="h-4 w-4 text-slate-400" /><p className="mt-3 font-bold text-slate-800">Semester {sem} · Coming Soon</p></div>)}</div></div></div>;
+
+  const sem1Subjects = syllabus2026_27.semesters[1].subjects;
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] py-12 sm:py-16">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+        <div className="max-w-3xl">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">BCA Syllabus 2026–27</p>
+          <h1 className="mt-3 text-3xl font-bold tracking-[-0.025em] text-slate-950 sm:text-5xl">
+            Theory notes, structured around the official syllabus.
+          </h1>
+          <p className="mt-4 text-base leading-7 text-slate-500">
+            Select a Semester 1 subject to view its theory preparation path. Mathematics, labs, practicals and projects are not included. Semester 2 will be available in a future release.
+          </p>
+        </div>
+
+        <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+          {sem1Subjects.map((item) => (
+            <a
+              key={item.courseCode}
+              href={`/notes?subject=${item.courseCode}`}
+              className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-lg"
+            >
+              <div className="flex justify-between">
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-slate-950 font-mono text-sm font-bold text-white">
+                  {item.courseCode}
+                </span>
+                <span className="text-xs font-bold text-slate-400">SEM {item.semester} · 2026–27</span>
+              </div>
+              <h2 className="mt-6 text-lg font-bold leading-6 text-slate-900">{item.officialTitle}</h2>
+              <p className="mt-2 text-sm text-slate-500">{item.courseType}</p>
+              <div className="mt-6 space-y-2 border-t border-slate-100 pt-4 text-sm text-slate-600">
+                {["Theory Notes", "Unit-wise Content", "Exam Focus", "Most Repeated Topics"].map((line) => (
+                  <p key={line} className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    {line}
+                  </p>
+                ))}
+              </div>
+              <span className="mt-6 inline-flex items-center gap-1 text-sm font-bold text-indigo-600">
+                View Subject <ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" />
+              </span>
+            </a>
+          ))}
+        </div>
+
+        <div className="mt-10 max-w-2xl">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <p className="font-bold text-slate-900">Semester 1 exclusions</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {syllabus2026_27.semesters[1].excludedSubjects.map((item) => (
+                <span key={item.officialTitle} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs text-slate-500">
+                  {item.officialTitle}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {[2, 3, 4, 5, 6, 7, 8].map((sem) => (
+            <div key={sem} className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
+              <LockKeyhole className="h-4 w-4 text-slate-400" />
+              <p className="mt-3 font-bold text-slate-800">Semester {sem} · Coming Soon</p>
+              <p className="mt-1 text-xs text-slate-500">Theory notes in preparation.</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }

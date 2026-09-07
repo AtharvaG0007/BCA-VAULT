@@ -6,7 +6,7 @@ const referralPillars = [
   {
     icon: Users,
     title: "1. Tell Your Classmates",
-    desc: "Share BCA Vault with friends who want organised notes and PYQ analysis.",
+    desc: "Share BCA Vault with friends who want organised Semester 1 notes and exam preparation.",
   },
   {
     icon: Share2,
@@ -23,7 +23,7 @@ const referralPillars = [
 export function CreditSpotlight() {
   const handleShareClick = () => {
     const text = encodeURIComponent(
-      "Hey! Check out BCA Vault for our BCA theory exam preparation. It has unit-wise notes, PYQs, and repeated questions in one place: https://bca-vault.portalbcavault.workers.dev"
+      "Hey! Check out BCA Vault for our BCA Semester 1 exam preparation. It has unit-wise notes and most repeated topics in one place: https://bca-vault.portalbcavault.workers.dev"
     );
     window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
   };

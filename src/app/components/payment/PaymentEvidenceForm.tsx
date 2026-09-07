@@ -276,7 +276,7 @@ export function PaymentEvidenceForm({
             </div>
           )}
 
-          {/* Product Banner - Fixed to BCA Semester 1 Complete Bundle */}
+          {/* Product Banner - Fixed to BCA Semester 1 Bundle */}
           <div className="flex items-center justify-between rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50 to-blue-50/50 p-4">
             <div>
               <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-indigo-700">
@@ -284,10 +284,10 @@ export function PaymentEvidenceForm({
                 Target Course Bundle
               </span>
               <h4 className="text-base font-bold text-slate-900">
-                BCA Semester 1 Complete Bundle
+                BCA Semester 1 Bundle
               </h4>
               <p className="text-xs text-slate-500">
-                All Unit Notes · Solved PYQs · Most Repeated Questions
+                Semester 1 Notes + Most Repeated Topics
               </p>
             </div>
             <div className="text-right">

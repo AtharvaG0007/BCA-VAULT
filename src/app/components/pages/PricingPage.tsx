@@ -7,23 +7,27 @@ import {
 import { Button } from "../ui/button";
 
 const INCLUDES = [
-  "Complete Theory Notes",
-  "Semester 1 & 2 Theory Subjects",
-  "Unit-Wise & Topic-Wise Notes",
-  "Previous Year Questions (PYQs)",
-  "PYQ Analysis",
-  "Most Repeated Questions",
-  "Important Exam Topics",
-  "Exam-Oriented Preparation",
+  "Semester 1 BCA Study Notes",
+  "Semester 1 Most Repeated Topics",
+  "Unit-Wise & Topic-Wise Theory Notes",
+  "Exam-Oriented Preparation Format",
   "Regular Content Updates",
 ];
 
-const EXCLUDES = ["Mathematics", "Lab / Practical Subjects", "Projects"];
+const EXCLUDES = [
+  "Semester 2 Material (Future Release)",
+  "Most Repeated Questions (Referral Reward)",
+  "Previous Year Questions (PYQs)",
+  "PYQ Analysis",
+  "Mathematics",
+  "Lab / Practical Subjects",
+  "Projects",
+];
 
 const faqs = [
   {
     q: "What is included in the BCA Vault bundle?",
-    a: "The bundle includes eligible Semester 1 and Semester 2 theory notes, unit-wise/topic-wise material, previous year questions, PYQ analysis, most repeated questions and important exam topics.",
+    a: "The bundle includes eligible Semester 1 study notes, unit-wise/topic-wise material, and Semester 1 most repeated topics organized for theory exam preparation.",
   },
   {
     q: "Are Mathematics, labs and projects included?",
@@ -63,7 +67,7 @@ export function PricingPage() {
             First-Batch Student Offer
           </h1>
           <p className="text-gray-600 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
-            Complete theory preparation bundle for eligible Semester 1 & Semester 2 theory subjects.
+            Complete theory preparation bundle for eligible Semester 1 theory subjects.
           </p>
         </motion.div>
       </div>
@@ -89,9 +93,9 @@ export function PricingPage() {
               </div>
               <p className="text-xs font-bold text-[#1E40AF] uppercase tracking-widest mb-1">BCA Vault</p>
               <h2 className="text-2xl font-black text-gray-900 mb-1" style={{ fontFamily: "var(--font-display)" }}>
-                Complete Theory Bundle
+                Semester 1 Bundle
               </h2>
-              <p className="text-sm text-gray-500">Theory Notes + PYQs + Most Repeated Questions</p>
+              <p className="text-sm text-gray-500">Semester 1 Notes + Most Repeated Topics</p>
             </div>
 
             {/* Price */}
@@ -104,7 +108,7 @@ export function PricingPage() {
               <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3.5 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
                 <span>First-Batch Offer (BUDMS400)</span>
               </div>
-              <p className="text-xs text-gray-400 mt-2">One-time payment · Semester 1 & 2 Complete Access</p>
+              <p className="text-xs text-gray-400 mt-2">One-time payment · Semester 1 Complete Access</p>
 
               {/* Quiz winner info */}
               <div className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
@@ -159,9 +163,9 @@ export function PricingPage() {
           className="mt-8 grid grid-cols-3 gap-4"
         >
           {[
-            { icon: FileText, label: "Theory Notes", sub: "Semester 1 & 2" },
-            { icon: Zap,      label: "PYQ Papers",   sub: "With Analysis" },
-            { icon: Star,     label: "Most Repeated", sub: "Questions" },
+            { icon: FileText, label: "Theory Notes", sub: "Semester 1" },
+            { icon: Zap,      label: "Most Repeated", sub: "Core Topics" },
+            { icon: Star,     label: "High Yield", sub: "Exam Format" },
           ].map((item) => (
             <div key={item.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
               <div className="w-9 h-9 rounded-xl bg-[#1E40AF]/10 flex items-center justify-center mx-auto mb-2">

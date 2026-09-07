@@ -48,7 +48,7 @@ export function Hero() {
             </h1>
 
             <p className="text-lg text-[#4B5563] leading-relaxed mb-4 max-w-lg font-medium">
-              Notes + PYQs + PYQ Analysis + Most Repeated Questions — organised to help you prepare smarter for your BCA theory exams.
+              Semester 1 Notes + Most Repeated Topics — organised to help you prepare smarter for your BCA theory exams.
             </p>
 
             <p className="text-sm text-[#6B7280] leading-relaxed mb-6 max-w-lg">
@@ -58,9 +58,9 @@ export function Hero() {
             {/* Mini feature list */}
             <div className="flex flex-col gap-2 mb-8">
               {[
-                "Complete Theory Notes for Semester 1 & 2",
-                "Previous Year Questions + Pattern Analysis",
-                "Most Repeated Questions & Key Topics",
+                "Semester 1 BCA Study Notes",
+                "Semester 1 Most Repeated Topics",
+                "Unit-Wise & Topic-Wise Theory Material",
               ].map((f) => (
                 <div key={f} className="flex items-center gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
@@ -100,7 +100,7 @@ export function Hero() {
               <div className="w-px h-5 bg-gray-200" />
               <div className="flex items-center gap-1.5">
                 <FileText className="w-4 h-4 text-[#1E40AF]" />
-                <span className="text-sm font-semibold text-gray-700">Semester 1 & 2</span>
+                <span className="text-sm font-semibold text-gray-700">Semester 1</span>
                 <span className="text-sm text-gray-500">theory notes</span>
               </div>
               <div className="w-px h-5 bg-gray-200" />
@@ -134,7 +134,7 @@ export function Hero() {
                 <p className="text-blue-200 text-sm mb-6">First-Batch Student Edition</p>
                 <div className="grid grid-cols-3 gap-4 w-full">
                   {[
-                    { label: "Semesters", value: "1 & 2" },
+                    { label: "Semester", value: "1 Only" },
                     { label: "First Batch", value: "Open" },
                     { label: "Offer Price", value: "₹499" },
                   ].map((stat) => (
@@ -158,8 +158,8 @@ export function Hero() {
                   <BookOpen className="w-5 h-5 text-[#1E40AF]" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">Complete Theory Notes</p>
-                  <p className="text-xs text-gray-500">Semester 1 & 2 · Theory Only</p>
+                  <p className="text-sm font-semibold text-gray-900">Semester 1 Study Notes</p>
+                  <p className="text-xs text-gray-500">Semester 1 · Theory Only</p>
                 </div>
               </div>
               <div className="flex items-center justify-between">
@@ -168,7 +168,7 @@ export function Hero() {
               </div>
             </motion.div>
 
-            {/* Floating Card 2 — PYQ */}
+            {/* Floating Card 2 — Most Repeated Topics */}
             <motion.div
               animate={{ y: [0, 8, 0] }}
               transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
@@ -179,8 +179,8 @@ export function Hero() {
                   <FileText className="w-5 h-5 text-[#4F46E5]" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">PYQ Analysis</p>
-                  <p className="text-xs text-gray-500">Most Repeated Questions</p>
+                  <p className="text-sm font-semibold text-gray-900">Most Repeated Topics</p>
+                  <p className="text-xs text-gray-500">High-Priority Revision</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">

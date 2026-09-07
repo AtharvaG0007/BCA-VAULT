@@ -4,17 +4,22 @@ import { ArrowRight, BookOpen, Check, X as XIcon, Zap, FileText, Sparkles, Troph
 import { Button } from "../ui/button";
 
 const INCLUDES = [
-  "Complete Theory Notes",
-  "All Eligible Theory Subjects",
-  "Unit-Wise & Topic-Wise Notes",
-  "Previous Year Questions (PYQs)",
-  "PYQ Analysis",
-  "Most Repeated Questions",
-  "Important Exam Topics",
-  "Exam-Oriented Preparation",
+  "Semester 1 BCA Study Notes",
+  "Semester 1 Most Repeated Topics",
+  "Unit-Wise & Topic-Wise Theory Notes",
+  "Exam-Oriented Preparation Format",
+  "Regular Content Updates",
 ];
 
-const EXCLUDES = ["Mathematics", "Lab / Practical Subjects", "Projects"];
+const EXCLUDES = [
+  "Semester 2 Material (Future Release)",
+  "Most Repeated Questions (Referral Reward)",
+  "Previous Year Questions (PYQs)",
+  "PYQ Analysis",
+  "Mathematics",
+  "Lab / Practical Subjects",
+  "Projects",
+];
 
 export function PopularBundles() {
   const navigate = useNavigate();
@@ -35,7 +40,7 @@ export function PopularBundles() {
             First-Batch Student Offer
           </h2>
           <p className="text-gray-600 max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
-            Complete theory preparation bundle for eligible Semester 1 & Semester 2 theory subjects.
+            Complete theory preparation bundle for eligible Semester 1 theory subjects.
           </p>
         </motion.div>
 
@@ -51,7 +56,7 @@ export function PopularBundles() {
               <div>
                 <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-0.5">BCA Vault</p>
                 <p className="text-white font-black text-xl" style={{ fontFamily: "var(--font-display)" }}>
-                  Complete Theory Bundle
+                  Semester 1 Bundle
                 </p>
               </div>
               <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full border border-white/20">
@@ -63,7 +68,7 @@ export function PopularBundles() {
               {/* Left: Features */}
               <div className="flex-1">
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
-                  Theory Notes + PYQs + Most Repeated Questions
+                  Semester 1 Notes + Most Repeated Topics
                 </p>
                 <div className="space-y-2.5 mb-5">
                   {INCLUDES.map((item) => (
@@ -98,11 +103,10 @@ export function PopularBundles() {
               {/* Right: Price + CTA */}
               <div className="flex flex-col items-center justify-center mt-8 lg:mt-0 lg:w-52 shrink-0">
                 {/* What's inside icons */}
-                <div className="grid grid-cols-3 gap-2 mb-6 w-full">
+                <div className="grid grid-cols-2 gap-2 mb-6 w-full">
                   {[
-                    { icon: BookOpen, label: "Notes" },
-                    { icon: FileText, label: "PYQs" },
-                    { icon: Zap,      label: "Repeated Qs" },
+                    { icon: BookOpen, label: "Theory Notes" },
+                    { icon: Zap,      label: "Repeated Topics" },
                   ].map((s) => (
                     <div key={s.label} className="bg-[#1E40AF]/5 rounded-xl p-3 text-center">
                       <s.icon className="w-5 h-5 text-[#1E40AF] mx-auto mb-1" />
