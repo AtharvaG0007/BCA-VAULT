@@ -484,11 +484,14 @@ export function StudentDashboard() {
 
             {/* ── Materials Categorization & Display ──────────────────────── */}
             {(() => {
-              const SEM1_MOST_REPEATED_TOPIC_NOTE_IDS = [
-                "9e59ab23-0de4-480e-a657-6a5de642c5e9", // Most Repeated Topics — C Programming
-                "67223491-a665-44b0-8307-b2a22dd30de2", // Most Repeated Topics — Algorithm & Program Design Using C
-                "480f00c8-b176-4d31-a030-2539e378a3c4", // Most Repeated Topics — Foundation of Computing
-              ];
+              type CanonicalTopicSubject =
+                | "C Programming"
+                | "Foundation of Computing"
+                | "Client-Side Web Technology";
+
+              const CANONICAL_C_PROGRAMMING_NOTE_ID = "9e59ab23-0de4-480e-a657-6a5de642c5e9";
+              const DUPLICATE_ALGORITHM_DESIGN_NOTE_ID = "67223491-a665-44b0-8307-b2a22dd30de2";
+              const CANONICAL_FOUNDATION_NOTE_ID = "480f00c8-b176-4d31-a030-2539e378a3c4";
 
               const REFERRAL_BONUS_QUESTION_NOTE_IDS = [
                 "6d971cc5-5677-43f5-958f-add182553c87", // C Programming — Most Repeated Questions
@@ -502,42 +505,179 @@ export function StudentDashboard() {
                 n.storage_path?.toLowerCase().includes("repted_questions") ||
                 n.storage_path?.toLowerCase().includes("questions_complete");
 
-              const isMostRepeatedTopic = (n: NoteItem) =>
-                SEM1_MOST_REPEATED_TOPIC_NOTE_IDS.includes(n.id) ||
-                (n.storage_path?.toLowerCase().includes("most_repeated_topics") &&
-                  !isReferralReward(n));
+              // The Algorithm & Program Design Using C record is an alternate batch/course naming duplicate of C Programming
+              const isDuplicateCProgRecord = (n: NoteItem) =>
+                n.id === DUPLICATE_ALGORITHM_DESIGN_NOTE_ID;
 
-              const isStudyNote = (n: NoteItem) =>
-                !isMostRepeatedTopic(n) && !isReferralReward(n);
+              const getNormalizedTopicSubject = (n: NoteItem): CanonicalTopicSubject | null => {
+                if (isReferralReward(n)) return null;
 
-              // Strictly Semester 1: exclude Semester 2 and exclude referral rewards (which belong in the Referral tab)
-              const displayableNotes = notes.filter(
-                (n) => (n.semester === 1 || n.semester === null) && !isReferralReward(n)
-              );
+                const s = (n.subject || "").toLowerCase();
+                const t = (n.title || "").toLowerCase();
+                const p = (n.storage_path || "").toLowerCase();
 
-              const topicSortOrder = (n: NoteItem) => {
-                if (n.id === "9e59ab23-0de4-480e-a657-6a5de642c5e9") return 1;
-                if (n.id === "67223491-a665-44b0-8307-b2a22dd30de2") return 2;
-                if (n.id === "480f00c8-b176-4d31-a030-2539e378a3c4") return 3;
-                return 4;
+                // 1. C Programming variations:
+                // - C Programming
+                // - Algorithms and Program Design Using C
+                // - Algorithm & Program Design Using C
+                // - C Programming / Algorithms and Program Design Using C
+                if (
+                  n.id === CANONICAL_C_PROGRAMMING_NOTE_ID ||
+                  n.id === DUPLICATE_ALGORITHM_DESIGN_NOTE_ID ||
+                  s.includes("c programming") ||
+                  s.includes("algorithm") ||
+                  s.includes("program design") ||
+                  t.includes("c programming") ||
+                  t.includes("algorithm") ||
+                  t.includes("program design") ||
+                  p.includes("c_programming") ||
+                  p.includes("algorithm")
+                ) {
+                  return "C Programming";
+                }
+
+                // 2. Foundation of Computing
+                if (
+                  n.id === CANONICAL_FOUNDATION_NOTE_ID ||
+                  s.includes("foundation") ||
+                  t.includes("foundation") ||
+                  p.includes("foundation")
+                ) {
+                  return "Foundation of Computing";
+                }
+
+                // 3. Client-Side Web Technology variations:
+                // - Client-Side Web Technology
+                // - Client-Side Web Technologies
+                // - HTML • CSS • JavaScript
+                // - HTML + CSS + JavaScript
+                if (
+                  s.includes("client-side") ||
+                  s.includes("client side") ||
+                  s.includes("web technolog") ||
+                  s.includes("html") ||
+                  s.includes("javascript") ||
+                  t.includes("client-side") ||
+                  t.includes("client side") ||
+                  t.includes("web technolog") ||
+                  t.includes("html") ||
+                  p.includes("client_side") ||
+                  p.includes("client-side") ||
+                  p.includes("web_technolog") ||
+                  p.includes("web-technolog")
+                ) {
+                  return "Client-Side Web Technology";
+                }
+
+                return null;
               };
 
-              const mostRepeatedTopicNotes = displayableNotes
-                .filter(isMostRepeatedTopic)
-                .sort((a, b) => topicSortOrder(a) - topicSortOrder(b));
-
-              const filteredNotes = displayableNotes.filter((n) => {
-                if (noteCategory === "repeated" && !isMostRepeatedTopic(n)) return false;
-                if (noteCategory === "theory" && !isStudyNote(n)) return false;
-                if (noteSearch.trim()) {
-                  const q = noteSearch.toLowerCase().trim();
-                  const matchTitle = n.title.toLowerCase().includes(q);
-                  const matchSubject = n.subject?.toLowerCase().includes(q);
-                  const matchDesc = n.description?.toLowerCase().includes(q);
-                  return Boolean(matchTitle || matchSubject || matchDesc);
+              const isMostRepeatedTopic = (n: NoteItem) => {
+                if (isReferralReward(n) || isDuplicateCProgRecord(n)) return false;
+                if (
+                  n.id === CANONICAL_C_PROGRAMMING_NOTE_ID ||
+                  n.id === CANONICAL_FOUNDATION_NOTE_ID
+                ) {
+                  return true;
                 }
-                return true;
-              });
+                const normSubject = getNormalizedTopicSubject(n);
+                if (!normSubject) return false;
+
+                const p = (n.storage_path || "").toLowerCase();
+                const t = (n.title || "").toLowerCase();
+                return (
+                  p.includes("most_repeated_topics") ||
+                  p.includes("repeated_topics") ||
+                  (t.includes("repeated") && t.includes("topic"))
+                );
+              };
+
+              const isStudyNote = (n: NoteItem) =>
+                !isMostRepeatedTopic(n) && !isReferralReward(n) && !isDuplicateCProgRecord(n);
+
+              // Formats canonical titles and subtitles for the Semester 1 Most Repeated Topics UI
+              const formatCanonicalTopicNote = (n: NoteItem): NoteItem => {
+                const normSubject = getNormalizedTopicSubject(n);
+                if (normSubject === "C Programming") {
+                  return {
+                    ...n,
+                    title: "Most Repeated Topics — C Programming",
+                    subject: "C Programming",
+                    description:
+                      n.description ||
+                      "Focus on the key C programming and program design topics repeatedly examined across previous semester papers.",
+                  };
+                }
+                if (normSubject === "Foundation of Computing") {
+                  return {
+                    ...n,
+                    title: "Most Repeated Topics — Foundation of Computing",
+                    subject: "Foundation of Computing",
+                    description:
+                      n.description ||
+                      "Focus on the key computing fundamentals and architectural topics repeatedly examined across previous semester papers.",
+                  };
+                }
+                if (normSubject === "Client-Side Web Technology") {
+                  return {
+                    ...n,
+                    title: "Most Repeated Topics — Client-Side Web Technology",
+                    subject: "Client-Side Web Technology",
+                    description:
+                      n.description ||
+                      "Focus on the key HTML, CSS, and JavaScript topics repeatedly examined across previous semester papers.",
+                  };
+                }
+                return n;
+              };
+
+              // Strictly Semester 1: exclude Semester 2, referral rewards, and duplicate C Programming records
+              const displayableNotes = notes.filter(
+                (n) =>
+                  (n.semester === 1 || n.semester === null) &&
+                  !isReferralReward(n) &&
+                  !isDuplicateCProgRecord(n)
+              );
+
+              // Canonical display order:
+              // 1. C Programming
+              // 2. Foundation of Computing
+              // 3. Client-Side Web Technology
+              const CANONICAL_TOPIC_SUBJECTS: CanonicalTopicSubject[] = [
+                "C Programming",
+                "Foundation of Computing",
+                "Client-Side Web Technology",
+              ];
+
+              // Deduplicate so each normalized subject has AT MOST one canonical note
+              const mostRepeatedTopicNotes = CANONICAL_TOPIC_SUBJECTS.map((subjectKey) => {
+                if (subjectKey === "C Programming") {
+                  const cProgNote = displayableNotes.find(
+                    (n) => n.id === CANONICAL_C_PROGRAMMING_NOTE_ID
+                  );
+                  if (cProgNote) return formatCanonicalTopicNote(cProgNote);
+                }
+
+                const matchedNote = displayableNotes.find(
+                  (n) => isMostRepeatedTopic(n) && getNormalizedTopicSubject(n) === subjectKey
+                );
+                return matchedNote ? formatCanonicalTopicNote(matchedNote) : null;
+              }).filter(Boolean) as NoteItem[];
+
+              const filteredNotes = displayableNotes
+                .filter((n) => {
+                  if (noteCategory === "repeated" && !isMostRepeatedTopic(n)) return false;
+                  if (noteCategory === "theory" && !isStudyNote(n)) return false;
+                  if (noteSearch.trim()) {
+                    const q = noteSearch.toLowerCase().trim();
+                    const matchTitle = n.title.toLowerCase().includes(q);
+                    const matchSubject = n.subject?.toLowerCase().includes(q);
+                    const matchDesc = n.description?.toLowerCase().includes(q);
+                    return Boolean(matchTitle || matchSubject || matchDesc);
+                  }
+                  return true;
+                })
+                .map((n) => (isMostRepeatedTopic(n) ? formatCanonicalTopicNote(n) : n));
 
               return (
                 <>
