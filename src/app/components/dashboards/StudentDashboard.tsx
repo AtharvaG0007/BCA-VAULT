@@ -493,6 +493,11 @@ export function StudentDashboard() {
               const DUPLICATE_ALGORITHM_DESIGN_NOTE_ID = "67223491-a665-44b0-8307-b2a22dd30de2";
               const CANONICAL_FOUNDATION_NOTE_ID = "480f00c8-b176-4d31-a030-2539e378a3c4";
 
+              const SEM1_MOST_REPEATED_TOPIC_NOTE_IDS = [
+                CANONICAL_C_PROGRAMMING_NOTE_ID,
+                CANONICAL_FOUNDATION_NOTE_ID,
+              ];
+
               const REFERRAL_BONUS_QUESTION_NOTE_IDS = [
                 "6d971cc5-5677-43f5-958f-add182553c87", // C Programming — Most Repeated Questions
                 "33cc389f-4a00-4d3e-89dd-670e514e2ed3", // Foundation of Computing — Most Repeated Questions
@@ -507,7 +512,9 @@ export function StudentDashboard() {
 
               // The Algorithm & Program Design Using C record is an alternate batch/course naming duplicate of C Programming
               const isDuplicateCProgRecord = (n: NoteItem) =>
-                n.id === DUPLICATE_ALGORITHM_DESIGN_NOTE_ID;
+                n.id === DUPLICATE_ALGORITHM_DESIGN_NOTE_ID ||
+                (Boolean(n.storage_path?.toLowerCase().includes("algorithm_program_design")) &&
+                  n.id !== CANONICAL_C_PROGRAMMING_NOTE_ID);
 
               const getNormalizedTopicSubject = (n: NoteItem): CanonicalTopicSubject | null => {
                 if (isReferralReward(n)) return null;
@@ -576,7 +583,8 @@ export function StudentDashboard() {
                 if (isReferralReward(n) || isDuplicateCProgRecord(n)) return false;
                 if (
                   n.id === CANONICAL_C_PROGRAMMING_NOTE_ID ||
-                  n.id === CANONICAL_FOUNDATION_NOTE_ID
+                  n.id === CANONICAL_FOUNDATION_NOTE_ID ||
+                  SEM1_MOST_REPEATED_TOPIC_NOTE_IDS.includes(n.id)
                 ) {
                   return true;
                 }
@@ -649,6 +657,13 @@ export function StudentDashboard() {
                 "Client-Side Web Technology",
               ];
 
+              const topicSortOrder = (subject: CanonicalTopicSubject | null | string) => {
+                if (subject === "C Programming") return 1;
+                if (subject === "Foundation of Computing") return 2;
+                if (subject === "Client-Side Web Technology") return 3;
+                return 4;
+              };
+
               // Deduplicate so each normalized subject has AT MOST one canonical note
               const mostRepeatedTopicNotes = CANONICAL_TOPIC_SUBJECTS.map((subjectKey) => {
                 if (subjectKey === "C Programming") {
@@ -656,6 +671,13 @@ export function StudentDashboard() {
                     (n) => n.id === CANONICAL_C_PROGRAMMING_NOTE_ID
                   );
                   if (cProgNote) return formatCanonicalTopicNote(cProgNote);
+                }
+
+                if (subjectKey === "Foundation of Computing") {
+                  const foundationNote = displayableNotes.find(
+                    (n) => n.id === CANONICAL_FOUNDATION_NOTE_ID
+                  );
+                  if (foundationNote) return formatCanonicalTopicNote(foundationNote);
                 }
 
                 const matchedNote = displayableNotes.find(
@@ -677,7 +699,20 @@ export function StudentDashboard() {
                   }
                   return true;
                 })
-                .map((n) => (isMostRepeatedTopic(n) ? formatCanonicalTopicNote(n) : n));
+                .map((n) => (isMostRepeatedTopic(n) ? formatCanonicalTopicNote(n) : n))
+                .sort((a, b) => {
+                  const isTopicA = isMostRepeatedTopic(a);
+                  const isTopicB = isMostRepeatedTopic(b);
+                  if (isTopicA && isTopicB) {
+                    return (
+                      topicSortOrder(getNormalizedTopicSubject(a)) -
+                      topicSortOrder(getNormalizedTopicSubject(b))
+                    );
+                  }
+                  if (isTopicA && !isTopicB) return -1;
+                  if (!isTopicA && isTopicB) return 1;
+                  return 0;
+                });
 
               return (
                 <>

@@ -72,6 +72,18 @@ async function main() {
       priority: "high",
       status: "published",
     },
+    {
+      bundle_id: sem1Bundle.id,
+      title: "Most Repeated Topics — Client-Side Web Technology",
+      subject: "Client-Side Web Technology",
+      semester: 1,
+      description: "High-priority exam-oriented repeated topics and core concepts for Client-Side Web Technology (HTML, CSS, JavaScript).",
+      storage_bucket: "Bca_notes",
+      storage_path: "BCA SEM1/Client_Side_Web_Technologies_HTML_CSS_JS_Most_Repeated_Topics.pdf",
+      published: true,
+      priority: "high",
+      status: "published",
+    },
   ];
 
   for (const item of topicNotes) {
