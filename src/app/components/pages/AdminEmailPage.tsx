@@ -116,6 +116,47 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+const DEFAULT_COMPOSER_SUBJECT = "Payment Approved";
+
+const DEFAULT_COMPOSER_HTML = `<div style="font-family: Arial, sans-serif; color: #333333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+  <h2 style="color: #2e7d32; margin-top: 0;">Payment Approved</h2>
+  <p>Dear Student,</p>
+  <p>We are pleased to inform you that your payment has been successfully approved.</p>
+
+  <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+    <p style="margin: 5px 0;"><strong>Course:</strong> BCA</p>
+    <p style="margin: 5px 0;"><strong>Bundle:</strong> BCA Vault Bundle</p>
+    <p style="margin: 5px 0;"><strong>Amount:</strong> ₹499</p>
+    <p style="margin: 5px 0;"><strong>Status:</strong> <span style="color: #2e7d32; font-weight: bold;">Approved</span></p>
+  </div>
+
+  <p>Thank you for choosing BCA Vault for your studies.</p>
+
+  <p style="margin-bottom: 0;">
+    Warm regards,<br>
+    <strong>BCA Vault Team</strong>
+  </p>
+</div>`;
+
+const DEFAULT_COMPOSER_TEXT = `Payment Approved
+
+Dear Student,
+
+We are pleased to inform you that your payment has been successfully approved.
+
+Course: BCA
+
+Bundle: BCA Vault Bundle
+
+Amount: ₹ 499
+
+Status: Approved
+
+Thank you for choosing BCA Vault for your studies.
+
+Warm regards,
+BCA Vault Team`;
+
 const DEFAULT_PAYMENT_APPROVED_SUBJECT = "BCA Vault — Payment Approved & Access Activated";
 
 const DEFAULT_PAYMENT_APPROVED_HTML = `<div style="font-family: Arial, sans-serif; color: #333333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
@@ -199,7 +240,7 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
   // Compose mode state
   const [isComposing, setIsComposing] = useState(false);
   const [composeRecipient, setComposeRecipient] = useState("");
-  const [composeEventType, setComposeEventType] = useState<string>("test_email");
+  const [composeEventType, setComposeEventType] = useState<string>("payment_approved");
 
   const [subject, setSubject] = useState("");
   const [htmlBody, setHtmlBody] = useState("");
@@ -284,41 +325,21 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
     }
   };
 
-  const startCompose = (type: "test_email" | "payment_approved" = "test_email") => {
+  const startCompose = (type: string = "payment_approved") => {
     setIsComposing(true);
     setSelectedJob(null);
     setComposeEventType(type);
     setComposeRecipient("");
-    if (type === "test_email") {
-      setSubject("BCA Vault — Gmail API Test Email");
-      setHtmlBody("");
-      setTextBody("");
-    } else if (type === "payment_approved") {
-      setSubject(DEFAULT_PAYMENT_APPROVED_SUBJECT);
-      setHtmlBody(DEFAULT_PAYMENT_APPROVED_HTML);
-      setTextBody(DEFAULT_PAYMENT_APPROVED_TEXT);
-    } else {
-      setSubject("");
-      setHtmlBody("");
-      setTextBody("");
-    }
+    setSubject(DEFAULT_COMPOSER_SUBJECT);
+    setHtmlBody(DEFAULT_COMPOSER_HTML);
+    setTextBody(DEFAULT_COMPOSER_TEXT);
   };
 
   const loadDefaultTemplate = () => {
     if (isComposing) {
-      if (composeEventType === "test_email") {
-        setSubject("BCA Vault — Gmail API Test Email");
-        setTextBody("This is an operational test email from BCA Vault to verify transactional delivery via Gmail API.\n\nRegards,\nBCA Vault Team\nbcavault07@gmail.com");
-        setHtmlBody("<p style='font-family: Arial, sans-serif; color: #1e293b; padding: 16px;'>This is an operational test email from BCA Vault to verify transactional delivery via Gmail API.<br><br>Regards,<br><strong>BCA Vault Team</strong><br>bcavault07@gmail.com</p>");
-      } else if (composeEventType === "payment_approved") {
-        setSubject(DEFAULT_PAYMENT_APPROVED_SUBJECT);
-        setTextBody(DEFAULT_PAYMENT_APPROVED_TEXT);
-        setHtmlBody(DEFAULT_PAYMENT_APPROVED_HTML);
-      } else {
-        setSubject("BCA Vault — Notification");
-        setTextBody("Official notification from BCA Vault Team.\n\nRegards,\nBCA Vault Team\nbcavault07@gmail.com");
-        setHtmlBody("<p style='font-family: Arial, sans-serif; color: #1e293b; padding: 16px;'>Official notification from BCA Vault Team.<br><br>Regards,<br><strong>BCA Vault Team</strong><br>bcavault07@gmail.com</p>");
-      }
+      setSubject(DEFAULT_COMPOSER_SUBJECT);
+      setHtmlBody(DEFAULT_COMPOSER_HTML);
+      setTextBody(DEFAULT_COMPOSER_TEXT);
       toast.success("Loaded default email template.");
     }
   };
@@ -488,13 +509,13 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
               </div>
             </div>
 
-            {/* Compose Test Email Button */}
+            {/* Create New Email Button */}
             <button
-              onClick={() => startCompose("test_email")}
+              onClick={() => startCompose()}
               className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 px-3.5 py-2 text-xs font-black text-white shadow-md shadow-indigo-600/20 transition"
             >
               <Plus className="h-4 w-4" />
-              Compose Test Email
+              Create New Email
             </button>
 
             {/* Refresh Button */}
@@ -538,7 +559,7 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                 Email Queue ({filteredQueue.length})
               </span>
               <button
-                onClick={() => startCompose("test_email")}
+                onClick={() => startCompose()}
                 className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-400 hover:text-indigo-300 transition"
               >
                 <Plus className="h-3 w-3" /> New
@@ -592,10 +613,10 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                   <p className="font-semibold text-slate-400">Queue is empty</p>
                   <p className="mt-1 text-slate-500">No emails match this filter or outbox is clear.</p>
                   <button
-                    onClick={() => startCompose("test_email")}
+                    onClick={() => startCompose()}
                     className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-indigo-500 transition"
                   >
-                    <Plus className="h-3.5 w-3.5" /> Compose Test Email
+                    <Plus className="h-3.5 w-3.5" /> Create New Email
                   </button>
                 </div>
               ) : (
@@ -654,7 +675,7 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                       </span>
                       <span className="text-xs text-slate-500 font-semibold">Super Admin Compose</span>
                     </div>
-                    <h2 className="text-xl font-black text-white mt-1">Compose Email</h2>
+                    <h2 className="text-xl font-black text-white mt-1">Create New Email</h2>
                     <p className="text-xs text-slate-400 mt-0.5">
                       Draft a test message or notification, preview, and dispatch via Gmail API.
                     </p>
@@ -709,22 +730,16 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
                       onChange={(e) => {
                         const val = e.target.value;
                         setComposeEventType(val);
-                        if (val === "test_email") {
-                          setSubject("BCA Vault — Gmail API Test Email");
-                        } else if (val === "payment_approved") {
-                          setSubject(DEFAULT_PAYMENT_APPROVED_SUBJECT);
-                          if (!htmlBody) {
-                            setHtmlBody(DEFAULT_PAYMENT_APPROVED_HTML);
-                          }
-                          if (!textBody) {
-                            setTextBody(DEFAULT_PAYMENT_APPROVED_TEXT);
-                          }
+                        if (val === "payment_approved") {
+                          if (!subject) setSubject(DEFAULT_COMPOSER_SUBJECT);
+                          if (!htmlBody) setHtmlBody(DEFAULT_COMPOSER_HTML);
+                          if (!textBody) setTextBody(DEFAULT_COMPOSER_TEXT);
                         }
                       }}
                       className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2 text-xs font-semibold text-white outline-none focus:border-indigo-500 transition"
                     >
-                      <option value="test_email">Test Email (Operational Check)</option>
                       <option value="payment_approved">Payment Approval</option>
+                      <option value="test_email">Test Email (Operational Check)</option>
                     </select>
                   </div>
                 </div>
