@@ -532,22 +532,33 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
 
         {/* Stats Row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-          <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">Total in Outbox</p>
-            <p className="text-2xl font-black mt-1 text-white">{stats.total}</p>
-          </div>
-          <div className="rounded-xl border border-amber-900/30 bg-amber-950/20 p-4">
-            <p className="text-[10px] font-black uppercase tracking-wider text-amber-400">Waiting / Pending</p>
-            <p className="text-2xl font-black mt-1 text-amber-300">{stats.pending}</p>
-          </div>
-          <div className="rounded-xl border border-emerald-900/30 bg-emerald-950/20 p-4">
-            <p className="text-[10px] font-black uppercase tracking-wider text-emerald-400">Delivered / Sent</p>
-            <p className="text-2xl font-black mt-1 text-emerald-300">{stats.sent}</p>
-          </div>
-          <div className="rounded-xl border border-rose-900/30 bg-rose-950/20 p-4">
-            <p className="text-[10px] font-black uppercase tracking-wider text-rose-400">Failed / Errors</p>
-            <p className="text-2xl font-black mt-1 text-rose-300">{stats.failed}</p>
-          </div>
+          {loading && queue.length === 0 ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-slate-800 bg-slate-900/50 p-4 space-y-2 animate-pulse">
+                <div className="h-2.5 w-20 bg-slate-800/80 rounded" />
+                <div className="h-7 w-12 bg-slate-800/80 rounded" />
+              </div>
+            ))
+          ) : (
+            <>
+              <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">Total in Outbox</p>
+                <p className="text-2xl font-black mt-1 text-white">{stats.total}</p>
+              </div>
+              <div className="rounded-xl border border-amber-900/30 bg-amber-950/20 p-4">
+                <p className="text-[10px] font-black uppercase tracking-wider text-amber-400">Waiting / Pending</p>
+                <p className="text-2xl font-black mt-1 text-amber-300">{stats.pending}</p>
+              </div>
+              <div className="rounded-xl border border-emerald-900/30 bg-emerald-950/20 p-4">
+                <p className="text-[10px] font-black uppercase tracking-wider text-emerald-400">Delivered / Sent</p>
+                <p className="text-2xl font-black mt-1 text-emerald-300">{stats.sent}</p>
+              </div>
+              <div className="rounded-xl border border-rose-900/30 bg-rose-950/20 p-4">
+                <p className="text-[10px] font-black uppercase tracking-wider text-rose-400">Failed / Errors</p>
+                <p className="text-2xl font-black mt-1 text-rose-300">{stats.failed}</p>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Main Console Workspace: Left Queue + Right Editor */}
@@ -607,7 +618,18 @@ export function AdminEmailPage({ embedded = false }: { embedded?: boolean }) {
 
             {/* Queue List */}
             <div className="flex-1 space-y-2 max-h-[640px] overflow-y-auto pr-1">
-              {filteredQueue.length === 0 ? (
+              {loading && filteredQueue.length === 0 ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="rounded-xl border border-slate-800/80 bg-slate-950/60 p-3.5 space-y-2 animate-pulse">
+                    <div className="flex justify-between items-center">
+                      <div className="h-3.5 w-24 bg-slate-800/70 rounded" />
+                      <div className="h-4 w-12 bg-slate-800/70 rounded-full" />
+                    </div>
+                    <div className="h-3 w-40 bg-slate-800/70 rounded" />
+                    <div className="h-2.5 w-28 bg-slate-800/70 rounded" />
+                  </div>
+                ))
+              ) : filteredQueue.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-800 p-8 text-center text-xs text-slate-500">
                   <Mail className="h-8 w-8 mx-auto mb-2 text-slate-700" />
                   <p className="font-semibold text-slate-400">Queue is empty</p>

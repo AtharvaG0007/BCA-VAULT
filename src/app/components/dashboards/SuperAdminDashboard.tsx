@@ -34,6 +34,17 @@ import { supabase } from "@/lib/supabase/client";
 import { useAdminAuth } from "../auth/AdminAuthContext";
 import { availableSubjects } from "../../data/syllabus";
 import { AdminEmailPage } from "../pages/AdminEmailPage";
+import {
+  DashboardSkeleton,
+  StudentsTableSkeleton,
+  PaymentsTableSkeleton,
+  ReferralsSkeleton,
+  BundlesSkeleton,
+  NotesTableSkeleton,
+  AccessTableSkeleton,
+  ActivityLogsSkeleton,
+  EmailConsoleSkeleton,
+} from "../admin/AdminSkeletons";
 
 /** Generate a cryptographically strong random password (16 chars, mixed case + digits + symbols). */
 function generateStrongPassword(): string {
@@ -483,9 +494,17 @@ export function SuperAdminDashboard() {
         )}
 
         {loading && !Object.keys(data).length ? (
-          <div className="flex items-center justify-center py-24">
-            <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
-          </div>
+          <>
+            {activeTab === "dashboard" && <DashboardSkeleton />}
+            {activeTab === "students" && <StudentsTableSkeleton />}
+            {activeTab === "payments" && <PaymentsTableSkeleton />}
+            {activeTab === "referrals" && <ReferralsSkeleton />}
+            {activeTab === "bundles" && <BundlesSkeleton />}
+            {activeTab === "notes" && <NotesTableSkeleton />}
+            {activeTab === "access" && <AccessTableSkeleton />}
+            {activeTab === "email" && <EmailConsoleSkeleton />}
+            {activeTab === "activity" && <ActivityLogsSkeleton />}
+          </>
         ) : (
           <>
             {/* Dashboard Tab */}
