@@ -76,10 +76,12 @@ export function PaymentEvidenceForm({
   onClose,
   initialBundleId,
   initialPrice = 499,
+  initialReferralIdentifier,
 }: {
   onClose: () => void;
   initialBundleId?: string;
   initialPrice?: number;
+  initialReferralIdentifier?: string;
 }) {
   const navigate = useNavigate();
   const { user, appUser } = useAuth();
@@ -98,7 +100,7 @@ export function PaymentEvidenceForm({
     semester: appUser?.semester ? String(appUser.semester) : "1",
     amountPaid: String(initialPrice || 499),
     utr: "",
-    referralCode: "",
+    referralCode: initialReferralIdentifier || "",
     paymentConfirmation: false,
   });
 
@@ -180,7 +182,8 @@ export function PaymentEvidenceForm({
         semester: Number(form.semester) || 1,
         amount: Number(form.amountPaid),
         utr: form.utr.trim().toUpperCase(),
-        referral_code: form.referralCode.trim().toUpperCase() || undefined,
+        referral_code: form.referralCode.trim() || undefined,
+        referral_identifier: form.referralCode.trim() || undefined,
         submission_id,
         storage_path,
       });
@@ -385,16 +388,15 @@ export function PaymentEvidenceForm({
             />
           </Field>
 
-          <Field label="Referral Code (Optional)">
+          <Field label="Referral Identifier (Optional)">
             <input
               value={form.referralCode}
-              onChange={(e) => update("referralCode", e.target.value.toUpperCase())}
-              placeholder="e.g. BV-ABC123"
-              className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-3 font-mono text-sm uppercase outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 tracking-wider"
-              maxLength={12}
+              onChange={(e) => update("referralCode", e.target.value)}
+              placeholder="e.g. Atharva Gogawale DMS"
+              className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-3 font-medium text-sm outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100"
             />
             <span className="mt-1 block text-xs text-slate-400">
-              Have a classmate&apos;s referral code? Enter it here so they receive referral reward credit upon verification.
+              Were you referred by a BCA Vault student? Enter their referral identifier (e.g. Atharva Gogawale DMS) so they receive referral credit upon payment verification.
             </span>
           </Field>
 

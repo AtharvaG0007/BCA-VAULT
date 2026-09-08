@@ -10,6 +10,7 @@ import {
   Download,
   AlertCircle,
   Loader2,
+  Copy,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "../auth/AuthContext";
@@ -52,6 +53,7 @@ export function StudentReferralView({
   const [rewardNotes, setRewardNotes] = useState<NoteItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const studentName =
     appUser?.name?.trim() ||
@@ -59,6 +61,16 @@ export function StudentReferralView({
     user?.email?.split("@")[0]?.trim() ||
     "Student";
   const studentDms = `${studentName} DMS`;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(studentDms);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback if clipboard API is restricted
+    }
+  };
 
   const REFERRAL_REWARD_NOTE_IDS = [
     "6d971cc5-5677-43f5-958f-add182553c87", // C Programming — Most Repeated Questions
@@ -194,10 +206,18 @@ export function StudentReferralView({
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
               Student Identifier
             </span>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="bg-slate-50 border-2 border-indigo-100 rounded-2xl px-5 py-3 font-mono text-2xl sm:text-3xl font-black text-indigo-700 tracking-tight shadow-inner">
                 {studentDms}
               </div>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-3 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 transition"
+              >
+                {copied ? <CheckCircle2 className="h-4 w-4 text-emerald-300" /> : <Copy className="h-4 w-4" />}
+                {copied ? "Copied ✓" : "Copy"}
+              </button>
             </div>
             <p className="text-[11px] text-slate-500">
               Your referral rewards and progress are linked to your BCA Vault account.
@@ -207,6 +227,73 @@ export function StudentReferralView({
           <div className="flex items-center gap-2 self-start sm:self-center bg-indigo-50/70 border border-indigo-100 rounded-2xl px-4 py-3 text-xs text-indigo-800">
             <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
             <span className="font-semibold">Rewards activate on qualifying Semester 1 referral</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ── How Referral Works (5-Step Explanation) ───────────── */}
+      <section className="rounded-3xl border border-slate-200 bg-slate-50/60 p-6 sm:p-8">
+        <div className="mb-5">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600">
+            Clear Referral Workflow
+          </span>
+          <h2 className="text-lg font-black text-slate-900 mt-0.5">
+            How the Referral Program Works
+          </h2>
+          <p className="text-xs text-slate-500">
+            Rewards unlock automatically once your referred student&apos;s Semester 1 purchase is verified by admin.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-5 gap-3.5">
+          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between">
+            <div>
+              <span className="text-[10px] font-black uppercase text-indigo-600 tracking-wider">Step 1</span>
+              <h3 className="text-xs font-bold text-slate-900 mt-1 mb-1">Share Identifier</h3>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Share your Student DMS identifier (<strong className="text-slate-700">{studentDms}</strong>) with your friends.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between">
+            <div>
+              <span className="text-[10px] font-black uppercase text-indigo-600 tracking-wider">Step 2</span>
+              <h3 className="text-xs font-bold text-slate-900 mt-1 mb-1">Friend Enters Code</h3>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Your friend enters your identifier in the &quot;Have a Referral Code?&quot; section during payment.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between">
+            <div>
+              <span className="text-[10px] font-black uppercase text-indigo-600 tracking-wider">Step 3</span>
+              <h3 className="text-xs font-bold text-slate-900 mt-1 mb-1">Semester 1 Purchase</h3>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Your friend completes an eligible BCA Semester 1 purchase and submits payment evidence.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between">
+            <div>
+              <span className="text-[10px] font-black uppercase text-indigo-600 tracking-wider">Step 4</span>
+              <h3 className="text-xs font-bold text-slate-900 mt-1 mb-1">Admin Approval</h3>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Admin verifies the payment evidence and approves your friend&apos;s Semester 1 access.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between">
+            <div>
+              <span className="text-[10px] font-black uppercase text-emerald-600 tracking-wider">Step 5</span>
+              <h3 className="text-xs font-bold text-slate-900 mt-1 mb-1">Reward Unlocks</h3>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Your referral becomes successful and your Most Repeated Questions reward unlocks automatically.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -278,6 +365,10 @@ export function StudentReferralView({
             {isRewardUnlocked ? (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800 border border-emerald-200">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Unlocked & Active
+              </span>
+            ) : successfulCount > 0 ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800 border border-emerald-200">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Successful
               </span>
             ) : pendingCount > 0 ? (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 border border-amber-200">

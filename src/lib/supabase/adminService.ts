@@ -149,7 +149,7 @@ export const adminApi = {
     const [refsRes, rewardsRes] = await Promise.all([
       adminSupabase
         .from("referrals")
-        .select("id, referrer_user_id, referred_user_id, referral_code_id, status, created_at, successful_at")
+        .select("id, referrer_user_id, referred_user_id, referral_code_id, referral_identifier, status, created_at, successful_at")
         .order("created_at", { ascending: false })
         .range(0, 99),
       adminSupabase
@@ -161,7 +161,7 @@ export const adminApi = {
 
     const referrals = (refsRes.data || []).map((r: any) => ({
       ...r,
-      referral_code: "BV-******",
+      referral_code: r.referral_identifier || "Student DMS",
       referrer_name: "Referrer",
       referrer_email: "—",
       referred_name: "Referred Student",

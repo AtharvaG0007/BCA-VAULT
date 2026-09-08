@@ -228,73 +228,31 @@ Deno.serve(async (request: Request) => {
         }
       }
 
-      // Referral code handling (optional)
-      const rawReferralCode = text(body.referral_code || body.referralCode).toUpperCase();
-      let validReferralCode: string | null = null;
+      // Referral identifier handling (optional)
+      const rawReferralInput = text(body.referral_identifier || body.referral_code || body.referralCode);
+      let validReferralIdentifier: string | null = null;
       let resolvedReferrerUserId: string | null = null;
-      let resolvedReferralCodeId: string | null = null;
 
-      if (rawReferralCode) {
-        // Validate code format: BV-XXXXXX
-        if (!/^BV-[A-Z0-9]{6}$/.test(rawReferralCode)) {
+      if (rawReferralInput) {
+        // Resolve using server-side resolve_referral_identifier function
+        const { data: refResult, error: refRpcError } = await admin.rpc("resolve_referral_identifier", {
+          p_identifier: rawReferralInput,
+          p_caller_user_id: effectiveUserId || null,
+          p_caller_email: email,
+          p_is_internal: true,
+        });
+
+        if (refRpcError || !refResult || !refResult.success) {
+          const errorMessage = refResult?.error || refRpcError?.message || "Invalid referral identifier.";
           return respond(
-            { success: false, error: "Invalid referral code format. Referral codes must follow the format BV-XXXXXX." },
+            { success: false, error: errorMessage },
             400,
             corsHeaders
           );
         }
 
-        // Look up code in referral_codes table
-        const { data: refCodeRow, error: refCodeError } = await admin
-          .from("referral_codes")
-          .select("id, user_id, is_active")
-          .eq("code", rawReferralCode)
-          .maybeSingle();
-
-        if (refCodeError || !refCodeRow) {
-          return respond(
-            { success: false, error: "The referral code entered does not exist. Please verify or leave it blank." },
-            400,
-            corsHeaders
-          );
-        }
-
-        if (!refCodeRow.is_active) {
-          return respond(
-            { success: false, error: "The referral code entered is inactive. Please leave it blank to proceed." },
-            400,
-            corsHeaders
-          );
-        }
-
-        // Self-referral protection:
-        // Check against effectiveUserId
-        if (effectiveUserId && refCodeRow.user_id === effectiveUserId) {
-          return respond(
-            { success: false, error: "You cannot use your own referral code." },
-            400,
-            corsHeaders
-          );
-        }
-
-        // Check against profile email of referrer
-        const { data: referrerProfile } = await admin
-          .from("profiles")
-          .select("email")
-          .eq("user_id", refCodeRow.user_id)
-          .maybeSingle();
-
-        if (referrerProfile?.email && referrerProfile.email.toLowerCase() === email) {
-          return respond(
-            { success: false, error: "You cannot use your own referral code." },
-            400,
-            corsHeaders
-          );
-        }
-
-        validReferralCode = rawReferralCode;
-        resolvedReferrerUserId = refCodeRow.user_id;
-        resolvedReferralCodeId = refCodeRow.id;
+        validReferralIdentifier = refResult.referral_identifier;
+        resolvedReferrerUserId = refResult.referrer_user_id;
       }
 
       const { error: insertError } = await admin.from("payment_submissions").insert({
@@ -311,7 +269,8 @@ Deno.serve(async (request: Request) => {
         screenshot_bucket: bucket,
         screenshot_path: path,
         status: "pending",
-        referral_code: validReferralCode,
+        referral_code: validReferralIdentifier,
+        referral_identifier: validReferralIdentifier,
       });
 
       if (insertError?.code === "23505") {
@@ -323,8 +282,8 @@ Deno.serve(async (request: Request) => {
         throw insertError;
       }
 
-      // If a valid referral code was supplied and we have an identified student, create pending referral
-      if (validReferralCode && effectiveUserId && resolvedReferrerUserId && resolvedReferralCodeId) {
+      // If a valid referral identifier was supplied and we have an identified student, create pending referral
+      if (validReferralIdentifier && effectiveUserId && resolvedReferrerUserId) {
         // Enforce 1-referral per student: check if referral already exists
         const { data: existingReferral } = await admin
           .from("referrals")
@@ -336,7 +295,7 @@ Deno.serve(async (request: Request) => {
           const { error: refInsertError } = await admin.from("referrals").insert({
             referrer_user_id: resolvedReferrerUserId,
             referred_user_id: effectiveUserId,
-            referral_code_id: resolvedReferralCodeId,
+            referral_identifier: validReferralIdentifier,
             status: "pending",
           });
 

@@ -763,6 +763,7 @@ Deno.serve(async (request: Request) => {
           referrer_user_id,
           referred_user_id,
           referral_code_id,
+          referral_identifier,
           status,
           created_at,
           successful_at
@@ -830,7 +831,7 @@ Deno.serve(async (request: Request) => {
       const referralsList = (rawReferrals || []).map((r: any) => {
         const referrer = profileMap.get(r.referrer_user_id);
         const referred = profileMap.get(r.referred_user_id);
-        const code = codeMap.get(r.referral_code_id) || "—";
+        const code = r.referral_identifier || codeMap.get(r.referral_code_id) || (referrer?.full_name ? `${referrer.full_name} DMS` : "—");
         const rw = rewardByReferralId.get(r.id);
 
         return {

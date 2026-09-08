@@ -13,7 +13,10 @@ import {
   Timer,
   Sparkles,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
+import { useAuth } from "../auth/AuthContext";
 import { PaymentEvidenceForm } from "../payment/PaymentEvidenceForm";
 
 export const GOOGLE_PAYMENT_FORM_URL =
@@ -45,10 +48,18 @@ const instructions = [
 ];
 
 export function PaymentPage() {
+  const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
+
+  // Student DMS Referral state (separate from price discount coupons)
+  const [referralInput, setReferralInput] = useState("");
+  const [appliedReferral, setAppliedReferral] = useState<string | null>(null);
+  const [referralValidating, setReferralValidating] = useState(false);
+  const [referralError, setReferralError] = useState<string | null>(null);
+
   const [showEvidenceModal, setShowEvidenceModal] = useState(false);
 
   // Marketing countdown timer: 3 minutes 50 seconds (230 seconds)
@@ -90,6 +101,43 @@ export function PaymentPage() {
       setCouponInput(raw);
     } else {
       setCouponError("Invalid coupon code. Try BUDMS400 for ₹400 OFF.");
+    }
+  };
+
+  const handleApplyReferral = async () => {
+    const raw = referralInput.trim();
+    setReferralError(null);
+
+    if (!raw) {
+      setReferralError("Please enter a referral identifier.");
+      return;
+    }
+
+    setReferralValidating(true);
+    try {
+      const { data, error } = await supabase.rpc("resolve_referral_identifier", {
+        p_identifier: raw,
+        p_caller_user_id: user?.id || null,
+        p_caller_email: user?.email || null,
+      });
+
+      if (error) {
+        setReferralError(error.message || "Referral identifier not found.");
+        return;
+      }
+
+      if (!data || !data.success) {
+        setReferralError(data?.error || "Referral identifier not found.");
+        return;
+      }
+
+      setAppliedReferral(data.referral_identifier || `${data.referrer_name} DMS`);
+      setReferralError(null);
+      setReferralInput("");
+    } catch (err: any) {
+      setReferralError(err?.message || "Unable to verify referral identifier.");
+    } finally {
+      setReferralValidating(false);
     }
   };
 
@@ -210,6 +258,86 @@ export function PaymentPage() {
               )}
             </div>
 
+            {/* Referral Identifier Section (Separate from Discount Coupon) */}
+            <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="mb-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Have a referral code?
+                </label>
+                <p className="mt-0.5 text-[11px] text-slate-500 leading-normal">
+                  Were you referred by a BCA Vault student? Enter their referral identifier below.
+                </p>
+              </div>
+
+              {!appliedReferral ? (
+                <div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={referralInput}
+                      onChange={(e) => {
+                        setReferralInput(e.target.value);
+                        if (referralError) setReferralError(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          void handleApplyReferral();
+                        }
+                      }}
+                      placeholder="e.g. Atharva Gogawale DMS"
+                      disabled={referralValidating}
+                      className="flex-1 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none disabled:bg-slate-100"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => void handleApplyReferral()}
+                      disabled={referralValidating}
+                      className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition disabled:bg-slate-400 shrink-0 inline-flex items-center gap-1.5"
+                    >
+                      {referralValidating ? (
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <span>Checking...</span>
+                        </>
+                      ) : (
+                        "Apply"
+                      )}
+                    </button>
+                  </div>
+
+                  {referralError && (
+                    <p className="mt-2 flex items-start gap-1 text-[11px] font-semibold text-rose-600">
+                      <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      <span>{referralError}</span>
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1 text-xs font-bold text-emerald-800">
+                      <Check className="h-3.5 w-3.5 text-emerald-600" />
+                      <span>✓ Referral applied</span>
+                    </div>
+                    <p className="mt-0.5 text-[11px] font-medium text-emerald-700 truncate">
+                      Referred by: <strong className="font-semibold text-slate-900">{appliedReferral}</strong>
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAppliedReferral(null);
+                      setReferralError(null);
+                    }}
+                    className="text-[11px] font-bold text-slate-500 hover:text-slate-800 underline shrink-0 px-1"
+                  >
+                    Change
+                  </button>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-2.5 rounded-2xl bg-slate-50 p-4 text-xs text-slate-600">
               {[
                 "Semester 1 Study Notes (All Theory Subjects)",
@@ -325,6 +453,7 @@ export function PaymentPage() {
               <PaymentEvidenceForm
                 onClose={() => setShowEvidenceModal(false)}
                 initialPrice={currentPrice}
+                initialReferralIdentifier={appliedReferral || undefined}
               />
             )}
           </div>

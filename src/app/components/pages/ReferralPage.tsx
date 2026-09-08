@@ -129,13 +129,13 @@ export function ReferralPage() {
                     <Share2 className="w-5 h-5" />
                   </div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Share Your Code</h3>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Share Your Identifier</h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Sign in to your BCA Vault student account to copy your unique referral code (<code className="bg-blue-50 text-blue-800 px-1.5 py-0.5 rounded text-xs font-semibold">BV-XXXXXX</code>) and share it with your BCA friends.
+                  Sign in to your BCA Vault student account to copy your student referral identifier (<code className="bg-blue-50 text-blue-800 px-1.5 py-0.5 rounded text-xs font-semibold">&lt;Your Name&gt; DMS</code>) and share it with your BCA friends.
                 </p>
               </div>
               <div className="mt-6 pt-4 border-t border-slate-200/60 text-[11px] text-slate-500 font-medium">
-                Instant generation in Student Dashboard
+                Available in your Student Dashboard
               </div>
             </div>
 
@@ -155,7 +155,7 @@ export function ReferralPage() {
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mb-2">Your Friend Purchases</h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Your friend submits an eligible BCA Semester 1 purchase and enters your referral code during checkout. Their payment enters review.
+                  Your friend submits an eligible BCA Semester 1 purchase and enters your referral identifier during checkout. Their payment enters review.
                 </p>
               </div>
               <div className="mt-6 pt-4 border-t border-slate-200/60 text-[11px] text-slate-500 font-medium">
