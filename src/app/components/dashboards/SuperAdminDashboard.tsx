@@ -17,6 +17,7 @@ import {
   Loader2,
   LogOut,
   Mail,
+  MoreVertical,
   Package,
   Plus,
   RefreshCw,
@@ -124,6 +125,19 @@ export function SuperAdminDashboard() {
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState<any>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [actionMenuStudentId, setActionMenuStudentId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!actionMenuStudentId) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(`[data-action-menu="${actionMenuStudentId}"]`)) {
+        setActionMenuStudentId(null);
+      }
+    };
+    window.addEventListener("click", handleOutsideClick);
+    return () => window.removeEventListener("click", handleOutsideClick);
+  }, [actionMenuStudentId]);
 
   // --- Create Student form state ---
   const [csPassword, setCsPassword] = useState("");
@@ -859,21 +873,45 @@ export function SuperAdminDashboard() {
             {/* Students Tab */}
             {activeTab === "students" && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <input
-                    type="text"
-                    placeholder="Search students..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && loadData()}
-                    className="rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-1.5 text-xs text-white placeholder-slate-500 outline-none focus:border-indigo-500"
-                  />
-                  <button
-                    onClick={openCreateStudentModal}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-500 transition"
-                  >
-                    <Plus className="h-3.5 w-3.5" /> Add Student
-                  </button>
+                {/* Compact and organized header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <h2 className="text-base sm:text-lg font-bold text-white">Students</h2>
+                    <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] font-semibold text-slate-400">
+                      {students.length}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="relative">
+                      <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+                      <input
+                        type="text"
+                        placeholder="Search students..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && loadData()}
+                        className="rounded-xl border border-slate-700 bg-slate-950 pl-8 pr-3.5 py-1.5 text-xs text-white placeholder-slate-500 outline-none focus:border-indigo-500 w-44 sm:w-56"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => loadData()}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition"
+                      title="Refresh students list"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" />
+                      <span>Refresh</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={openCreateStudentModal}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-indigo-500 transition shadow-sm"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>Add Student</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
@@ -883,64 +921,94 @@ export function SuperAdminDashboard() {
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs">
                         <thead>
-                          <tr className="border-b border-slate-800 text-slate-400 font-semibold">
-                            <th className="pb-3">Student</th>
-                            <th className="pb-3">Email & User ID</th>
-                            <th className="pb-3">Authentication</th>
-                            <th className="pb-3">Account</th>
-                            <th className="pb-3">Course / Sem</th>
-                            <th className="pb-3">Payment</th>
-                            <th className="pb-3">Assigned Bundles</th>
-                            <th className="pb-3">Registered</th>
-                            <th className="pb-3 text-right">Actions</th>
+                          <tr className="border-b border-slate-800 text-slate-400 font-semibold tracking-wide">
+                            <th className="pb-3 pr-4">STUDENT</th>
+                            <th className="pb-3 pr-4">ACCOUNT</th>
+                            <th className="pb-3 pr-4">PAYMENT</th>
+                            <th className="pb-3 pr-4">BUNDLE</th>
+                            <th className="pb-3 pr-4">REGISTERED</th>
+                            <th className="pb-3 text-right">ACTIONS</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/60 text-slate-300">
                           {students.map((s) => {
                             const assignedBundles: string[] = s.assigned_bundles || [];
-                            const paymentStatus = s.payment_status || "unpaid";
+                            const rawPaymentStatus = String(s.payment_status || "unpaid").toLowerCase();
+                            const paymentDisplay =
+                              rawPaymentStatus === "approved"
+                                ? "Approved"
+                                : rawPaymentStatus === "pending"
+                                ? "Pending"
+                                : "Unpaid";
                             const isVerified = Boolean(s.is_verified || s.email_confirmed_at);
+                            const isActive = s.status === "active";
+                            const isMenuOpen = actionMenuStudentId === s.user_id;
+
                             return (
                               <tr key={s.user_id} className="hover:bg-slate-900/50">
-                                <td className="py-3">
-                                  <p className="font-bold text-white">{s.full_name}</p>
-                                  {s.phone && <p className="text-[10px] text-slate-500">{s.phone}</p>}
+                                {/* STUDENT */}
+                                <td className="py-3.5 pr-4">
+                                  <p className="font-bold text-white text-sm">{s.full_name || "—"}</p>
+                                  <p className="text-xs text-slate-400 mt-0.5">{s.email || "—"}</p>
+                                  {s.user_id && (
+                                    <div className="flex items-center gap-1 mt-0.5">
+                                      <code className="text-[10px] font-mono text-slate-500 select-all">
+                                        {s.user_id.slice(0, 8)}...{s.user_id.slice(-4)}
+                                      </code>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleCopyPassword(s.user_id)}
+                                        title="Copy User ID"
+                                        className="text-slate-500 hover:text-slate-300 transition"
+                                      >
+                                        <Copy className="h-2.5 w-2.5" />
+                                      </button>
+                                    </div>
+                                  )}
                                 </td>
-                                <td className="py-3">
-                                  <p className="text-slate-300 font-medium">{s.email}</p>
-                                  <div className="flex items-center gap-1 mt-0.5">
-                                    <code className="text-[10px] font-mono text-slate-500 select-all">
-                                      {s.user_id.slice(0, 8)}...{s.user_id.slice(-4)}
-                                    </code>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleCopyPassword(s.user_id)}
-                                      title="Copy full User UUID"
-                                      className="text-slate-500 hover:text-slate-300 transition"
-                                    >
-                                      <Copy className="h-2.5 w-2.5" />
-                                    </button>
+
+                                {/* ACCOUNT */}
+                                <td className="py-3.5 pr-4">
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-1.5 text-xs font-semibold">
+                                      {isVerified ? (
+                                        <span className="inline-flex items-center gap-1 text-emerald-400">
+                                          <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                                          <span>Verified</span>
+                                        </span>
+                                      ) : (
+                                        <span className="inline-flex items-center gap-1 text-amber-400">
+                                          <Clock className="h-3 w-3 text-amber-400" />
+                                          <span>Unverified</span>
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-xs font-medium">
+                                      <span
+                                        className={`h-1.5 w-1.5 rounded-full ${
+                                          isActive ? "bg-emerald-400" : "bg-rose-400"
+                                        }`}
+                                      />
+                                      <span className={isActive ? "text-slate-300 capitalize" : "text-rose-400 capitalize"}>
+                                        {isActive ? "Active" : s.status || "Inactive"}
+                                      </span>
+                                    </div>
                                   </div>
                                 </td>
-                                <td className="py-3">
-                                  <AuthStatusBadge isVerified={s.is_verified} confirmedAt={s.email_confirmed_at} />
+
+                                {/* PAYMENT */}
+                                <td className="py-3.5 pr-4">
+                                  <StatusBadge status={paymentDisplay} />
                                 </td>
-                                <td className="py-3">
-                                  <StatusBadge status={s.status} />
-                                </td>
-                                <td className="py-3 text-slate-400">
-                                  {s.course || "BCA"} · Sem {s.semester || 1}
-                                </td>
-                                <td className="py-3">
-                                  <StatusBadge status={paymentStatus} />
-                                </td>
-                                <td className="py-3">
+
+                                {/* BUNDLE */}
+                                <td className="py-3.5 pr-4">
                                   {assignedBundles.length > 0 ? (
-                                    <div className="flex flex-wrap gap-1 max-w-[180px]">
+                                    <div className="flex flex-wrap gap-1 max-w-[240px] line-clamp-2">
                                       {assignedBundles.map((bTitle, idx) => (
                                         <span
                                           key={idx}
-                                          className="inline-block rounded-md bg-indigo-950/80 border border-indigo-800/80 px-2 py-0.5 text-[10px] font-bold text-indigo-300 truncate max-w-[160px]"
+                                          className="inline-block rounded-md bg-indigo-950/80 border border-indigo-800/80 px-2 py-0.5 text-[11px] font-bold text-indigo-300 truncate max-w-[220px]"
                                           title={bTitle}
                                         >
                                           {bTitle}
@@ -948,22 +1016,23 @@ export function SuperAdminDashboard() {
                                       ))}
                                     </div>
                                   ) : (
-                                    <span className="text-slate-500 text-[11px]">No bundles</span>
+                                    <span className="text-slate-500 text-xs">No bundle</span>
                                   )}
                                 </td>
-                                <td className="py-3 text-slate-500">{formatDate(s.created_at)}</td>
-                                <td className="py-3 text-right">
-                                  <div className="inline-flex items-center gap-1.5">
-                                    {!isVerified && (
-                                      <button
-                                        onClick={() => setModal({ kind: "verify_student_email", student: s })}
-                                        className="rounded-lg bg-emerald-950/80 border border-emerald-700/90 px-2.5 py-1 text-xs font-bold text-emerald-300 hover:bg-emerald-900/80 transition shadow-sm"
-                                        title="Verify Student Email"
-                                      >
-                                        Verify Email
-                                      </button>
-                                    )}
+
+                                {/* REGISTERED */}
+                                <td className="py-3.5 pr-4 text-slate-400 text-xs whitespace-nowrap">
+                                  {formatDate(s.created_at)}
+                                </td>
+
+                                {/* ACTIONS */}
+                                <td className="py-3.5 text-right">
+                                  <div
+                                    className="inline-flex items-center justify-end gap-2 relative"
+                                    data-action-menu={s.user_id}
+                                  >
                                     <button
+                                      type="button"
                                       onClick={async () => {
                                         await adminApi.updateProfile(
                                           s.user_id,
@@ -971,28 +1040,77 @@ export function SuperAdminDashboard() {
                                         );
                                         await loadData();
                                       }}
-                                      className="rounded-lg bg-slate-800 px-2 py-1 text-xs font-bold text-slate-300 hover:bg-slate-700 transition"
+                                      className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition shadow-xs ${
+                                        isActive
+                                          ? "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+                                          : "bg-emerald-950/80 text-emerald-300 border border-emerald-700/80 hover:bg-emerald-900/80"
+                                      }`}
                                     >
-                                      {s.status === "active" ? "Deactivate" : "Activate"}
+                                      {isActive ? "Deactivate" : "Activate"}
                                     </button>
-                                    <button
-                                      onClick={() => setModal({ kind: "grant_access", initialUserId: s.user_id })}
-                                      className="rounded-lg bg-indigo-950/60 border border-indigo-800/70 px-2 py-1 text-xs font-bold text-indigo-300 hover:bg-indigo-900/50 transition"
-                                      title="Grant Bundle Access"
-                                    >
-                                      + Bundle
-                                    </button>
-                                    <button
-                                      onClick={async () => {
-                                        if (confirm(`Send password reset email to ${s.email}?`)) {
-                                          await adminApi.resetPassword(s.email);
-                                          toast.success("Password reset email sent successfully.");
-                                        }
-                                      }}
-                                      className="rounded-lg bg-slate-800 px-2 py-1 text-xs font-bold text-indigo-400 hover:bg-indigo-950/50 transition"
-                                    >
-                                      Reset PW
-                                    </button>
+
+                                    <div className="relative">
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setActionMenuStudentId(isMenuOpen ? null : s.user_id);
+                                        }}
+                                        className="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800 px-2 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-750 hover:text-white transition"
+                                        title="More actions"
+                                      >
+                                        <MoreVertical className="h-3.5 w-3.5" />
+                                        <span>More</span>
+                                      </button>
+
+                                      {isMenuOpen && (
+                                        <div
+                                          className="absolute right-0 top-full mt-1.5 w-44 rounded-xl border border-slate-700 bg-slate-900 py-1.5 shadow-2xl z-30 text-left"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setActionMenuStudentId(null);
+                                              setModal({ kind: "grant_access", initialUserId: s.user_id });
+                                            }}
+                                            className="flex w-full items-center gap-2 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 transition"
+                                          >
+                                            <Package className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                                            <span>Manage Bundles</span>
+                                          </button>
+
+                                          <button
+                                            type="button"
+                                            onClick={async () => {
+                                              setActionMenuStudentId(null);
+                                              if (confirm(`Send password reset email to ${s.email}?`)) {
+                                                await adminApi.resetPassword(s.email);
+                                                toast.success("Password reset email sent successfully.");
+                                              }
+                                            }}
+                                            className="flex w-full items-center gap-2 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 transition"
+                                          >
+                                            <KeyRound className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                                            <span>Reset Password</span>
+                                          </button>
+
+                                          {!isVerified && (
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setActionMenuStudentId(null);
+                                                setModal({ kind: "verify_student_email", student: s });
+                                              }}
+                                              className="flex w-full items-center gap-2 px-3 py-2 text-xs font-semibold text-emerald-300 hover:bg-slate-800 transition border-t border-slate-800/80"
+                                            >
+                                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                                              <span>Verify Email</span>
+                                            </button>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 </td>
                               </tr>
