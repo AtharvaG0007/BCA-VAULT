@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "../auth/AuthContext";
+import { StudentProfileSkeleton } from "./StudentSkeletons";
 
 interface PaymentRecord {
   id: string;
