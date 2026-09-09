@@ -74,9 +74,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           if (createError || !authData?.user) throw createError ?? new Error("Unable to create student account.");
           userId = authData.user.id;
         } else {
+          const appBase = process.env.APP_URL || "https://bca-vault.portalbcavault.workers.dev";
           const { data, error } = await client.auth.admin.inviteUserByEmail(email, {
             data: { full_name: fullName },
-            redirectTo: process.env.APP_URL ? `${process.env.APP_URL}/auth/update-password` : undefined,
+            redirectTo: `${appBase.replace(/\/$/, "")}/auth/update-password`,
           });
           if (error || !data.user) throw error ?? new Error("Unable to create student account.");
           userId = data.user.id;

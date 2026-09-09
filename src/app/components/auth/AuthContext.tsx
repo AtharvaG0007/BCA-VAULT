@@ -233,10 +233,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const name = fullName.trim();
       const cleanEmail = email.trim().toLowerCase();
 
+      const origin = typeof window !== "undefined" && window.location?.origin
+        ? window.location.origin
+        : "https://bca-vault.portalbcavault.workers.dev";
+
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password,
         options: {
+          emailRedirectTo: `${origin}/dashboard`,
           data: {
             full_name: name,
             course: crs,
@@ -292,10 +297,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signInWithGoogle() {
+    const origin = typeof window !== "undefined" && window.location?.origin
+      ? window.location.origin
+      : "https://bca-vault.portalbcavault.workers.dev";
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${origin}/dashboard`,
       },
     });
     if (error) throw error;
@@ -308,8 +316,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function resetPassword(email: string) {
+    const origin = typeof window !== "undefined" && window.location?.origin
+      ? window.location.origin
+      : "https://bca-vault.portalbcavault.workers.dev";
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
-      redirectTo: `${window.location.origin}/auth/update-password`,
+      redirectTo: `${origin}/auth/update-password`,
     });
     if (error) throw error;
   }

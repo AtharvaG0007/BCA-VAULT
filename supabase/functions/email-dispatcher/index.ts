@@ -37,7 +37,6 @@ function corsHeaders(req: Request) {
   const origin = req.headers.get("Origin") || "";
   const allowed =
     origin.endsWith(".workers.dev") ||
-    origin.endsWith(".vercel.app") ||
     origin.endsWith(".figma.site") ||
     /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
   return {

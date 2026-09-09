@@ -51,8 +51,7 @@ export default defineConfig({
     ],
   },
 
-  // Proxy /api/* to the Vercel dev server when running locally.
-  // Run `vercel dev` (port 3000) alongside `vite` (port 5173) for full local dev.
+  // Proxy /api/* to local backend if running locally.
   server: {
     proxy: {
       '/api': {
