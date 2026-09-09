@@ -823,8 +823,21 @@ Deno.serve(async (request: Request) => {
       });
 
       const rewardByReferralId = new Map<string, any>();
+      const unlockedUserIds = new Set<string>();
       rewardsList.forEach((rw: any) => {
         if (rw.referral_id) rewardByReferralId.set(rw.referral_id, rw);
+        if (rw.status === "unlocked") unlockedUserIds.add(rw.user_id);
+      });
+
+      // Count successful referrals per referrer to evaluate the 3-referral threshold
+      const successfulCountByReferrer = new Map<string, number>();
+      (rawReferrals || []).forEach((r: any) => {
+        if (r.status === "successful" && r.referrer_user_id) {
+          successfulCountByReferrer.set(
+            r.referrer_user_id,
+            (successfulCountByReferrer.get(r.referrer_user_id) || 0) + 1
+          );
+        }
       });
 
       const referralsList = (rawReferrals || []).map((r: any) => {
@@ -832,6 +845,8 @@ Deno.serve(async (request: Request) => {
         const referred = profileMap.get(r.referred_user_id);
         const code = r.referral_identifier || codeMap.get(r.referral_code_id) || (referrer?.full_name ? `${referrer.full_name} DMS` : "—");
         const rw = rewardByReferralId.get(r.id);
+        const referrerSuccessfulCount = successfulCountByReferrer.get(r.referrer_user_id) || 0;
+        const isQualified = referrerSuccessfulCount >= 3;
 
         return {
           id: r.id,
@@ -845,7 +860,7 @@ Deno.serve(async (request: Request) => {
           status: r.status,
           created_at: r.created_at,
           successful_at: r.successful_at,
-          reward_status: rw?.status || (r.status === "successful" ? "unlocked" : "locked"),
+          reward_status: (rw?.status === "unlocked" || isQualified) && referrerSuccessfulCount >= 3 ? "unlocked" : "locked",
           reward_type: rw?.reward_type || "Most Repeated Questions",
         };
       });
@@ -853,7 +868,7 @@ Deno.serve(async (request: Request) => {
       const totalReferrals = referralsList.length;
       const pendingReferrals = referralsList.filter((x: any) => x.status === "pending").length;
       const successfulReferrals = referralsList.filter((x: any) => x.status === "successful").length;
-      const rewardsUnlocked = rewardsList.filter((x: any) => x.status === "unlocked").length;
+      const rewardsUnlocked = Array.from(unlockedUserIds).filter((uid) => (successfulCountByReferrer.get(uid) || 0) >= 3).length;
 
       return respond(
         {

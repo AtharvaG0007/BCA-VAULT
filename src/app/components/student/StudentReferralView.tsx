@@ -7,10 +7,10 @@ import {
   Sparkles,
   FileText,
   Flame,
-  Download,
   AlertCircle,
   Loader2,
   Copy,
+  Lock,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "../auth/AuthContext";
@@ -40,6 +40,8 @@ interface NoteItem {
   storage_path: string;
   priority?: string | null;
 }
+
+const REQUIRED_REFERRALS = 3;
 
 export function StudentReferralView({
   onOpenNote,
@@ -94,8 +96,8 @@ export function StudentReferralView({
       description: "Curated high-frequency exam questions for Foundation of Computing.",
     },
     "20af0ae2-66e3-46cb-bbc2-4ae8e12f0500": {
-      title: "Client-Side Web Technologies — Most Repeated Questions",
-      subject: "Client-Side Web Technologies",
+      title: "HTML + CSS + JavaScript — Most Repeated Questions",
+      subject: "HTML + CSS + JavaScript",
       description: "Curated high-frequency exam questions for Client-Side Web Technologies (HTML, CSS, JS).",
     },
   };
@@ -137,7 +139,7 @@ export function StudentReferralView({
           .in("id", REFERRAL_REWARD_NOTE_IDS);
 
         if (notesData) {
-          // Order them logically: C Programming, Foundation of Computing, Client-Side Web Technologies
+          // Order them logically: C Programming, Foundation of Computing, HTML + CSS + JavaScript
           const ordered = REFERRAL_REWARD_NOTE_IDS.map((id) => {
             const raw = notesData.find((n) => n.id === id);
             if (!raw) return null;
@@ -162,9 +164,18 @@ export function StudentReferralView({
     void fetchReferralData();
   }, [user]);
 
-  const isRewardUnlocked = reward?.status === "unlocked";
-  const pendingCount = referrals.filter((r) => r.status === "pending").length;
   const successfulCount = referrals.filter((r) => r.status === "successful").length;
+  const pendingCount = referrals.filter((r) => r.status === "pending").length;
+  const displayCount = Math.min(successfulCount, REQUIRED_REFERRALS);
+  const isRewardUnlocked = Boolean(reward?.status === "unlocked" && successfulCount >= REQUIRED_REFERRALS);
+  const progressPercent = Math.min(100, Math.round((displayCount / REQUIRED_REFERRALS) * 100));
+
+  const getProgressMessage = (count: number) => {
+    if (count === 0) return "Refer 3 students to unlock your reward.";
+    if (count === 1) return "Great start! 2 more successful referrals to unlock your reward.";
+    if (count === 2) return "You're almost there! 1 more successful referral to unlock your reward.";
+    return "🎉 You've unlocked your reward!";
+  };
 
   if (loading) {
     return <StudentReferralSkeleton />;
@@ -173,16 +184,16 @@ export function StudentReferralView({
   return (
     <div className="mx-auto max-w-5xl w-full px-4 py-8 sm:px-6 space-y-8">
       {/* Header */}
-      <header className="space-y-1">
+      <header className="space-y-1.5">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200/60 text-indigo-700 text-xs font-bold uppercase tracking-wider">
           <Gift className="w-3.5 h-3.5 text-indigo-600" />
-          Student Referral Program
+          🎁 Referral Reward
         </div>
         <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-          Refer a Friend & Earn Free Study Resources
+          Refer 3 friends. Unlock Most Repeated Questions FREE.
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 max-w-2xl leading-relaxed">
-          Invite friends to BCA Vault. When your referred student completes an eligible BCA Semester 1 purchase and their payment is verified, your <strong className="text-slate-900 font-semibold">Most Repeated Questions</strong> reward is unlocked automatically.
+        <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
+          Refer 3 friends who successfully purchase the Semester 1 Bundle and unlock the Semester 1 Most Repeated Questions Pack — FREE.
         </p>
       </header>
 
@@ -198,7 +209,7 @@ export function StudentReferralView({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="space-y-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Student Identifier
+              Your Referral Identifier
             </span>
             <div className="flex flex-wrap items-center gap-3">
               <div className="bg-slate-50 border-2 border-indigo-100 rounded-2xl px-5 py-3 font-mono text-2xl sm:text-3xl font-black text-indigo-700 tracking-tight shadow-inner">
@@ -210,19 +221,106 @@ export function StudentReferralView({
                 className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-3 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 transition"
               >
                 {copied ? <CheckCircle2 className="h-4 w-4 text-emerald-300" /> : <Copy className="h-4 w-4" />}
-                {copied ? "Copied ✓" : "Copy"}
+                {copied ? "Copied ✓" : "Copy Identifier"}
               </button>
             </div>
             <p className="text-[11px] text-slate-500">
-              Your referral rewards and progress are linked to your BCA Vault account.
+              Have your friends enter <strong className="text-slate-700">{studentDms}</strong> during Semester 1 purchase checkout.
             </p>
           </div>
 
           <div className="flex items-center gap-2 self-start sm:self-center bg-indigo-50/70 border border-indigo-100 rounded-2xl px-4 py-3 text-xs text-indigo-800">
             <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
-            <span className="font-semibold">Rewards activate on qualifying Semester 1 referral</span>
+            <span className="font-semibold">Requires 3 approved Semester 1 purchases</span>
           </div>
         </div>
+      </section>
+
+      {/* ── Progress UI Card ──────────────────────── */}
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              Referral Qualification Progress
+            </span>
+            <div className="flex items-center gap-3 mt-1">
+              <h2 className="text-2xl font-black text-slate-900" style={{ fontFamily: "var(--font-mono)" }}>
+                {displayCount} / {REQUIRED_REFERRALS} Successful Referrals
+              </h2>
+              {isRewardUnlocked ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800 border border-emerald-200">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> 🎉 Reward Unlocked!
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600 border border-slate-200">
+                  <Lock className="w-3 h-3 text-slate-500" /> Locked ({displayCount}/3)
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="text-xs sm:text-sm font-bold text-indigo-700 bg-indigo-50 px-4 py-2 rounded-2xl border border-indigo-100/80 self-start sm:self-auto">
+            {getProgressMessage(displayCount)}
+          </div>
+        </div>
+
+        {/* Clean Progress Bar */}
+        <div className="space-y-2">
+          <div className="h-3.5 w-full bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200/80">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ease-out ${
+                isRewardUnlocked ? "bg-emerald-500" : "bg-indigo-600"
+              }`}
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+
+          {/* 3 Step Boxes */}
+          <div className="grid grid-cols-3 gap-3 pt-1">
+            <div
+              className={`p-3 rounded-2xl border text-center transition ${
+                displayCount >= 1
+                  ? "bg-indigo-50/70 border-indigo-200 text-indigo-900"
+                  : "bg-slate-50/70 border-slate-200/70 text-slate-400"
+              }`}
+            >
+              <div className="text-[10px] uppercase font-bold tracking-wider opacity-70">Referral 1</div>
+              <div className="text-xs font-bold mt-0.5">
+                {displayCount >= 1 ? "✓ 1st Approved" : "Pending"}
+              </div>
+            </div>
+
+            <div
+              className={`p-3 rounded-2xl border text-center transition ${
+                displayCount >= 2
+                  ? "bg-indigo-50/70 border-indigo-200 text-indigo-900"
+                  : "bg-slate-50/70 border-slate-200/70 text-slate-400"
+              }`}
+            >
+              <div className="text-[10px] uppercase font-bold tracking-wider opacity-70">Referral 2</div>
+              <div className="text-xs font-bold mt-0.5">
+                {displayCount >= 2 ? "✓ 2nd Approved" : "Pending"}
+              </div>
+            </div>
+
+            <div
+              className={`p-3 rounded-2xl border text-center transition ${
+                displayCount >= 3
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-900"
+                  : "bg-slate-50/70 border-slate-200/70 text-slate-400"
+              }`}
+            >
+              <div className="text-[10px] uppercase font-bold tracking-wider opacity-70">Referral 3</div>
+              <div className="text-xs font-bold mt-0.5">
+                {displayCount >= 3 ? "🎉 Reward Unlocks!" : "Reward Unlocks"}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-[11px] text-slate-500">
+          Your reward unlocks after 3 successful referrals — when the referred students complete an approved Semester 1 purchase.
+        </p>
       </section>
 
       {/* ── How Referral Works (5-Step Explanation) ───────────── */}
@@ -232,10 +330,10 @@ export function StudentReferralView({
             Clear Referral Workflow
           </span>
           <h2 className="text-lg font-black text-slate-900 mt-0.5">
-            How the Referral Program Works
+            How the 3-Referral Program Works
           </h2>
           <p className="text-xs text-slate-500">
-            Rewards unlock automatically once your referred student&apos;s Semester 1 purchase is verified by admin.
+            A referral counts only when your friend purchases Semester 1 and payment is approved by admin.
           </p>
         </div>
 
@@ -245,7 +343,7 @@ export function StudentReferralView({
               <span className="text-[10px] font-black uppercase text-indigo-600 tracking-wider">Step 1</span>
               <h3 className="text-xs font-bold text-slate-900 mt-1 mb-1">Share Identifier</h3>
               <p className="text-[11px] text-slate-500 leading-relaxed">
-                Share your Student DMS identifier (<strong className="text-slate-700">{studentDms}</strong>) with your friends.
+                Share your Student DMS identifier (<strong className="text-slate-700">{studentDms}</strong>) with friends.
               </p>
             </div>
           </div>
@@ -253,9 +351,9 @@ export function StudentReferralView({
           <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between">
             <div>
               <span className="text-[10px] font-black uppercase text-indigo-600 tracking-wider">Step 2</span>
-              <h3 className="text-xs font-bold text-slate-900 mt-1 mb-1">Friend Enters Code</h3>
+              <h3 className="text-xs font-bold text-slate-900 mt-1 mb-1">Enter Code</h3>
               <p className="text-[11px] text-slate-500 leading-relaxed">
-                Your friend enters your identifier in the &quot;Have a Referral Code?&quot; section during payment.
+                Your friend enters your identifier in &quot;Have a Referral Code?&quot; during checkout.
               </p>
             </div>
           </div>
@@ -265,7 +363,7 @@ export function StudentReferralView({
               <span className="text-[10px] font-black uppercase text-indigo-600 tracking-wider">Step 3</span>
               <h3 className="text-xs font-bold text-slate-900 mt-1 mb-1">Semester 1 Purchase</h3>
               <p className="text-[11px] text-slate-500 leading-relaxed">
-                Your friend completes an eligible BCA Semester 1 purchase and submits payment evidence.
+                Friend submits an eligible BCA Semester 1 purchase and payment screenshot.
               </p>
             </div>
           </div>
@@ -273,9 +371,9 @@ export function StudentReferralView({
           <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between">
             <div>
               <span className="text-[10px] font-black uppercase text-indigo-600 tracking-wider">Step 4</span>
-              <h3 className="text-xs font-bold text-slate-900 mt-1 mb-1">Admin Approval</h3>
+              <h3 className="text-xs font-bold text-slate-900 mt-1 mb-1">Payment Approved</h3>
               <p className="text-[11px] text-slate-500 leading-relaxed">
-                Admin verifies the payment evidence and approves your friend&apos;s Semester 1 access.
+                Admin approves the payment in Payment CRM. Referral status becomes Successful (+1).
               </p>
             </div>
           </div>
@@ -283,9 +381,9 @@ export function StudentReferralView({
           <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between">
             <div>
               <span className="text-[10px] font-black uppercase text-emerald-600 tracking-wider">Step 5</span>
-              <h3 className="text-xs font-bold text-slate-900 mt-1 mb-1">Reward Unlocks</h3>
+              <h3 className="text-xs font-bold text-slate-900 mt-1 mb-1">Reward at 3/3</h3>
               <p className="text-[11px] text-slate-500 leading-relaxed">
-                Your referral becomes successful and your Most Repeated Questions reward unlocks automatically.
+                After 3 successful referrals, your Most Repeated Questions pack unlocks FREE!
               </p>
             </div>
           </div>
@@ -302,7 +400,7 @@ export function StudentReferralView({
           <p className="text-2xl font-black text-slate-900" style={{ fontFamily: "var(--font-mono)" }}>
             {referrals.length}
           </p>
-          <p className="text-[11px] text-slate-400 mt-1">Referred students</p>
+          <p className="text-[11px] text-slate-400 mt-1">Referred students total</p>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
@@ -313,7 +411,7 @@ export function StudentReferralView({
           <p className="text-2xl font-black text-amber-700" style={{ fontFamily: "var(--font-mono)" }}>
             {pendingCount}
           </p>
-          <p className="text-[11px] text-slate-400 mt-1">Pending payment verification</p>
+          <p className="text-[11px] text-slate-400 mt-1">Pending admin payment review</p>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
@@ -322,13 +420,13 @@ export function StudentReferralView({
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
           </div>
           <p className="text-2xl font-black text-emerald-700" style={{ fontFamily: "var(--font-mono)" }}>
-            {successfulCount}
+            {successfulCount} <span className="text-sm font-semibold text-slate-400">({displayCount}/3 toward reward)</span>
           </p>
           <p className="text-[11px] text-slate-400 mt-1">Eligible payments approved</p>
         </div>
       </section>
 
-      {/* ── Reward Section (Most Repeated Questions) ────────────────── */}
+      {/* ── Reward Section (Semester 1 Most Repeated Questions) ────────────────── */}
       <section
         className={`rounded-3xl border p-6 sm:p-8 transition-all ${
           isRewardUnlocked
@@ -344,37 +442,41 @@ export function StudentReferralView({
                   isRewardUnlocked ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-400"
                 }`}
               >
-                <Flame className="w-4 h-4" />
+                {isRewardUnlocked ? <Flame className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
               </div>
               <h2 className="text-lg font-black text-slate-900">
-                Reward: Most Repeated Questions
+                {isRewardUnlocked ? "🎉 Reward Unlocked!" : "🔒 Most Repeated Questions"}
               </h2>
             </div>
             <p className="text-xs text-slate-500">
-              High-frequency exam questions across C Programming, Foundation of Computing, and Client-Side Web Technologies.
+              {isRewardUnlocked
+                ? "3 / 3 Successful Referrals — Your reward contains high-frequency exam questions for Semester 1."
+                : "Unlock after 3 successful referrals. Currently: " + displayCount + " / 3 Successful Referrals."}
             </p>
           </div>
 
           <div>
             {isRewardUnlocked ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800 border border-emerald-200">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Unlocked & Active
-              </span>
-            ) : successfulCount > 0 ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800 border border-emerald-200">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Successful
-              </span>
-            ) : pendingCount > 0 ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 border border-amber-200">
-                <Clock className="w-3.5 h-3.5 text-amber-600" /> Pending Verification
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3.5 py-1 text-xs font-bold text-emerald-800 border border-emerald-200">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Reward Unlocked (3/3)
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600 border border-slate-200">
-                Locked
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3.5 py-1 text-xs font-bold text-slate-600 border border-slate-200">
+                <Lock className="w-3.5 h-3.5 text-slate-500" /> Locked ({displayCount} / 3)
               </span>
             )}
           </div>
         </div>
+
+        {/* Subjects Included Breakdown */}
+        {isRewardUnlocked && (
+          <div className="mb-6 p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 flex flex-wrap items-center gap-4 text-xs font-bold text-emerald-900">
+            <span className="text-[11px] uppercase tracking-wider text-emerald-700">Included in your reward:</span>
+            <span className="inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> C Programming</span>
+            <span className="inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Foundation of Computing</span>
+            <span className="inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> HTML + CSS + JavaScript</span>
+          </div>
+        )}
 
         {/* Resources list */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -411,17 +513,22 @@ export function StudentReferralView({
                     >
                       {openingId === note.id ? (
                         <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Opening PDF…
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Opening Reward…
                         </>
                       ) : (
                         <>
-                          <FileText className="w-3.5 h-3.5" /> View PDF
+                          <FileText className="w-3.5 h-3.5" /> Open Reward
                         </>
                       )}
                     </button>
                   ) : (
-                    <div className="text-center py-1.5 text-[11px] font-semibold text-slate-400 bg-slate-50 rounded-xl">
-                      Unlocks after verified referral
+                    <div className="flex flex-col items-center justify-center py-2 px-3 text-[11px] font-semibold text-slate-400 bg-slate-50 rounded-xl border border-slate-150 gap-1 text-center">
+                      <div className="inline-flex items-center gap-1 font-bold text-slate-500">
+                        <Lock className="w-3 h-3" /> Locked ({displayCount}/3)
+                      </div>
+                      <span className="text-[10px] text-slate-400">
+                        Unlock after 3 successful referrals
+                      </span>
                     </div>
                   )}
                 </div>
@@ -440,7 +547,9 @@ export function StudentReferralView({
         <div className="flex items-center justify-between mb-5 pb-4 border-b border-slate-100">
           <div>
             <h2 className="text-base font-bold text-slate-900">Referral Activity History</h2>
-            <p className="text-xs text-slate-500">Live status of your referred purchases</p>
+            <p className="text-xs text-slate-500">
+              Progress: <strong className="text-slate-800">{displayCount} / {REQUIRED_REFERRALS} Successful Referrals</strong>
+            </p>
           </div>
           <span className="text-xs font-semibold text-slate-400">
             {referrals.length} {referrals.length === 1 ? "record" : "records"}
@@ -452,7 +561,7 @@ export function StudentReferralView({
             <Gift className="mx-auto h-8 w-8 text-slate-300" />
             <p className="mt-2 text-xs font-bold text-slate-700">No referrals yet</p>
             <p className="mt-1 text-[11px] text-slate-400 max-w-sm mx-auto">
-              Invite friends preparing for BCA Semester 1 to get started.
+              Share your identifier with friends preparing for BCA Semester 1.
             </p>
           </div>
         ) : (
@@ -461,9 +570,9 @@ export function StudentReferralView({
               <thead>
                 <tr className="border-b border-slate-100 text-slate-400 uppercase tracking-wider font-semibold text-[10px]">
                   <th className="pb-3 pl-2">Referral Entry</th>
-                  <th className="pb-3">Status</th>
+                  <th className="pb-3">Payment Status</th>
                   <th className="pb-3">Date</th>
-                  <th className="pb-3 pr-2 text-right">Reward Status</th>
+                  <th className="pb-3 pr-2 text-right">Counter Contribution</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -475,11 +584,11 @@ export function StudentReferralView({
                     <td className="py-3.5">
                       {item.status === "successful" ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200">
-                          <CheckCircle2 className="w-3 h-3" /> Successful
+                          <CheckCircle2 className="w-3 h-3" /> Payment Approved (✓ Successful)
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 border border-amber-200">
-                          <Clock className="w-3 h-3" /> Pending Review
+                          <Clock className="w-3 h-3" /> Payment Pending (⏳ Pending)
                         </span>
                       )}
                     </td>
@@ -488,12 +597,13 @@ export function StudentReferralView({
                     </td>
                     <td className="py-3.5 pr-2 text-right">
                       {item.status === "successful" ? (
-                        <span className="text-emerald-700 font-bold text-[11px]">
-                          Reward Unlocked
+                        <span className="text-emerald-700 font-bold text-[11px] inline-flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" />
+                          {isRewardUnlocked ? "Reward Unlocked (3/3)" : "Counted (+1 toward 3/3)"}
                         </span>
                       ) : (
                         <span className="text-slate-400 font-medium text-[11px]">
-                          Awaiting Payment Verification
+                          Pending Approval (Does not count yet)
                         </span>
                       )}
                     </td>

@@ -159,16 +159,29 @@ export const adminApi = {
         .range(0, 99),
     ]);
 
-    const referrals = (refsRes.data || []).map((r: any) => ({
-      ...r,
-      referral_code: r.referral_identifier || "Student DMS",
-      referrer_name: "Referrer",
-      referrer_email: "—",
-      referred_name: "Referred Student",
-      referred_email: "—",
-      reward_status: r.status === "successful" ? "unlocked" : "pending",
-      reward_type: "Most Repeated Questions",
-    }));
+    const successfulCountByReferrer = new Map<string, number>();
+    (refsRes.data || []).forEach((r: any) => {
+      if (r.status === "successful" && r.referrer_user_id) {
+        successfulCountByReferrer.set(
+          r.referrer_user_id,
+          (successfulCountByReferrer.get(r.referrer_user_id) || 0) + 1
+        );
+      }
+    });
+
+    const referrals = (refsRes.data || []).map((r: any) => {
+      const sCount = successfulCountByReferrer.get(r.referrer_user_id) || 0;
+      return {
+        ...r,
+        referral_code: r.referral_identifier || "Student DMS",
+        referrer_name: "Referrer",
+        referrer_email: "—",
+        referred_name: "Referred Student",
+        referred_email: "—",
+        reward_status: sCount >= 3 ? "unlocked" : "locked",
+        reward_type: "Most Repeated Questions",
+      };
+    });
 
     const rewards = (rewardsRes.data || []).map((rw: any) => ({
       ...rw,
@@ -183,7 +196,7 @@ export const adminApi = {
           total_referrals: referrals.length,
           pending_referrals: referrals.filter((r) => r.status === "pending").length,
           successful_referrals: referrals.filter((r) => r.status === "successful").length,
-          rewards_unlocked: rewards.filter((rw) => rw.status === "unlocked").length,
+          rewards_unlocked: rewards.filter((rw) => rw.status === "unlocked" && (successfulCountByReferrer.get(rw.user_id) || 0) >= 3).length,
         },
         referrals,
         rewards,

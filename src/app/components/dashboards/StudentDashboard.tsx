@@ -840,7 +840,7 @@ export function StudentDashboard() {
                           Looking for ❓ Most Repeated Questions?
                         </h3>
                         <p className="text-xs text-slate-500 mt-0.5">
-                          Most Repeated Questions are an exclusive bonus unlocked through the Student Referral Program.
+                          Refer 3 friends who purchase Semester 1 to unlock the Most Repeated Questions Pack — FREE.
                         </p>
                       </div>
                     </div>
@@ -848,7 +848,7 @@ export function StudentDashboard() {
                       onClick={() => switchTab("referral")}
                       className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-indigo-200 bg-white px-4 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-50 transition shadow-2xs shrink-0 self-start sm:self-auto"
                     >
-                      <span>View Referral Rewards</span>
+                      <span>Refer 3 Friends</span>
                       <ChevronRight className="h-3.5 w-3.5" />
                     </button>
                   </div>

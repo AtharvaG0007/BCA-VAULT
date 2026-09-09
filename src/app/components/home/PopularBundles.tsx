@@ -145,7 +145,7 @@ export function PopularBundles() {
               <span>Study Together. Earn More.</span>
             </div>
             <p className="text-xs text-slate-700 leading-relaxed max-w-md">
-              Refer a friend and unlock <strong className="text-slate-900 font-semibold">Most Repeated Questions</strong> after their eligible purchase is verified.
+              Refer 3 friends. Unlock <strong className="text-slate-900 font-semibold">Most Repeated Questions</strong> FREE after their eligible Semester 1 purchases are approved.
             </p>
           </div>
           <Button
@@ -154,7 +154,7 @@ export function PopularBundles() {
             onClick={() => navigate("/referral")}
             className="shrink-0 bg-white border-blue-200 text-[#1E40AF] hover:bg-blue-50 text-xs font-bold rounded-xl shadow-xs"
           >
-            Refer a Friend
+            Refer 3 Friends
           </Button>
         </div>
       </div>

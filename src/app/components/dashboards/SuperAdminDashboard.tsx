@@ -1625,8 +1625,14 @@ export function SuperAdminDashboard() {
                           <span className="text-[10px] font-bold text-amber-400">Step 3</span>
                         </div>
                         <p className="font-bold text-white text-xs truncate">{modal.item.referrer_name}</p>
-                        <p className="text-[10px] text-emerald-400 font-semibold">
-                          {modal.item.status === "successful" ? "✓ Unlocked" : "⏳ Pending Approval"}
+                        <p className="text-[10px] font-semibold">
+                          {modal.item.reward_status === "unlocked" ? (
+                            <span className="text-emerald-400">✓ Unlocked (3/3)</span>
+                          ) : modal.item.status === "successful" ? (
+                            <span className="text-indigo-300">✓ Counted (Toward 3/3)</span>
+                          ) : (
+                            <span className="text-amber-400">⏳ Pending Approval</span>
+                          )}
                         </p>
                       </div>
                     </div>
@@ -1656,25 +1662,35 @@ export function SuperAdminDashboard() {
                     </div>
                     <div>
                       <p className="text-slate-500 font-semibold">Reward Designation</p>
-                      <p className="font-semibold text-indigo-300 mt-0.5">Most Repeated Questions</p>
+                      <p className="font-semibold text-indigo-300 mt-0.5">Semester 1 Most Repeated Questions</p>
                     </div>
                     <div>
                       <p className="text-slate-500 font-semibold">Reward Access Status</p>
-                      <p className="font-bold text-emerald-400 mt-0.5 capitalize">
-                        {modal.item.status === "successful" ? "Reward Unlocked" : "Waiting for payment verification"}
+                      <p className="font-bold mt-0.5">
+                        {modal.item.reward_status === "unlocked" ? (
+                          <span className="text-emerald-400">Reward Unlocked (3/3 Referrals)</span>
+                        ) : modal.item.status === "successful" ? (
+                          <span className="text-indigo-300">Successful Referral (Requires 3 for Reward)</span>
+                        ) : (
+                          <span className="text-amber-400">Waiting for payment verification</span>
+                        )}
                       </p>
                     </div>
                   </div>
 
                   {/* Clarification Notice */}
                   <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 text-slate-300 text-[11px] leading-relaxed">
-                    {modal.item.status === "successful" ? (
+                    {modal.item.reward_status === "unlocked" ? (
                       <span className="text-emerald-300">
-                        ✓ This referral is qualified. Student A has active authorization to the three Most Repeated Topics PDFs (Foundation of Computing, C Programming, HTML+CSS+JavaScript).
+                        ✓ 3 successful referrals reached. Referrer has active authorization to the three Semester 1 Most Repeated Questions PDFs (C Programming, Foundation of Computing, HTML + CSS + JavaScript).
+                      </span>
+                    ) : modal.item.status === "successful" ? (
+                      <span className="text-indigo-300">
+                        ✓ This referral is successful (payment approved). It contributes toward the 3 successful referrals required to unlock the Semester 1 Most Repeated Questions pack.
                       </span>
                     ) : (
                       <span className="text-amber-300">
-                        ⏳ Waiting for eligible payment verification. Once an admin verifies Student B's eligible Semester 1 payment in Payment CRM, this referral will automatically qualify.
+                        ⏳ Waiting for eligible payment verification. Once an admin approves Student B's eligible Semester 1 payment in Payment CRM, this referral will become successful.
                       </span>
                     )}
                   </div>

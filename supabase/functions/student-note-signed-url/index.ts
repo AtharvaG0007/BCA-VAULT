@@ -209,16 +209,28 @@ Deno.serve(async (request: Request) => {
 
     if (isReferralQuestionResource) {
       // 4A. Exclusive Referral Reward Authorization
-      const { data: rewardAccess } = await admin
-        .from("referral_rewards")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("reward_type", "most_repeated_questions")
-        .eq("status", "unlocked")
-        .maybeSingle();
+      // Backend / Security rule: Reward unlocks ONLY when successful referral count >= 3
+      // and verified in referral_rewards.
+      const { count: successfulReferralsCount, error: countErr } = await admin
+        .from("referrals")
+        .select("id", { count: "exact", head: true })
+        .eq("referrer_user_id", userId)
+        .eq("status", "successful");
 
-      if (rewardAccess) {
-        hasAccess = true;
+      const hasRequiredReferrals = !countErr && (successfulReferralsCount ?? 0) >= 3;
+
+      if (hasRequiredReferrals) {
+        const { data: rewardAccess } = await admin
+          .from("referral_rewards")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("reward_type", "most_repeated_questions")
+          .eq("status", "unlocked")
+          .maybeSingle();
+
+        if (rewardAccess) {
+          hasAccess = true;
+        }
       }
 
       if (!hasAccess) {

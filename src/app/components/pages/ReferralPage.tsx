@@ -66,11 +66,11 @@ export function ReferralPage() {
               className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.1] mb-6"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              Refer a Friend. <span className="text-[#1E40AF]">Unlock More.</span>
+              Refer 3 friends. <span className="text-[#1E40AF]">Unlock Most Repeated Questions FREE.</span>
             </h1>
 
             <p className="text-base sm:text-lg lg:text-xl text-slate-600 max-w-2xl mx-auto mb-8 leading-relaxed">
-              Share your BCA Vault referral code with a friend. When your friend purchases an eligible BCA Semester 1 bundle and their payment is verified, you unlock our <strong className="text-slate-900 font-semibold">Most Repeated Questions</strong> resources for free.
+              Your reward unlocks after 3 successful referrals — when the referred students complete an approved Semester 1 purchase.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -93,7 +93,7 @@ export function ReferralPage() {
             </div>
 
             <p className="text-[11px] text-slate-600 mt-4">
-              * Reward unlocks strictly for the referrer after eligible Semester 1 payment verification.
+              * Reward unlocks strictly after 3 successful Semester 1 referral payment approvals.
             </p>
           </motion.div>
         </div>
@@ -153,9 +153,9 @@ export function ReferralPage() {
                     <Users className="w-5 h-5" />
                   </div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Your Friend Purchases</h3>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Friends Purchase</h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Your friend submits an eligible BCA Semester 1 purchase and enters your referral identifier during checkout. Their payment enters review.
+                  Your friends enter your student referral identifier during checkout when purchasing the BCA Semester 1 bundle.
                 </p>
               </div>
               <div className="mt-6 pt-4 border-t border-slate-200/60 text-[11px] text-slate-500 font-medium">
@@ -177,9 +177,9 @@ export function ReferralPage() {
                     <CheckCircle2 className="w-5 h-5" />
                   </div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Your Reward Unlocks</h3>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">3 Referrals Unlocks Reward</h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  As soon as our admin team verifies and approves your friend's payment, your referral qualifies and the 3 Most Repeated Questions PDFs unlock automatically.
+                  Once 3 friends have their Semester 1 purchase verified and approved by admin, your Semester 1 Most Repeated Questions pack unlocks automatically!
                 </p>
               </div>
               <div className="mt-6 pt-4 border-t border-slate-200/60 text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
@@ -202,10 +202,10 @@ export function ReferralPage() {
               className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-3"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              Most Repeated Questions
+              Semester 1 Most Repeated Questions
             </h2>
             <p className="text-slate-600 text-sm sm:text-base">
-              Once your friend's eligible payment is successfully verified, these three high-yield revision resources are unlocked for you:
+              Once you complete 3 successful referrals with approved Semester 1 purchases, these three high-yield revision resources are unlocked:
             </p>
           </div>
 
@@ -235,7 +235,7 @@ export function ReferralPage() {
 
                 <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-[11px] font-semibold text-emerald-700">
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  <span>Unlocked upon payment approval</span>
+                  <span>Unlocked after 3 approved referrals</span>
                 </div>
               </div>
             ))}
@@ -316,11 +316,11 @@ export function ReferralPage() {
               className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight mb-4 text-white"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              Have a Friend Preparing for BCA?
+              Have Friends Preparing for BCA?
             </h2>
 
             <p className="text-base sm:text-lg text-blue-100 max-w-xl mx-auto mb-8 leading-relaxed">
-              Share your referral code and start your journey toward unlocking Most Repeated Questions for free.
+              Refer 3 friends. Unlock Most Repeated Questions FREE when they complete an approved Semester 1 purchase.
             </p>
 
             <Button
