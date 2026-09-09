@@ -150,18 +150,18 @@ export function PaymentPage() {
   return (
     <main className="min-h-screen bg-[#f7f8fc]">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-slate-950 pb-24 pt-16 text-white sm:pt-20">
+      <section className="relative overflow-hidden bg-slate-950 pb-16 pt-12 text-white sm:pb-24 sm:pt-20">
         <div className="absolute inset-0 opacity-50 [background-image:radial-gradient(circle_at_20%_20%,rgba(79,70,229,0.45),transparent_28%),radial-gradient(circle_at_78%_4%,rgba(16,185,129,0.2),transparent_24%)]" />
-        <div className="relative mx-auto max-w-6xl px-5 sm:px-8">
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-950/60 px-3 py-1 text-xs font-semibold text-indigo-300 backdrop-blur-sm">
               <Sparkles className="h-3.5 w-3.5 text-amber-400" />
               <span>Official BVDU Student Edition</span>
             </div>
-            <h1 className="mt-4 text-4xl font-bold tracking-[-0.025em] sm:text-5xl">
+            <h1 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl leading-tight">
               Complete your BCA Vault payment.
             </h1>
-            <p className="mt-4 max-w-xl text-base leading-7 text-slate-300">
+            <p className="mt-3 max-w-xl text-xs sm:text-base leading-relaxed text-slate-300">
               Pay via UPI, then submit your payment evidence for manual administrative verification.
             </p>
           </div>
@@ -169,15 +169,15 @@ export function PaymentPage() {
       </section>
 
       {/* Marketing Urgency Countdown Banner */}
-      <div className="sticky top-0 z-30 border-b border-indigo-200/80 bg-gradient-to-r from-indigo-900 via-indigo-800 to-blue-900 px-4 py-2.5 text-white shadow-md">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 text-xs sm:text-sm">
-          <div className="flex items-center gap-2 font-medium">
-            <Timer className="h-4 w-4 text-amber-400 animate-pulse" />
-            <span>
-              BCA Semester 1 Bundle: Standard price <strong className="text-emerald-300 font-bold">₹499</strong> · Quiz winners use code <strong className="text-amber-300 font-mono tracking-wider">WINNER150</strong> for <strong className="text-amber-300 font-bold">₹349</strong>!
+      <div className="sticky top-0 z-30 border-b border-indigo-200/80 bg-gradient-to-r from-indigo-900 via-indigo-800 to-blue-900 px-3 py-2 text-white shadow-md sm:px-4 sm:py-2.5">
+        <div className="mx-auto flex max-w-6xl flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs sm:text-sm">
+          <div className="flex items-start sm:items-center gap-2 font-medium min-w-0">
+            <Timer className="h-4 w-4 text-amber-400 animate-pulse shrink-0 mt-0.5 sm:mt-0" />
+            <span className="leading-snug">
+              BCA Sem 1: Standard price <strong className="text-emerald-300 font-bold">₹499</strong> · Code <strong className="text-amber-300 font-mono tracking-wider">WINNER150</strong> for <strong className="text-amber-300 font-bold">₹349</strong>!
             </span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto shrink-0 pt-1.5 sm:pt-0 border-t border-white/10 sm:border-t-0">
             <div className="flex items-center gap-1.5 rounded-lg bg-white/15 px-2.5 py-1 font-mono text-xs font-bold text-amber-300 backdrop-blur-sm">
               <span>Offer timer:</span>
               <span className="text-white">{formatTimer(secondsRemaining)}</span>
@@ -185,7 +185,7 @@ export function PaymentPage() {
             {appliedCoupon !== "WINNER150" && (
               <button
                 onClick={() => handleApplyCoupon("WINNER150")}
-                className="rounded-lg bg-amber-400 px-2.5 py-1 text-xs font-bold text-slate-950 hover:bg-amber-300 transition"
+                className="rounded-lg bg-amber-400 px-3 py-1 text-xs font-bold text-slate-950 hover:bg-amber-300 transition shrink-0 cursor-pointer shadow-xs"
               >
                 Apply Winner Price
               </button>
@@ -195,12 +195,12 @@ export function PaymentPage() {
       </div>
 
       {/* Main Payment Section */}
-      <section className="relative mt-8 pb-20">
-        <div className="mx-auto grid max-w-6xl gap-6 px-5 sm:px-8 lg:grid-cols-[0.9fr_1.1fr]">
+      <section className="relative mt-6 sm:mt-8 pb-16 sm:pb-20">
+        <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 lg:px-8 lg:grid-cols-[0.9fr_1.1fr]">
           {/* Bundle Summary Card */}
-          <aside className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5 sm:p-8">
+          <aside className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 lg:p-8 shadow-xl shadow-slate-950/5 w-full min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">Official Curriculum</p>
-            <h2 className="mt-2 text-2xl font-bold tracking-[-0.02em] text-slate-950">
+            <h2 className="mt-1.5 text-xl sm:text-2xl font-bold tracking-tight text-slate-950">
               BCA Semester 1 Bundle
             </h2>
             <p className="mt-1 text-xs text-slate-500">
@@ -208,11 +208,11 @@ export function PaymentPage() {
             </p>
 
             {/* Price Box with Coupon Calculation */}
-            <div className="my-6 border-y border-slate-100 py-5">
+            <div className="my-5 border-y border-slate-100 py-4 sm:py-5">
               <div className="flex items-baseline gap-3">
-                <p className="font-mono text-5xl font-extrabold text-slate-950">₹{currentPrice}</p>
+                <p className="font-mono text-4xl sm:text-5xl font-extrabold text-slate-950">₹{currentPrice}</p>
                 {currentPrice < BASE_PRICE && (
-                  <span className="font-mono text-xl text-slate-400 line-through">₹{BASE_PRICE}</span>
+                  <span className="font-mono text-lg sm:text-xl text-slate-400 line-through">₹{BASE_PRICE}</span>
                 )}
               </div>
               {currentCouponInfo ? (
@@ -221,7 +221,7 @@ export function PaymentPage() {
                   <span>Coupon {appliedCoupon} applied (Saved ₹{currentCouponInfo.discount})</span>
                 </div>
               ) : (
-                <p className="mt-2 text-xs text-slate-500">One-time manual UPI payment</p>
+                <p className="mt-1.5 text-xs text-slate-500">One-time manual UPI payment</p>
               )}
             </div>
 
@@ -354,35 +354,35 @@ export function PaymentPage() {
           </aside>
 
           {/* Payment Steps */}
-          <div className="space-y-6">
+          <div className="space-y-6 w-full min-w-0">
             {/* Step 1: UPI / QR */}
-            <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <article className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 lg:p-8 shadow-sm w-full min-w-0">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">
                     Step 1 · Make payment
                   </p>
-                  <h2 className="mt-1 text-2xl font-bold text-slate-950">UPI / QR Payment</h2>
+                  <h2 className="mt-1 text-xl sm:text-2xl font-bold text-slate-950">UPI / QR Payment</h2>
                 </div>
-                <Smartphone className="h-6 w-6 text-indigo-600" />
+                <Smartphone className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600 shrink-0 mt-0.5" />
               </div>
 
-              <div className="mt-6 grid gap-6 sm:grid-cols-[1fr_156px] sm:items-center">
-                <div>
-                  <p className="text-sm text-slate-600">
-                    Transfer exactly <strong className="font-bold text-slate-950 font-mono text-base">₹{currentPrice}</strong> using any UPI app (GPay, PhonePe, Paytm, BHIM).
+              <div className="mt-5 sm:mt-6 grid gap-6 sm:grid-cols-[1fr_156px] sm:items-center">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                    Transfer exactly <strong className="font-bold text-slate-950 font-mono text-sm sm:text-base">₹{currentPrice}</strong> using any UPI app (GPay, PhonePe, Paytm, BHIM).
                   </p>
-                  <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                  <div className="mt-3.5 sm:mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 sm:p-4 min-w-0">
+                    <div className="min-w-0 max-w-full">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                         Official UPI ID
                       </p>
-                      <p className="mt-1 truncate font-mono text-sm font-bold text-slate-900">{UPI_ID}</p>
+                      <p className="mt-0.5 truncate font-mono text-xs sm:text-sm font-bold text-slate-900">{UPI_ID}</p>
                     </div>
                     <button
                       type="button"
                       onClick={copyUpi}
-                      className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-bold text-indigo-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 transition"
+                      className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-bold text-indigo-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 transition cursor-pointer self-start sm:self-auto"
                     >
                       {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Clipboard className="h-3.5 w-3.5" />}
                       {copied ? "Copied" : "Copy"}
@@ -390,7 +390,7 @@ export function PaymentPage() {
                   </div>
                   <a
                     href={upiUrl}
-                    className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition"
+                    className="mt-3.5 sm:mt-4 inline-flex items-center gap-2 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition"
                   >
                     Open in UPI App <ArrowUpRight className="h-3.5 w-3.5" />
                   </a>
@@ -404,30 +404,30 @@ export function PaymentPage() {
             </article>
 
             {/* Step 2: Evidence Submission */}
-            <article className="rounded-3xl border border-indigo-100 bg-indigo-50/50 p-6 sm:p-8">
+            <article className="rounded-3xl border border-indigo-100 bg-indigo-50/50 p-4 sm:p-6 lg:p-8 w-full min-w-0">
               <div className="flex items-start gap-3">
-                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-600 text-white">
+                <div className="grid h-9 w-9 sm:h-10 sm:w-10 shrink-0 place-items-center rounded-xl bg-indigo-600 text-white">
                   <ShieldCheck className="h-5 w-5" />
                 </div>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">
                     Step 2 · Submit evidence
                   </p>
-                  <h2 className="mt-1 text-2xl font-bold text-slate-950">Submit Payment Evidence</h2>
-                  <p className="mt-2 text-xs leading-5 text-slate-600">
+                  <h2 className="mt-1 text-xl sm:text-2xl font-bold text-slate-950">Submit Payment Evidence</h2>
+                  <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
                     After transferring ₹{currentPrice} via UPI, submit your 12-digit UTR and payment screenshot for instant verification queue.
                   </p>
                 </div>
               </div>
 
-              <div className="mt-6 space-y-3">
+              <div className="mt-5 sm:mt-6 space-y-3">
                 <button
                   type="button"
                   onClick={() => setShowEvidenceModal(true)}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-4 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700 active:scale-[0.99]"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-4 py-3.5 sm:py-4 text-xs sm:text-sm font-bold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700 active:scale-[0.99] cursor-pointer"
                 >
                   <ShieldCheck className="h-4 w-4" />
-                  Submit Payment Evidence (In-App)
+                  <span>Submit Payment Evidence (In-App)</span>
                 </button>
 
                 <div className="text-center">
@@ -461,14 +461,14 @@ export function PaymentPage() {
       </section>
 
       {/* Instructions & Approval Process */}
-      <section className="border-t border-slate-200 bg-white py-16">
-        <div className="mx-auto max-w-6xl px-5 sm:px-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <section className="border-t border-slate-200 bg-white py-12 sm:py-16">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">
                 How to get access
               </p>
-              <h2 className="mt-1 text-3xl font-bold tracking-[-0.025em] text-slate-950">
+              <h2 className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-slate-950">
                 A clear, manual approval process.
               </h2>
             </div>

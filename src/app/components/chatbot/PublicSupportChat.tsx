@@ -172,13 +172,13 @@ export function PublicSupportChat() {
       {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-50">
+          <div className="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-50">
             <motion.div
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="flex h-[520px] max-h-[85vh] w-[92vw] max-w-[400px] flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden sm:w-[400px]"
+              className="flex h-[520px] max-h-[85vh] w-[calc(100vw-24px)] max-w-[400px] flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden sm:w-[400px]"
             >
               {/* Header — teal/green to distinguish from student AI */}
               <div className="flex items-center justify-between bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 px-5 py-3.5 text-white shadow-sm">
@@ -347,15 +347,15 @@ export function PublicSupportChat() {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.2 }}
-          className="fixed bottom-[74px] right-5 sm:bottom-[88px] sm:right-6 z-40"
+          className="fixed bottom-[68px] right-4 sm:bottom-[88px] sm:right-6 z-40"
         >
           <button
             onClick={() => setIsOpen(true)}
             aria-label="AI Support Assistant"
             title="AI Support Assistant"
-            className="group relative flex h-12 w-12 sm:h-13 sm:w-13 md:h-14 md:w-14 items-center justify-center rounded-full bg-gradient-to-tr from-teal-600 via-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-600/30 hover:from-teal-500 hover:via-emerald-400 hover:to-emerald-500 hover:shadow-xl hover:shadow-emerald-600/40 hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2"
+            className="group relative flex h-11 w-11 sm:h-13 sm:w-13 md:h-14 md:w-14 items-center justify-center rounded-full bg-gradient-to-tr from-teal-600 via-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-600/30 hover:from-teal-500 hover:via-emerald-400 hover:to-emerald-500 hover:shadow-xl hover:shadow-emerald-600/40 hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2"
           >
-            <Bot className="h-6 w-6 sm:h-7 sm:w-7" />
+            <Bot className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />
             <span className="sr-only">AI Support Assistant</span>
 
             {/* Dot indicator */}

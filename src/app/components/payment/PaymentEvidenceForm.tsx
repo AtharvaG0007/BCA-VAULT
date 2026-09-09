@@ -242,19 +242,19 @@ export function PaymentEvidenceForm({
 
   return (
     <div
-      className="fixed inset-0 z-[110] overflow-y-auto bg-slate-950/60 p-4 sm:p-8"
+      className="fixed inset-0 z-[110] overflow-y-auto bg-slate-950/60 p-3 sm:p-6 lg:p-8"
       role="dialog"
       aria-modal="true"
       aria-label="Submit payment evidence"
     >
-      <div className="mx-auto my-4 w-full max-w-2xl rounded-3xl bg-white shadow-2xl">
-        <div className="flex items-start justify-between border-b border-slate-100 p-6 sm:p-8">
+      <div className="mx-auto my-2 sm:my-4 w-full max-w-2xl rounded-2xl sm:rounded-3xl bg-white shadow-2xl">
+        <div className="flex items-start justify-between border-b border-slate-100 p-4 sm:p-6 lg:p-8">
           <div>
             <p className="text-xs font-bold uppercase tracking-[.16em] text-indigo-600">
               Step 2 · Submit evidence
             </p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-950">Submit Payment Form</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <h2 className="mt-1 text-xl sm:text-2xl font-bold text-slate-950">Submit Payment Form</h2>
+            <p className="mt-1 text-xs sm:text-sm text-slate-500">
               Your evidence is verified manually before bundle access is activated.
             </p>
           </div>
@@ -268,7 +268,7 @@ export function PaymentEvidenceForm({
           </button>
         </div>
 
-        <form onSubmit={submit} className="space-y-5 p-6 sm:p-8">
+        <form onSubmit={submit} className="space-y-4 sm:space-y-5 p-4 sm:p-6 lg:p-8">
           {error && (
             <div
               role="alert"

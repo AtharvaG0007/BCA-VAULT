@@ -26,7 +26,7 @@ export function Hero() {
         />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 lg:py-24">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left: Copy */}
           <motion.div
@@ -40,7 +40,7 @@ export function Hero() {
             </div>
 
             <h1
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#111827] leading-[1.1] mb-6"
+              className="text-3xl sm:text-5xl lg:text-6xl font-bold text-[#111827] leading-[1.15] sm:leading-[1.1] mb-6"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               Your BCA Exam Preparation,{" "}

@@ -395,11 +395,11 @@ export function StudentDashboard() {
 
         {/* VIEW 4: MAIN DASHBOARD */}
         {activeTab === "dashboard" && (
-          <div className="mx-auto max-w-5xl w-full px-4 py-8 sm:px-6 space-y-8">
+          <div className="mx-auto max-w-5xl w-full px-3.5 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8 min-w-0">
             {/* Header */}
-            <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                <h1 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight">
                   Welcome, {studentName}
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
@@ -420,15 +420,15 @@ export function StudentDashboard() {
             {message && (
               <div
                 role="alert"
-                className={`flex items-center justify-between gap-3 rounded-2xl p-4 text-xs font-medium ${
+                className={`flex items-center justify-between gap-3 rounded-2xl p-3.5 sm:p-4 text-xs font-medium ${
                   message.type === "error"
                     ? "border border-red-200 bg-red-50 text-red-700"
                     : "border border-indigo-200 bg-indigo-50 text-indigo-700"
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <ShieldAlert className="h-5 w-5 shrink-0" />
-                  <span>{message.text}</span>
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                  <ShieldAlert className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                  <span className="leading-snug">{message.text}</span>
                 </div>
                 {message.type === "error" && (
                   <button
@@ -436,7 +436,7 @@ export function StudentDashboard() {
                       setMessage(null);
                       void loadData();
                     }}
-                    className="shrink-0 rounded-xl bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1.5 font-bold transition cursor-pointer"
+                    className="shrink-0 rounded-xl bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1.5 font-bold transition cursor-pointer text-xs"
                   >
                     Try Again
                   </button>
@@ -447,17 +447,17 @@ export function StudentDashboard() {
             {/* ── State Hero: State A (No Purchase), State B (Pending), or State C (Active) ── */}
             {hasActiveBundle ? (
               /* STATE C: PAYMENT APPROVED / BUNDLE ACTIVE */
-              <section className="rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50/80 via-white to-teal-50/40 p-6 sm:p-7 shadow-2xs">
+              <section className="rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50/80 via-white to-teal-50/40 p-4 sm:p-6 lg:p-7 shadow-2xs w-full min-w-0">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 min-w-0">
                     <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-bold text-emerald-800 border border-emerald-200">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                       <span>Semester 1 Bundle Active</span>
                     </div>
-                    <h2 className="text-lg sm:text-xl font-bold text-slate-900">
+                    <h2 className="text-base sm:text-xl font-bold text-slate-900 leading-snug">
                       Your Semester 1 study materials are ready
                     </h2>
-                    <p className="text-xs text-slate-600 max-w-xl">
+                    <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
                       You have full access to official theory notes and most repeated topics. Start studying below or ask the AI assistant whenever you need help.
                     </p>
                   </div>
@@ -476,23 +476,23 @@ export function StudentDashboard() {
               </section>
             ) : isPaymentPending ? (
               /* STATE B: PAYMENT PENDING REVIEW */
-              <section className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50/90 via-white to-orange-50/50 p-6 sm:p-8 shadow-2xs">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-                  <div className="space-y-2">
+              <section className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50/90 via-white to-orange-50/50 p-4 sm:p-6 lg:p-8 shadow-2xs w-full min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-5">
+                  <div className="space-y-2 min-w-0">
                     <div className="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-100 px-3 py-1 text-xs font-bold text-amber-900">
-                      <Clock className="h-3.5 w-3.5 text-amber-600 animate-pulse" />
+                      <Clock className="h-3.5 w-3.5 text-amber-600 animate-pulse shrink-0" />
                       <span>⏳ Payment Under Review</span>
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                    <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
                       Payment Under Review
                     </h2>
                     <p className="text-xs sm:text-sm text-slate-600 max-w-xl leading-relaxed">
                       Your payment has been submitted successfully. We're reviewing your payment. Your Semester 1 access will appear here once approved.
                     </p>
-                    <div className="flex flex-wrap items-center gap-4 text-xs pt-1">
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs pt-1">
                       <span className="font-semibold text-amber-900">Status: ⏳ Payment Pending</span>
                       {latestPayment?.reference_id && (
-                        <span className="font-mono text-slate-500">
+                        <span className="font-mono text-slate-500 text-[11px] sm:text-xs">
                           Ref: <strong className="text-slate-700">{latestPayment.reference_id}</strong>
                           {latestPayment.utr ? ` • UTR: ${latestPayment.utr}` : ""}
                         </span>
@@ -500,10 +500,10 @@ export function StudentDashboard() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-start sm:items-end gap-2 shrink-0">
+                  <div className="flex flex-col items-start sm:items-end gap-2 shrink-0 w-full sm:w-auto">
                     <button
                       onClick={() => void loadData()}
-                      className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold px-4 py-2.5 text-xs transition cursor-pointer shadow-xs"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-amber-300 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold px-4 py-2.5 text-xs transition cursor-pointer shadow-xs"
                     >
                       <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
                       <span>Check Payment Status</span>
@@ -514,31 +514,31 @@ export function StudentDashboard() {
               </section>
             ) : (
               /* STATE A: NEW STUDENT / NO PURCHASE ONBOARDING */
-              <section className="rounded-3xl border border-indigo-200 bg-gradient-to-br from-indigo-50/90 via-white to-amber-50/40 p-6 sm:p-8 shadow-2xs">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                  <div className="space-y-3">
-                    <div className="inline-flex items-center gap-2 rounded-full bg-indigo-100/80 px-3.5 py-1 text-xs font-bold text-indigo-900">
+              <section className="rounded-3xl border border-indigo-200 bg-gradient-to-br from-indigo-50/90 via-white to-amber-50/40 p-4 sm:p-6 lg:p-8 shadow-2xs w-full min-w-0">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 sm:gap-6">
+                  <div className="space-y-3 min-w-0">
+                    <div className="inline-flex items-center gap-2 rounded-full bg-indigo-100/80 px-3 py-1 text-xs font-bold text-indigo-900 flex-wrap">
                       <span>👋 Welcome to BCA Vault</span>
-                      <span className="text-indigo-400">•</span>
+                      <span className="text-indigo-400 hidden sm:inline">•</span>
                       <span className="text-amber-800 font-semibold">Semester 1 bundle isn't active yet</span>
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                    <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
                       Get your Semester 1 Study Notes + Most Repeated Topics
                     </h2>
                     <p className="text-xs sm:text-sm text-slate-600 max-w-xl leading-relaxed">
                       Your account is ready! Complete your bundle purchase to unlock all official Semester 1 study notes and high-priority exam topics in one complete package.
                     </p>
-                    <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-700 pt-1">
+                    <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 text-xs font-semibold text-slate-700 pt-1">
                       <span className="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Semester 1 Study Notes
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" /> Semester 1 Study Notes
                       </span>
                       <span className="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Semester 1 Most Repeated Topics
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" /> Semester 1 Most Repeated Topics
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end gap-3 shrink-0 bg-white/90 border border-indigo-100 rounded-2xl p-5 shadow-xs">
+                  <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end gap-3 shrink-0 bg-white/90 border border-indigo-100 rounded-2xl p-4 sm:p-5 shadow-xs w-full lg:w-auto min-w-0">
                     <div>
                       <span className="text-xs font-medium text-slate-500">Semester 1 BCA Bundle</span>
                       <div className="text-2xl sm:text-3xl font-black text-slate-900">₹499</div>
@@ -564,37 +564,37 @@ export function StudentDashboard() {
                   <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">
                     Here's how it works:
                   </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-2.5 sm:p-3 min-w-0">
                       <div className="flex items-center justify-between text-xs font-bold text-emerald-800">
                         <span>1. Account</span>
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                       </div>
                       <p className="text-[10px] text-emerald-700 mt-1">Created ✓</p>
                     </div>
 
-                    <div className="rounded-xl border-2 border-indigo-500 bg-indigo-50/80 p-3 shadow-xs">
+                    <div className="rounded-xl border-2 border-indigo-500 bg-indigo-50/80 p-2.5 sm:p-3 shadow-xs min-w-0">
                       <div className="flex items-center justify-between text-xs font-bold text-indigo-900">
-                        <span>2. Purchase Bundle</span>
-                        <span className="rounded bg-indigo-600 text-white text-[9px] px-1.5 py-0.2 font-extrabold uppercase tracking-wider">NEXT</span>
+                        <span>2. Purchase</span>
+                        <span className="rounded bg-indigo-600 text-white text-[9px] px-1.5 py-0.2 font-extrabold uppercase tracking-wider shrink-0">NEXT</span>
                       </div>
                       <p className="text-[10px] text-indigo-800 mt-1">₹499 Package</p>
                     </div>
 
-                    <div className="rounded-xl border border-slate-200 bg-white/70 p-3 opacity-80">
+                    <div className="rounded-xl border border-slate-200 bg-white/70 p-2.5 sm:p-3 opacity-80 min-w-0">
                       <div className="flex items-center justify-between text-xs font-bold text-slate-600">
-                        <span>3. Payment Approval</span>
-                        <Clock className="h-3.5 w-3.5 text-slate-400" />
+                        <span>3. Approval</span>
+                        <Clock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                       </div>
-                      <p className="text-[10px] text-slate-500 mt-1">Verification Review</p>
+                      <p className="text-[10px] text-slate-500 mt-1">Review</p>
                     </div>
 
-                    <div className="rounded-xl border border-slate-200 bg-white/70 p-3 opacity-80">
+                    <div className="rounded-xl border border-slate-200 bg-white/70 p-2.5 sm:p-3 opacity-80 min-w-0">
                       <div className="flex items-center justify-between text-xs font-bold text-slate-600">
-                        <span>4. Start Studying</span>
-                        <BookOpen className="h-3.5 w-3.5 text-slate-400" />
+                        <span>4. Study</span>
+                        <BookOpen className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                       </div>
-                      <p className="text-[10px] text-slate-500 mt-1">Instant Notes Access</p>
+                      <p className="text-[10px] text-slate-500 mt-1">Access Notes</p>
                     </div>
                   </div>
                 </div>
@@ -602,9 +602,9 @@ export function StudentDashboard() {
             )}
 
             {/* Active Courses Section */}
-            <section className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-2xs">
+            <section className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 lg:p-7 shadow-2xs w-full min-w-0">
               <div className="flex items-center gap-3 mb-5 border-b border-slate-100 pb-4">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-600">
+                <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-600 shrink-0">
                   <ShieldCheck className="h-5 w-5" />
                 </div>
                 <div>

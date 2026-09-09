@@ -263,13 +263,13 @@ export function StudentLearningChat() {
       {/* Floating Chat Window Modal */}
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-50">
+          <div className="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-50">
             <motion.div
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="flex h-[560px] max-h-[85vh] w-[92vw] max-w-[410px] flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden sm:w-[410px]"
+              className="flex h-[560px] max-h-[85vh] w-[calc(100vw-24px)] max-w-[410px] flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden sm:w-[410px]"
             >
               {/* Header */}
               <div className="flex items-center justify-between bg-gradient-to-r from-blue-700 via-indigo-700 to-indigo-900 px-5 py-3.5 text-white shadow-sm">
@@ -438,15 +438,15 @@ export function StudentLearningChat() {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.2 }}
-          className="fixed bottom-[74px] right-5 sm:bottom-[88px] sm:right-6 z-40"
+          className="fixed bottom-[68px] right-4 sm:bottom-[88px] sm:right-6 z-40"
         >
           <button
             onClick={() => setIsOpen(true)}
             aria-label="Ask AI Tutor"
             title="Ask AI Tutor"
-            className="group relative flex h-12 w-12 sm:h-13 sm:w-13 md:h-14 md:w-14 items-center justify-center rounded-full bg-gradient-to-tr from-blue-700 via-indigo-600 to-indigo-800 text-white shadow-lg shadow-indigo-600/30 hover:from-blue-600 hover:via-indigo-500 hover:to-indigo-700 hover:shadow-xl hover:shadow-indigo-600/40 hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2"
+            className="group relative flex h-11 w-11 sm:h-13 sm:w-13 md:h-14 md:w-14 items-center justify-center rounded-full bg-gradient-to-tr from-blue-700 via-indigo-600 to-indigo-800 text-white shadow-lg shadow-indigo-600/30 hover:from-blue-600 hover:via-indigo-500 hover:to-indigo-700 hover:shadow-xl hover:shadow-indigo-600/40 hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2"
           >
-            <Sparkles className="h-6 w-6 sm:h-7 sm:w-7 text-amber-300" />
+            <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 text-amber-300" />
             <span className="sr-only">Ask AI Tutor</span>
 
             {/* Sparkle Badge Dot */}

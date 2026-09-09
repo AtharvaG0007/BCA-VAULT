@@ -53,6 +53,7 @@ function PageWrapper({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 8 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
+      className="w-full max-w-full min-w-0"
     >
       {children}
     </motion.div>
@@ -98,6 +99,7 @@ function AppLayout() {
     location.pathname.startsWith(p),
   );
   const isStudentRoute = location.pathname.startsWith("/app");
+  const isPurchaseRoute = location.pathname.startsWith("/purchase");
   const isAdminRoute =
     location.pathname.startsWith("/admin") ||
     location.pathname.startsWith("/admin-root");
@@ -108,10 +110,10 @@ function AppLayout() {
     );
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col w-full max-w-full overflow-x-hidden">
       {showDisclaimer && <DisclaimerModal />}
       {!hideNav && <Navbar />}
-      <div className="flex-1">
+      <div className="flex-1 w-full min-w-0">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
             {/* ── Public pages ─────────────────────────────────────────── */}
@@ -401,7 +403,7 @@ function AppLayout() {
       {!isAdminRoute && !isStudentRoute && (
         <>
           <PublicSupportChat />
-          <ReferralFloatingPromo />
+          {!isPurchaseRoute && <ReferralFloatingPromo />}
         </>
       )}
       <Toaster />

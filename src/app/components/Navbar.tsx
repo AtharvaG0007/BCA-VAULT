@@ -145,20 +145,20 @@ export function Navbar() {
                   <span>Dashboard</span>
                 </button>
 
-                {/* Mobile: Visible Dashboard button */}
+                {/* Tablet: Visible Dashboard button */}
                 <button
                   onClick={() => navigate("/app/dashboard")}
-                  className="lg:hidden inline-flex items-center gap-1 px-2.5 py-1.5 bg-[#1E40AF] rounded-lg text-white hover:bg-[#1E3A8A] transition text-xs font-bold shadow-xs"
+                  className="hidden sm:inline-flex lg:hidden items-center gap-1 px-2.5 py-1.5 bg-[#1E40AF] rounded-lg text-white hover:bg-[#1E3A8A] transition text-xs font-bold shadow-xs"
                 >
                   <LayoutDashboard className="w-3.5 h-3.5" />
                   <span>Dashboard</span>
                 </button>
 
-                {/* User Dropdown */}
+                {/* User Dropdown / Avatar */}
                 <div className="relative">
                   <button
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black hover:bg-[#1E40AF] transition shadow-xs"
+                    className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black hover:bg-[#1E40AF] transition shadow-xs cursor-pointer"
                     title={studentName}
                   >
                     {avatarLetter}
@@ -220,7 +220,7 @@ export function Navbar() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="px-2.5 sm:px-3 text-xs font-bold text-gray-700 hover:text-[#1E40AF] hover:bg-blue-50 rounded-xl"
+                  className="px-2 sm:px-3 text-xs font-bold text-gray-700 hover:text-[#1E40AF] hover:bg-blue-50 rounded-xl"
                   onClick={() => navigate("/auth/login")}
                 >
                   Login
@@ -229,7 +229,7 @@ export function Navbar() {
                 {/* Mobile & Desktop visible: Create Account Button */}
                 <Button
                   size="sm"
-                  className="px-2.5 sm:px-3.5 text-xs font-bold bg-[#1E40AF] hover:bg-[#1E3A8A] text-white rounded-xl shadow-xs"
+                  className="px-2 sm:px-3.5 text-xs font-bold bg-[#1E40AF] hover:bg-[#1E3A8A] text-white rounded-xl shadow-xs shrink-0"
                   onClick={() => navigate("/auth/signup")}
                 >
                   <span className="hidden sm:inline">Create Free Account</span>
