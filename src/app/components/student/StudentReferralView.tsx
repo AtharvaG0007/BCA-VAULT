@@ -407,15 +407,15 @@ export function StudentReferralView({
                     <button
                       onClick={() => onOpenNote(note)}
                       disabled={openingId === note.id}
-                      className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 px-3 py-2 text-xs font-extrabold transition shadow-xs disabled:bg-slate-200"
+                      className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 px-3 py-2 text-xs font-extrabold transition shadow-xs disabled:bg-slate-200 cursor-pointer"
                     >
                       {openingId === note.id ? (
                         <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Opening Questions…
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Opening PDF…
                         </>
                       ) : (
                         <>
-                          <Download className="w-3.5 h-3.5" /> Read Questions
+                          <FileText className="w-3.5 h-3.5" /> View PDF
                         </>
                       )}
                     </button>

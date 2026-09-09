@@ -27,7 +27,6 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import { supabase } from "@/lib/supabase/client";
 import { adminApi } from "@/lib/supabase/adminService";
-import { ProtectedPdfViewer } from "../viewer/ProtectedPdfViewer";
 import { StudentLearningView } from "../student/StudentLearningView";
 import { StudentProfileView } from "../student/StudentProfileView";
 import { StudentReferralView } from "../student/StudentReferralView";
@@ -79,19 +78,6 @@ export function StudentDashboard() {
   const [noteSearch, setNoteSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [openingId, setOpeningId] = useState<string | null>(null);
-  const [activeViewer, setActiveViewer] = useState<{
-    url: string;
-    title: string;
-    subject?: string;
-    semester?: number;
-    expiresIn?: number;
-    watermarkData?: {
-      studentName?: string;
-      studentEmail?: string;
-      studentId?: string;
-      sessionTimestamp?: string;
-    };
-  } | null>(null);
   const [message, setMessage] = useState<{ text: string; type: "error" | "info" } | null>(null);
 
   // Sync tab with URL if user navigates
@@ -151,24 +137,27 @@ export function StudentDashboard() {
     setOpeningId(note.id);
     setMessage(null);
 
+    // Pre-open blank tab synchronously to guarantee browser popup blocker does not intercept
+    const newWindow = typeof window !== "undefined" ? window.open("about:blank", "_blank") : null;
+
     try {
       const res = await adminApi.getStudentSignedNoteUrl(note.id);
       if (res?.signedUrl) {
-        setActiveViewer({
-          url: res.signedUrl,
-          title: note.title,
-          subject: note.subject ?? undefined,
-          semester: note.semester ?? undefined,
-          expiresIn: res.expiresIn || 180,
-          watermarkData: res.watermark,
-        });
+        if (newWindow && !newWindow.closed) {
+          newWindow.location.href = res.signedUrl;
+        } else {
+          window.open(res.signedUrl, "_blank", "noopener,noreferrer");
+        }
         return;
       }
-      throw new Error("Signed URL not returned");
+      throw new Error("Unable to open this document right now. Please try again.");
     } catch (err: any) {
       console.error("Open note error:", err);
+      if (newWindow && !newWindow.closed) {
+        newWindow.close();
+      }
       setMessage({
-        text: err.message || "This note is currently unavailable. Please verify your course access.",
+        text: "Unable to open this document right now. Please try again.",
         type: "error",
       });
     } finally {
@@ -396,14 +385,27 @@ export function StudentDashboard() {
             {message && (
               <div
                 role="alert"
-                className={`flex items-center gap-3 rounded-2xl p-4 text-xs font-medium ${
+                className={`flex items-center justify-between gap-3 rounded-2xl p-4 text-xs font-medium ${
                   message.type === "error"
                     ? "border border-red-200 bg-red-50 text-red-700"
                     : "border border-indigo-200 bg-indigo-50 text-indigo-700"
                 }`}
               >
-                <ShieldAlert className="h-5 w-5 shrink-0" />
-                <span>{message.text}</span>
+                <div className="flex items-center gap-3">
+                  <ShieldAlert className="h-5 w-5 shrink-0" />
+                  <span>{message.text}</span>
+                </div>
+                {message.type === "error" && (
+                  <button
+                    onClick={() => {
+                      setMessage(null);
+                      void loadData();
+                    }}
+                    className="shrink-0 rounded-xl bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1.5 font-bold transition cursor-pointer"
+                  >
+                    Try Again
+                  </button>
+                )}
               </div>
             )}
 
@@ -808,15 +810,15 @@ export function StudentDashboard() {
                               <button
                                 onClick={() => void openNote(note)}
                                 disabled={openingId === note.id}
-                                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 px-4 py-2.5 text-xs font-black transition shadow-xs disabled:bg-slate-200 uppercase tracking-wider"
+                                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 px-4 py-2.5 text-xs font-black transition shadow-xs disabled:bg-slate-200 uppercase tracking-wider cursor-pointer"
                               >
                                 {openingId === note.id ? (
                                   <>
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-950" /> Opening Material…
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-950" /> Opening PDF…
                                   </>
                                 ) : (
                                   <>
-                                    <FileText className="h-3.5 w-3.5 text-slate-950" /> Read Topics PDF
+                                    <FileText className="h-3.5 w-3.5 text-slate-950" /> View PDF
                                   </>
                                 )}
                               </button>
@@ -1006,7 +1008,7 @@ export function StudentDashboard() {
                                 <button
                                   onClick={() => void openNote(note)}
                                   disabled={openingId === note.id}
-                                  className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white transition ${
+                                  className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white transition cursor-pointer ${
                                     isTopic
                                       ? "bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold"
                                       : "bg-indigo-600 hover:bg-indigo-700"
@@ -1018,7 +1020,7 @@ export function StudentDashboard() {
                                     </>
                                   ) : (
                                     <>
-                                      <Download className="h-3.5 w-3.5" /> Open & Read Securely
+                                      <FileText className="h-3.5 w-3.5" /> View PDF
                                     </>
                                   )}
                                 </button>
@@ -1035,26 +1037,6 @@ export function StudentDashboard() {
           </div>
         )}
       </main>
-
-      {/* Protected PDF Modal Viewer */}
-      {activeViewer && (
-        <ProtectedPdfViewer
-          url={activeViewer.url}
-          title={activeViewer.title}
-          subject={activeViewer.subject}
-          semester={activeViewer.semester}
-          expiresIn={activeViewer.expiresIn}
-          watermarkData={activeViewer.watermarkData}
-          onClose={() => setActiveViewer(null)}
-          onSessionExpired={() => {
-            setActiveViewer(null);
-            setMessage({
-              text: "Viewing session expired. Click 'Open & Read Securely' to refresh access.",
-              type: "info",
-            });
-          }}
-        />
-      )}
     </div>
   );
 }

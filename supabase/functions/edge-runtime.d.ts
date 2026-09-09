@@ -79,3 +79,11 @@ declare namespace EdgeRuntime {
   export function waitUntil(promise: Promise<any>): void;
 }
 
+declare module "npm:pdf-lib" {
+  export * from "pdf-lib";
+}
+
+declare module "npm:pdf-lib@1.17.9" {
+  export * from "pdf-lib";
+}
+

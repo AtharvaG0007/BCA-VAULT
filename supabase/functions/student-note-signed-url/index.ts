@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { PDFDocument, rgb, StandardFonts, degrees } from "npm:pdf-lib@1.17.9";
 
 const ALLOWED_ORIGINS = [
   "https://bca-vault.portalbcavault.workers.dev",
@@ -356,6 +357,8 @@ Deno.serve(async (request: Request) => {
     const uniquePaths = Array.from(new Set(candidatePaths.filter(Boolean)));
 
     let signedUrl = "";
+    let matchedBucket = "";
+    let matchedPath = "";
     let lastStorageError: any = null;
 
     for (const b of candidateBuckets) {
@@ -365,6 +368,8 @@ Deno.serve(async (request: Request) => {
           .createSignedUrl(p, SIGNED_URL_TTL);
         if (!sErr && sData?.signedUrl) {
           signedUrl = sData.signedUrl;
+          matchedBucket = b;
+          matchedPath = p;
           break;
         }
         if (sErr) lastStorageError = sErr;
@@ -401,7 +406,110 @@ Deno.serve(async (request: Request) => {
       );
     }
 
-    // 6. Audit log authorized document access
+    const studentName = profile.full_name || identity.user.user_metadata?.full_name || "Student";
+    const studentEmail = profile.email || identity.user.email || "";
+
+    // 6. Dynamic Server-Side PDF Watermarking (Per-Student, Master Untouched)
+    // Stamps the PDF binary with student identity so browser native downloads retain the watermark.
+    let finalSignedUrl = signedUrl;
+    const watermarkedPath = `.watermarked/${userId}/${note.id}.pdf`;
+
+    try {
+      const storageBucket = matchedBucket || "bca-notes";
+      // Check if already watermarked and cached
+      const { data: existingList } = await admin.storage
+        .from(storageBucket)
+        .list(`.watermarked/${userId}`, { limit: 10, search: `${note.id}.pdf` });
+
+      const isCached = existingList && existingList.some((f) => f.name === `${note.id}.pdf`);
+
+      if (isCached) {
+        const { data: cachedSign, error: cachedSignErr } = await admin.storage
+          .from(storageBucket)
+          .createSignedUrl(watermarkedPath, SIGNED_URL_TTL);
+        if (!cachedSignErr && cachedSign?.signedUrl) {
+          finalSignedUrl = cachedSign.signedUrl;
+        }
+      } else if (matchedBucket && matchedPath) {
+        // Download master PDF bytes
+        const { data: masterBlob, error: dlErr } = await admin.storage
+          .from(matchedBucket)
+          .download(matchedPath);
+
+        if (!dlErr && masterBlob) {
+          const rawBuffer = await masterBlob.arrayBuffer();
+          const pdfDoc = await PDFDocument.load(rawBuffer, { ignoreEncryption: true });
+          const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+          const studentLabel = `${studentName} • ${studentEmail}`;
+          const diagonalWatermark = `BCA VAULT • ${studentLabel}`;
+          const footerStamp = `Licensed to: ${studentName} (${studentEmail}) • BCA Vault Official Study Material`;
+
+          const pages = pdfDoc.getPages();
+          for (const page of pages) {
+            const { width, height } = page.getSize();
+
+            // Subtle center diagonal watermark across the page
+            const textWidth = boldFont.widthOfTextAtSize(diagonalWatermark, 14);
+            page.drawText(diagonalWatermark, {
+              x: Math.max(20, (width - textWidth) / 2),
+              y: height / 2,
+              size: 14,
+              font: boldFont,
+              color: rgb(0.55, 0.6, 0.7),
+              opacity: 0.15,
+              rotate: degrees(35),
+            });
+
+            // Subtle top security header
+            page.drawText(footerStamp, {
+              x: 25,
+              y: height - 16,
+              size: 7.5,
+              font: regularFont,
+              color: rgb(0.4, 0.45, 0.5),
+              opacity: 0.5,
+            });
+
+            // Subtle bottom footer stamp
+            page.drawText(footerStamp, {
+              x: 25,
+              y: 14,
+              size: 7.5,
+              font: regularFont,
+              color: rgb(0.4, 0.45, 0.5),
+              opacity: 0.5,
+            });
+          }
+
+          const watermarkedBytes = await pdfDoc.save();
+
+          // Upload per-student watermarked copy to storage
+          const { error: uploadErr } = await admin.storage
+            .from(storageBucket)
+            .upload(watermarkedPath, watermarkedBytes, {
+              contentType: "application/pdf",
+              upsert: true,
+            });
+
+          if (!uploadErr) {
+            const { data: newSign, error: newSignErr } = await admin.storage
+              .from(storageBucket)
+              .createSignedUrl(watermarkedPath, SIGNED_URL_TTL);
+            if (!newSignErr && newSign?.signedUrl) {
+              finalSignedUrl = newSign.signedUrl;
+            }
+          } else {
+            console.warn("Watermarked upload failed, falling back to original:", uploadErr);
+          }
+        }
+      }
+    } catch (wmErr) {
+      console.warn("Watermark processing encountered error, falling back to original:", wmErr);
+    }
+
+    // 7. Audit log authorized document access
     try {
       await admin.from("activity_logs").insert({
         actor_id: userId,
@@ -419,13 +527,10 @@ Deno.serve(async (request: Request) => {
       console.warn("Activity log insert failed:", logErr);
     }
 
-    const studentName = profile.full_name || identity.user.user_metadata?.full_name || "Student";
-    const studentEmail = profile.email || identity.user.email || "";
-
     return respond(
       {
         success: true,
-        signedUrl,
+        signedUrl: finalSignedUrl,
         expiresIn: SIGNED_URL_TTL,
         note: {
           id: note.id,
