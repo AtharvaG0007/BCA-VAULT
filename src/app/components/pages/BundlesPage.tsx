@@ -2,7 +2,8 @@ import { motion } from "motion/react";
 import { useNavigate } from "react-router";
 import {
   BookOpen, Check, X as XIcon, Shield,
-  BadgeCheck, RefreshCw, QrCode, ClipboardList, Sparkles, Trophy
+  BadgeCheck, RefreshCw, QrCode, ClipboardList, Sparkles, Trophy,
+  UserCheck, ShoppingBag, Clock, ShieldCheck
 } from "lucide-react";
 
 // Single fixed product — no DB fetch required
@@ -25,10 +26,11 @@ const EXCLUDES = [
 ];
 
 const HOW_IT_WORKS = [
-  { icon: BookOpen,      step: "01", label: "Choose Bundle",   desc: "Select the BCA Vault theory bundle" },
-  { icon: QrCode,        step: "02", label: "Make Payment",    desc: "Pay using official BCA Vault UPI" },
-  { icon: ClipboardList, step: "03", label: "Submit Evidence", desc: "Submit UTR and payment screenshot" },
-  { icon: BadgeCheck,    step: "04", label: "Get Access",      desc: "Appears in My Library after verification" },
+  { icon: UserCheck,     step: "STEP 1", label: "Create Account",   desc: "Sign up in 30 seconds" },
+  { icon: ShoppingBag,   step: "STEP 2", label: "Purchase Bundle",  desc: "Semester 1 Bundle — ₹499" },
+  { icon: Clock,         step: "STEP 3", label: "Payment Reviewed", desc: "Admin reviews submission" },
+  { icon: ShieldCheck,   step: "STEP 4", label: "Access Activated", desc: "Materials unlock automatically" },
+  { icon: BookOpen,      step: "STEP 5", label: "Start Studying",   desc: "Study Notes & Repeated Topics" },
 ];
 
 const SUPPORT_EMAIL = "bcavault07@gmail.com";
@@ -161,17 +163,17 @@ export function BundlesPage() {
         <div className="mt-6 bg-gradient-to-r from-blue-50/70 to-indigo-50/50 border border-blue-200/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
           <div className="space-y-1">
             <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#1E40AF]">
-              <span>🎓 Know a BCA friend?</span>
+              <span>🎓 Know BCA friends?</span>
             </div>
             <p className="text-xs text-slate-700 leading-relaxed max-w-lg">
-              Refer them to BCA Vault and unlock <strong className="text-slate-900 font-semibold">Most Repeated Questions</strong> for yourself after their eligible purchase is verified.
+              Refer 3 friends to BCA Vault. When their purchases are approved, unlock the <strong className="text-slate-900 font-semibold">Semester 1 Most Repeated Questions</strong> pack for free.
             </p>
           </div>
           <button
             onClick={() => navigate("/referral")}
             className="shrink-0 px-4 py-2 bg-white border border-blue-200 text-[#1E40AF] hover:bg-blue-50 text-xs font-bold rounded-xl shadow-xs transition-colors"
           >
-            Learn About Referral
+            Refer 3 Friends
           </button>
         </div>
 
@@ -183,9 +185,9 @@ export function BundlesPage() {
           className="mt-8 bg-white border border-gray-100 rounded-3xl p-7 shadow-sm"
         >
           <h3 className="text-base font-black text-gray-900 mb-6 text-center" style={{ fontFamily: "var(--font-display)" }}>
-            How to Get Access
+            5-Step Path to Study Materials
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
             {HOW_IT_WORKS.map((s) => (
               <div key={s.step} className="flex flex-col items-center text-center">
                 <div className="w-10 h-10 rounded-full bg-[#1E40AF] text-white flex items-center justify-center mb-2 shadow-md shadow-blue-200">

@@ -1,11 +1,13 @@
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";
-import { ArrowRight, Star, Check, FileText, Shield, BookOpen, Zap, BadgeCheck, Sparkles } from "lucide-react";
+import { ArrowRight, Star, Check, FileText, Shield, BookOpen, Zap, BadgeCheck, Sparkles, UserPlus, LayoutDashboard } from "lucide-react";
 import { Button } from "../ui/button";
-
+import { useAuth } from "../auth/AuthContext";
 
 export function Hero() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isLoggedIn = Boolean(user);
 
   return (
     <section className="relative overflow-hidden bg-white">
@@ -71,23 +73,52 @@ export function Hero() {
               ))}
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 mb-10">
-              <Button
-                size="lg"
-                className="bg-[#1E40AF] hover:bg-[#1E3A8A] text-white px-8 h-12 rounded-xl shadow-lg shadow-blue-200"
-                onClick={() => navigate("/purchase")}
-              >
-                Get First-Batch Access
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-gray-200 text-gray-700 hover:bg-gray-50 h-12 rounded-xl"
-                onClick={() => navigate("/pricing")}
-              >
-                Explore What’s Included
-              </Button>
+            {/* CTA Group */}
+            <div className="space-y-3 mb-10">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  size="lg"
+                  className="bg-[#1E40AF] hover:bg-[#1E3A8A] text-white px-8 h-12 rounded-xl shadow-lg shadow-blue-200 text-sm font-bold"
+                  onClick={() => navigate("/purchase")}
+                >
+                  <span>Get Semester 1 Bundle</span>
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+
+                {isLoggedIn ? (
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="border-slate-200 text-slate-700 hover:bg-slate-50 h-12 rounded-xl text-sm font-bold"
+                    onClick={() => navigate("/app/dashboard")}
+                  >
+                    <LayoutDashboard className="w-4 h-4 mr-2 text-[#1E40AF]" />
+                    <span>Go to Dashboard</span>
+                  </Button>
+                ) : (
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="border-slate-200 text-slate-700 hover:bg-slate-50 h-12 rounded-xl text-sm font-bold"
+                    onClick={() => navigate("/auth/signup")}
+                  >
+                    <UserPlus className="w-4 h-4 mr-2 text-[#1E40AF]" />
+                    <span>Create Free Account</span>
+                  </Button>
+                )}
+              </div>
+
+              {!isLoggedIn && (
+                <p className="text-xs text-slate-500">
+                  Already have an account?{" "}
+                  <button
+                    onClick={() => navigate("/auth/login")}
+                    className="font-bold text-[#1E40AF] hover:underline cursor-pointer"
+                  >
+                    Login here →
+                  </button>
+                </p>
+              )}
             </div>
 
             {/* Trust Bar */}

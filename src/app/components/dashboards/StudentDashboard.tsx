@@ -6,12 +6,14 @@ import {
   Bot,
   CheckCircle2,
   ChevronRight,
+  Clock,
   Download,
   FileText,
   Flame,
   HelpCircle,
   LayoutDashboard,
   Loader2,
+  Lock,
   LogOut,
   Menu,
   MessageSquare,
@@ -20,6 +22,7 @@ import {
   Search,
   ShieldAlert,
   ShieldCheck,
+  ShoppingBag,
   Sparkles,
   User,
   X,
@@ -39,6 +42,15 @@ interface AccessItem {
   bundles: { title: string; price: number } | { title: string; price: number }[] | null;
 }
 
+interface PaymentRecord {
+  id: string;
+  reference_id?: string;
+  amount?: number;
+  utr?: string;
+  status?: string;
+  created_at?: string;
+}
+
 interface NoteItem {
   id: string;
   title: string;
@@ -54,7 +66,7 @@ interface NoteItem {
 type TabType = "dashboard" | "ai" | "profile" | "referral";
 
 export function StudentDashboard() {
-  const { appUser, logout } = useAuth();
+  const { user, appUser, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -73,6 +85,7 @@ export function StudentDashboard() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [access, setAccess] = useState<AccessItem[]>([]);
+  const [latestPayment, setLatestPayment] = useState<PaymentRecord | null>(null);
   const [notes, setNotes] = useState<NoteItem[]>([]);
   const [noteCategory, setNoteCategory] = useState<"all" | "repeated" | "theory">("all");
   const [noteSearch, setNoteSearch] = useState("");
@@ -98,16 +111,31 @@ export function StudentDashboard() {
     setLoading(true);
     setMessage(null);
     try {
-      const [accessRes, notesRes] = await Promise.all([
-        supabase
-          .from("access_permissions")
-          .select("id,bundle_id,status,bundles(title,price)")
-          .eq("status", "active"),
-        supabase
-          .from("notes")
-          .select("id,title,subject,semester,description,storage_bucket,storage_path,priority,status")
-          .eq("published", true)
-          .order("semester", { ascending: true }),
+      const accessPromise = supabase
+        .from("access_permissions")
+        .select("id,bundle_id,status,bundles(title,price)")
+        .eq("status", "active");
+
+      const notesPromise = supabase
+        .from("notes")
+        .select("id,title,subject,semester,description,storage_bucket,storage_path,priority,status")
+        .eq("published", true)
+        .order("semester", { ascending: true });
+
+      const paymentPromise = user?.id
+        ? supabase
+            .from("payment_submissions")
+            .select("id,reference_id,amount,utr,status,created_at")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null });
+
+      const [accessRes, notesRes, paymentRes] = await Promise.all([
+        accessPromise,
+        notesPromise,
+        paymentPromise,
       ]);
 
       if (accessRes.error) {
@@ -121,6 +149,10 @@ export function StudentDashboard() {
       } else {
         setNotes((notesRes.data ?? []) as unknown as NoteItem[]);
       }
+
+      if (paymentRes && !paymentRes.error && paymentRes.data) {
+        setLatestPayment(paymentRes.data as PaymentRecord);
+      }
     } catch (err) {
       console.error("Dashboard load error:", err);
       setMessage({ text: "Failed to load study materials. Please try again.", type: "error" });
@@ -131,7 +163,7 @@ export function StudentDashboard() {
 
   useEffect(() => {
     void loadData();
-  }, []);
+  }, [user?.id]);
 
   async function openNote(note: NoteItem) {
     setOpeningId(note.id);
@@ -167,6 +199,9 @@ export function StudentDashboard() {
 
   const studentName = appUser?.name || "Student";
   const studentSemester = appUser?.semester || 1;
+  const hasActiveBundle = access.length > 0;
+  const isPaymentPending = !hasActiveBundle && latestPayment?.status === "pending";
+  const isNoPurchase = !hasActiveBundle && !isPaymentPending;
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col md:flex-row">
@@ -409,31 +444,162 @@ export function StudentDashboard() {
               </div>
             )}
 
-            {/* AI Learning Assistant Hero Card */}
-            <section className="rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50/90 via-white to-blue-50/50 p-6 sm:p-7 shadow-2xs">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="space-y-1.5">
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1 text-[11px] font-bold text-indigo-800">
-                    <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                    AI Academic Assistant
+            {/* ── State Hero: State A (No Purchase), State B (Pending), or State C (Active) ── */}
+            {hasActiveBundle ? (
+              /* STATE C: PAYMENT APPROVED / BUNDLE ACTIVE */
+              <section className="rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50/80 via-white to-teal-50/40 p-6 sm:p-7 shadow-2xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-bold text-emerald-800 border border-emerald-200">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                      <span>Semester 1 Bundle Active</span>
+                    </div>
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-900">
+                      Your Semester 1 study materials are ready
+                    </h2>
+                    <p className="text-xs text-slate-600 max-w-xl">
+                      You have full access to official theory notes and most repeated topics. Start studying below or ask the AI assistant whenever you need help.
+                    </p>
                   </div>
-                  <h2 className="text-base sm:text-lg font-bold text-slate-900">
-                    Need help understanding a topic?
-                  </h2>
-                  <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
-                    Ask the BCA Vault AI Learning Assistant for step-by-step topic explanations, code walkthroughs, and exam questions.
-                  </p>
+
+                  <button
+                    onClick={() => {
+                      const el = document.getElementById("study-materials");
+                      if (el) el.scrollIntoView({ behavior: "smooth" });
+                    }}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-xs font-bold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 transition shrink-0 cursor-pointer"
+                  >
+                    <span>Start Studying</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </section>
+            ) : isPaymentPending ? (
+              /* STATE B: PAYMENT PENDING REVIEW */
+              <section className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50/90 via-white to-orange-50/50 p-6 sm:p-8 shadow-2xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                  <div className="space-y-2">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-100 px-3 py-1 text-xs font-bold text-amber-900">
+                      <Clock className="h-3.5 w-3.5 text-amber-600 animate-pulse" />
+                      <span>⏳ Payment Under Review</span>
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                      Payment Under Review
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-600 max-w-xl leading-relaxed">
+                      Your payment has been submitted successfully. We're reviewing your payment. Your Semester 1 access will appear here once approved.
+                    </p>
+                    <div className="flex flex-wrap items-center gap-4 text-xs pt-1">
+                      <span className="font-semibold text-amber-900">Status: ⏳ Payment Pending</span>
+                      {latestPayment?.reference_id && (
+                        <span className="font-mono text-slate-500">
+                          Ref: <strong className="text-slate-700">{latestPayment.reference_id}</strong>
+                          {latestPayment.utr ? ` • UTR: ${latestPayment.utr}` : ""}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-start sm:items-end gap-2 shrink-0">
+                    <button
+                      onClick={() => void loadData()}
+                      className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold px-4 py-2.5 text-xs transition cursor-pointer shadow-xs"
+                    >
+                      <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+                      <span>Check Payment Status</span>
+                    </button>
+                    <span className="text-[11px] text-slate-500">Verification usually takes a short time</span>
+                  </div>
+                </div>
+              </section>
+            ) : (
+              /* STATE A: NEW STUDENT / NO PURCHASE ONBOARDING */
+              <section className="rounded-3xl border border-indigo-200 bg-gradient-to-br from-indigo-50/90 via-white to-amber-50/40 p-6 sm:p-8 shadow-2xs">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                  <div className="space-y-3">
+                    <div className="inline-flex items-center gap-2 rounded-full bg-indigo-100/80 px-3.5 py-1 text-xs font-bold text-indigo-900">
+                      <span>👋 Welcome to BCA Vault</span>
+                      <span className="text-indigo-400">•</span>
+                      <span className="text-amber-800 font-semibold">Semester 1 bundle isn't active yet</span>
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                      Get your Semester 1 Study Notes + Most Repeated Topics
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-600 max-w-xl leading-relaxed">
+                      Your account is ready! Complete your bundle purchase to unlock all official Semester 1 study notes and high-priority exam topics in one complete package.
+                    </p>
+                    <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-700 pt-1">
+                      <span className="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Semester 1 Study Notes
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Semester 1 Most Repeated Topics
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end gap-3 shrink-0 bg-white/90 border border-indigo-100 rounded-2xl p-5 shadow-xs">
+                    <div>
+                      <span className="text-xs font-medium text-slate-500">Semester 1 BCA Bundle</span>
+                      <div className="text-2xl sm:text-3xl font-black text-slate-900">₹499</div>
+                    </div>
+                    <button
+                      onClick={() => navigate("/purchase")}
+                      className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 py-3 text-xs shadow-md shadow-indigo-600/20 transition cursor-pointer"
+                    >
+                      <ShoppingBag className="h-4 w-4" />
+                      <span>Buy Semester 1 Bundle</span>
+                    </button>
+                    <button
+                      onClick={() => void loadData()}
+                      className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 underline transition cursor-pointer"
+                    >
+                      Already purchased? Refresh your status
+                    </button>
+                  </div>
                 </div>
 
-                <button
-                  onClick={() => switchTab("ai")}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-xs font-bold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-700 transition shrink-0"
-                >
-                  <span>Ask AI</span>
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            </section>
+                {/* Compact Onboarding Steps */}
+                <div className="mt-6 pt-5 border-t border-indigo-100/80">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">
+                    Here's how it works:
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3">
+                      <div className="flex items-center justify-between text-xs font-bold text-emerald-800">
+                        <span>1. Account</span>
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                      </div>
+                      <p className="text-[10px] text-emerald-700 mt-1">Created ✓</p>
+                    </div>
+
+                    <div className="rounded-xl border-2 border-indigo-500 bg-indigo-50/80 p-3 shadow-xs">
+                      <div className="flex items-center justify-between text-xs font-bold text-indigo-900">
+                        <span>2. Purchase Bundle</span>
+                        <span className="rounded bg-indigo-600 text-white text-[9px] px-1.5 py-0.2 font-extrabold uppercase tracking-wider">NEXT</span>
+                      </div>
+                      <p className="text-[10px] text-indigo-800 mt-1">₹499 Package</p>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-200 bg-white/70 p-3 opacity-80">
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-600">
+                        <span>3. Payment Approval</span>
+                        <Clock className="h-3.5 w-3.5 text-slate-400" />
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-1">Verification Review</p>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-200 bg-white/70 p-3 opacity-80">
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-600">
+                        <span>4. Start Studying</span>
+                        <BookOpen className="h-3.5 w-3.5 text-slate-400" />
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-1">Instant Notes Access</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
 
             {/* Active Courses Section */}
             <section className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-2xs">
@@ -462,13 +628,57 @@ export function StudentDashboard() {
                     </div>
                   ))}
                 </div>
-              ) : access.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
-                  <Package className="mx-auto h-8 w-8 text-slate-400" />
-                  <p className="mt-2 text-xs font-bold text-slate-700">No active course access found</p>
-                  <p className="mt-1 text-[11px] text-slate-500 max-w-md mx-auto">
-                    Your course bundle will appear here once your payment verification is complete.
-                  </p>
+              ) : isPaymentPending ? (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-start sm:items-center gap-3.5">
+                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-100 text-amber-800 shrink-0">
+                      <Clock className="h-5 w-5 animate-pulse" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900">Semester 1 Bundle — Verification In Progress</h3>
+                      <p className="text-xs text-slate-600 mt-0.5">
+                        Your payment was submitted. Materials unlock automatically as soon as verified by our team.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => void loadData()}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-white px-3.5 py-2 text-xs font-bold text-amber-900 hover:bg-amber-50 transition shrink-0 self-start sm:self-auto cursor-pointer"
+                  >
+                    <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
+                    <span>Check Status</span>
+                  </button>
+                </div>
+              ) : isNoPurchase ? (
+                <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-start sm:items-center gap-3.5">
+                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-indigo-100 text-indigo-700 shrink-0">
+                      <Package className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900">You haven't purchased the Semester 1 Bundle yet</h3>
+                      <p className="text-xs text-slate-600 mt-0.5">
+                        Purchase the bundle to unlock your Semester 1 study materials.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+                    <button
+                      onClick={() => navigate("/purchase")}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-xs font-bold text-white shadow-sm transition cursor-pointer"
+                    >
+                      <ShoppingBag className="h-3.5 w-3.5" />
+                      <span>Buy Semester 1 Bundle</span>
+                    </button>
+                    <button
+                      onClick={() => void loadData()}
+                      className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                      title="Refresh status"
+                    >
+                      <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
+                      <span>Refresh</span>
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -486,7 +696,7 @@ export function StudentDashboard() {
                             Semester {studentSemester}
                           </span>
                           <h3 className="text-xs font-bold text-slate-900">
-                            {title || "BCA Semester Complete Notes"}
+                            {title || "BCA Semester 1 Complete Bundle"}
                           </h3>
                         </div>
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200">
@@ -497,6 +707,32 @@ export function StudentDashboard() {
                   })}
                 </div>
               )}
+            </section>
+
+            {/* AI Learning Assistant Hero Card */}
+            <section className="rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50/90 via-white to-blue-50/50 p-6 sm:p-7 shadow-2xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1.5">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1 text-[11px] font-bold text-indigo-800">
+                    <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                    AI Academic Assistant
+                  </div>
+                  <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                    Need help understanding a topic?
+                  </h2>
+                  <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
+                    Ask the BCA Vault AI Learning Assistant for step-by-step topic explanations, code walkthroughs, and exam questions.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => switchTab("ai")}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-xs font-bold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-700 transition shrink-0"
+                >
+                  <span>Ask AI</span>
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
             </section>
 
             {/* ── Materials Categorization & Display ──────────────────────── */}
@@ -807,21 +1043,42 @@ export function StudentDashboard() {
                             </div>
 
                             <div className="mt-5 pt-3 border-t border-slate-100">
-                              <button
-                                onClick={() => void openNote(note)}
-                                disabled={openingId === note.id}
-                                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 px-4 py-2.5 text-xs font-black transition shadow-xs disabled:bg-slate-200 uppercase tracking-wider cursor-pointer"
-                              >
-                                {openingId === note.id ? (
-                                  <>
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-950" /> Opening PDF…
-                                  </>
-                                ) : (
-                                  <>
-                                    <FileText className="h-3.5 w-3.5 text-slate-950" /> View PDF
-                                  </>
-                                )}
-                              </button>
+                              {hasActiveBundle ? (
+                                <button
+                                  onClick={() => void openNote(note)}
+                                  disabled={openingId === note.id}
+                                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 px-4 py-2.5 text-xs font-black transition shadow-xs disabled:bg-slate-200 uppercase tracking-wider cursor-pointer"
+                                >
+                                  {openingId === note.id ? (
+                                    <>
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-950" /> Opening PDF…
+                                    </>
+                                  ) : (
+                                    <>
+                                      <FileText className="h-3.5 w-3.5 text-slate-950" /> View PDF
+                                    </>
+                                  )}
+                                </button>
+                              ) : isPaymentPending ? (
+                                <div className="space-y-1">
+                                  <button
+                                    disabled
+                                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 px-4 py-2 text-xs font-bold opacity-90 cursor-not-allowed"
+                                  >
+                                    <Clock className="h-3.5 w-3.5 text-amber-700 animate-pulse" />
+                                    <span>Payment Under Review</span>
+                                  </button>
+                                  <p className="text-[10px] text-center text-slate-500">Unlocks automatically once approved</p>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => navigate("/purchase")}
+                                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 text-xs font-bold transition shadow-xs cursor-pointer"
+                                >
+                                  <Lock className="h-3.5 w-3.5" />
+                                  <span>Unlock with Bundle (₹499)</span>
+                                </button>
+                              )}
                             </div>
                           </article>
                         ))
@@ -854,7 +1111,7 @@ export function StudentDashboard() {
                   </div>
 
                   {/* ── 📚 Study Materials Hub Section ───────────────────────────── */}
-                  <section className="space-y-4">
+                  <section id="study-materials" className="space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div>
                         <h2 className="text-lg font-bold text-slate-900">📚 Study Notes & Materials Hub</h2>
@@ -1005,25 +1262,46 @@ export function StudentDashboard() {
                               </div>
 
                               <div className="mt-5 pt-3 border-t border-slate-100">
-                                <button
-                                  onClick={() => void openNote(note)}
-                                  disabled={openingId === note.id}
-                                  className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white transition cursor-pointer ${
-                                    isTopic
-                                      ? "bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold"
-                                      : "bg-indigo-600 hover:bg-indigo-700"
-                                  } disabled:bg-slate-300`}
-                                >
-                                  {openingId === note.id ? (
-                                    <>
-                                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Opening PDF…
-                                    </>
-                                  ) : (
-                                    <>
-                                      <FileText className="h-3.5 w-3.5" /> View PDF
-                                    </>
-                                  )}
-                                </button>
+                                {hasActiveBundle ? (
+                                  <button
+                                    onClick={() => void openNote(note)}
+                                    disabled={openingId === note.id}
+                                    className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white transition cursor-pointer ${
+                                      isTopic
+                                        ? "bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold"
+                                        : "bg-indigo-600 hover:bg-indigo-700"
+                                    } disabled:bg-slate-300`}
+                                  >
+                                    {openingId === note.id ? (
+                                      <>
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Opening PDF…
+                                      </>
+                                    ) : (
+                                      <>
+                                        <FileText className="h-3.5 w-3.5" /> View PDF
+                                      </>
+                                    )}
+                                  </button>
+                                ) : isPaymentPending ? (
+                                  <div className="space-y-1">
+                                    <button
+                                      disabled
+                                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-800 opacity-90 cursor-not-allowed"
+                                    >
+                                      <Clock className="h-3.5 w-3.5 text-amber-600 animate-pulse" />
+                                      <span>Payment Under Review</span>
+                                    </button>
+                                    <p className="text-[10px] text-center text-slate-500">Unlocks automatically once approved</p>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => navigate("/purchase")}
+                                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-xs font-bold text-white transition cursor-pointer shadow-xs"
+                                  >
+                                    <Lock className="h-3.5 w-3.5" />
+                                    <span>Unlock with Bundle (₹499)</span>
+                                  </button>
+                                )}
                               </div>
                             </article>
                           );

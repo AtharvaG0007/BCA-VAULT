@@ -1,9 +1,24 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
-import { BookOpen, Menu, X, ShoppingBag, Search, ChevronDown, User, LogOut, Settings, LayoutDashboard, Sparkles } from "lucide-react";
+import {
+  BookOpen,
+  Menu,
+  X,
+  ShoppingBag,
+  Search,
+  ChevronDown,
+  User,
+  LogOut,
+  LayoutDashboard,
+  Gift,
+  Home,
+  FileText,
+  Package,
+} from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "./ui/utils";
+import { useAuth } from "./auth/AuthContext";
 
 const navLinks = [
   {
@@ -32,18 +47,34 @@ export function Navbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const [isLoggedIn] = useState(false);
+  const { user, appUser, logout } = useAuth();
+  const isLoggedIn = Boolean(user);
+
+  const studentName =
+    appUser?.name?.trim() ||
+    (user?.user_metadata?.full_name as string | undefined)?.trim() ||
+    user?.email?.split("@")[0]?.trim() ||
+    "Student";
+  const studentEmail = user?.email || "";
+  const avatarLetter = (studentName[0] || "S").toUpperCase();
+
+  const handleLogout = async () => {
+    setUserMenuOpen(false);
+    setMobileOpen(false);
+    await logout();
+    navigate("/");
+  };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-xs">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-[#1E40AF] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-[#1E40AF] flex items-center justify-center shadow-xs">
               <BookOpen className="w-4 h-4 text-white" />
             </div>
-            <span className="text-lg font-bold text-[#111827]" style={{ fontFamily: 'var(--font-display)' }}>
+            <span className="text-lg font-black text-[#111827] tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
               BCA <span className="text-[#1E40AF]">Vault</span>
             </span>
           </Link>
@@ -60,7 +91,7 @@ export function Navbar() {
                 <Link
                   to={link.href}
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#1E40AF] rounded-lg hover:bg-blue-50 transition-colors",
+                    "flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-gray-600 hover:text-[#1E40AF] rounded-lg hover:bg-blue-50 transition-colors",
                   )}
                 >
                   <span>{link.label}</span>
@@ -69,7 +100,7 @@ export function Navbar() {
                       {(link as any).badge}
                     </span>
                   )}
-                  {link.children && <ChevronDown className="w-3.5 h-3.5" />}
+                  {link.children && <ChevronDown className="w-3.5 h-3.5 opacity-60" />}
                 </Link>
                 {link.children && openDropdown === link.label && (
                   <motion.div
@@ -82,7 +113,7 @@ export function Navbar() {
                       <Link
                         key={child.label}
                         to={child.href}
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#1E40AF] transition-colors"
+                        className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-[#1E40AF] transition-colors"
                       >
                         {child.label}
                       </Link>
@@ -93,32 +124,44 @@ export function Navbar() {
             ))}
           </nav>
 
-          {/* Right Side */}
-          <div className="flex items-center gap-2">
+          {/* Right Side Controls */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               onClick={() => navigate("/search")}
               className="hidden sm:flex w-9 h-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-[#1E40AF] transition-colors"
+              title="Search notes"
             >
               <Search className="w-4 h-4" />
             </button>
 
             {isLoggedIn ? (
               <>
-                {/* Bundles CTA */}
+                {/* Desktop: Quick Dashboard CTA */}
                 <button
-                  onClick={() => navigate("/bundles")}
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#1E40AF]/10 rounded-full border border-[#1E40AF]/20 text-[#1E40AF] hover:bg-[#1E40AF]/20 transition-colors text-xs font-semibold"
+                  onClick={() => navigate("/app/dashboard")}
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#1E40AF] rounded-xl text-white hover:bg-[#1E3A8A] transition text-xs font-bold shadow-xs"
                 >
-                  <ShoppingBag className="w-3.5 h-3.5" /> Get Bundle
+                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  <span>Dashboard</span>
                 </button>
 
-                {/* User Menu */}
+                {/* Mobile: Visible Dashboard button */}
+                <button
+                  onClick={() => navigate("/app/dashboard")}
+                  className="lg:hidden inline-flex items-center gap-1 px-2.5 py-1.5 bg-[#1E40AF] rounded-lg text-white hover:bg-[#1E3A8A] transition text-xs font-bold shadow-xs"
+                >
+                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  <span>Dashboard</span>
+                </button>
+
+                {/* User Dropdown */}
                 <div className="relative">
                   <button
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="w-8 h-8 rounded-full bg-[#1E40AF] text-white flex items-center justify-center text-sm font-semibold hover:bg-[#1E3A8A] transition-colors"
+                    className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black hover:bg-[#1E40AF] transition shadow-xs"
+                    title={studentName}
                   >
-                    A
+                    {avatarLetter}
                   </button>
                   <AnimatePresence>
                     {userMenuOpen && (
@@ -126,31 +169,43 @@ export function Navbar() {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 8 }}
-                        className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50"
+                        className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-1.5 z-50"
                       >
-                        <div className="px-4 py-2 border-b border-gray-100">
-                          <p className="text-sm font-semibold text-gray-900">Arjun Kumar</p>
-                          <p className="text-xs text-gray-500">arjun@example.com</p>
+                        <div className="px-4 py-2.5 border-b border-gray-100">
+                          <p className="text-xs font-black text-gray-900 truncate">{studentName}</p>
+                          <p className="text-[11px] text-gray-500 truncate">{studentEmail}</p>
                         </div>
-                        {[
-                          { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-                          { icon: User,            label: "Profile",   href: "/dashboard/settings" },
-                          { icon: Settings,        label: "Settings",  href: "/dashboard/settings" },
-                        ].map((item) => (
-                          <Link
-                            key={item.label}
-                            to={item.href}
-                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#1E40AF] transition-colors"
-                            onClick={() => setUserMenuOpen(false)}
-                          >
-                            <item.icon className="w-4 h-4" />
-                            {item.label}
-                          </Link>
-                        ))}
+                        <Link
+                          to="/app/dashboard"
+                          className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-[#1E40AF] transition"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          <LayoutDashboard className="w-3.5 h-3.5" />
+                          <span>Student Dashboard</span>
+                        </Link>
+                        <Link
+                          to="/app/profile"
+                          className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-[#1E40AF] transition"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          <User className="w-3.5 h-3.5" />
+                          <span>My Profile</span>
+                        </Link>
+                        <Link
+                          to="/app/referral"
+                          className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-[#1E40AF] transition"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          <Gift className="w-3.5 h-3.5 text-indigo-600" />
+                          <span>Referral Program</span>
+                        </Link>
                         <div className="border-t border-gray-100 mt-1 pt-1">
-                          <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                            <LogOut className="w-4 h-4" />
-                            Sign out
+                          <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 transition"
+                          >
+                            <LogOut className="w-3.5 h-3.5" />
+                            <span>Sign out</span>
                           </button>
                         </div>
                       </motion.div>
@@ -160,29 +215,34 @@ export function Navbar() {
               </>
             ) : (
               <>
+                {/* ── VISIBLE AUTH ACTIONS (DESKTOP & MOBILE) ── */}
+                {/* Mobile & Desktop visible: Login Button */}
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="hidden sm:inline-flex text-gray-700 hover:text-[#1E40AF] hover:bg-blue-50"
+                  className="px-2.5 sm:px-3 text-xs font-bold text-gray-700 hover:text-[#1E40AF] hover:bg-blue-50 rounded-xl"
                   onClick={() => navigate("/auth/login")}
                 >
-                  Sign in
+                  Login
                 </Button>
+
+                {/* Mobile & Desktop visible: Create Account Button */}
                 <Button
                   size="sm"
-                  className="bg-[#1E40AF] hover:bg-[#1E3A8A] text-white hidden sm:inline-flex"
-                  onClick={() => navigate("/auth/login")}
+                  className="px-2.5 sm:px-3.5 text-xs font-bold bg-[#1E40AF] hover:bg-[#1E3A8A] text-white rounded-xl shadow-xs"
+                  onClick={() => navigate("/auth/signup")}
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Get Started
+                  <span className="hidden sm:inline">Create Free Account</span>
+                  <span className="sm:hidden">Sign Up</span>
                 </Button>
               </>
             )}
 
-            {/* Mobile menu toggle */}
+            {/* Mobile hamburger menu toggle */}
             <button
-              className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+              className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl text-gray-700 hover:bg-gray-100 transition"
               onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Toggle Menu"
             >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -190,62 +250,136 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu (Categorized into MAIN and ACCOUNT) */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden border-t border-gray-100 bg-white overflow-hidden"
+            className="lg:hidden border-t border-gray-100 bg-white overflow-hidden shadow-lg"
           >
-            <div className="px-4 py-3 space-y-1">
-              {navLinks.map((link) => (
-                <div key={link.label}>
+            <div className="px-4 py-4 space-y-4">
+              {/* ── MAIN SECTION ── */}
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-2 block mb-1.5">
+                  Main Navigation
+                </span>
+                <div className="space-y-0.5">
                   <Link
-                    to={link.href}
-                    className="flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-blue-50 hover:text-[#1E40AF] transition-colors"
+                    to="/"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-gray-700 rounded-xl hover:bg-blue-50 hover:text-[#1E40AF] transition"
                     onClick={() => setMobileOpen(false)}
                   >
-                    <span>{link.label}</span>
-                    {(link as any).badge && (
-                      <span className="text-[10px] font-bold tracking-tight bg-blue-100 text-[#1E40AF] px-2 py-0.5 rounded-full border border-blue-200">
-                        {(link as any).badge}
-                      </span>
-                    )}
+                    <Home className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Home</span>
                   </Link>
-                  {link.children && (
-                    <div className="ml-4 mt-1 space-y-1">
-                      {link.children.map((child) => (
-                        <Link
-                          key={child.label}
-                          to={child.href}
-                          className="block px-3 py-1.5 text-sm text-gray-500 rounded-lg hover:bg-blue-50 hover:text-[#1E40AF] transition-colors"
-                          onClick={() => setMobileOpen(false)}
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
+
+                  <Link
+                    to="/notes"
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-gray-700 rounded-xl hover:bg-blue-50 hover:text-[#1E40AF] transition"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <FileText className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Notes</span>
+                  </Link>
+
+                  <Link
+                    to="/bundles"
+                    className="flex items-center justify-between px-3 py-2 text-xs font-bold text-gray-700 rounded-xl hover:bg-blue-50 hover:text-[#1E40AF] transition"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Package className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Semester 1 Bundle</span>
                     </div>
-                  )}
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                      ₹499
+                    </span>
+                  </Link>
+
+                  <Link
+                    to="/referral"
+                    className="flex items-center justify-between px-3 py-2 text-xs font-bold text-gray-700 rounded-xl hover:bg-blue-50 hover:text-[#1E40AF] transition"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Gift className="w-3.5 h-3.5 text-indigo-500" />
+                      <span>Referral Program</span>
+                    </div>
+                    <span className="text-[10px] font-bold bg-blue-100 text-[#1E40AF] px-2 py-0.5 rounded-full border border-blue-200">
+                      Unlock Qs
+                    </span>
+                  </Link>
                 </div>
-              ))}
-              <div className="pt-2 border-t border-gray-100 flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => { navigate("/auth/login"); setMobileOpen(false); }}
-                >
-                  Sign in
-                </Button>
-                <Button
-                  size="sm"
-                  className="flex-1 bg-[#1E40AF] hover:bg-[#1E3A8A] text-white"
-                  onClick={() => { navigate("/auth/login"); setMobileOpen(false); }}
-                >
-                  Get Started
-                </Button>
+              </div>
+
+              {/* ── ACCOUNT SECTION ── */}
+              <div className="pt-3 border-t border-gray-100">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-2 block mb-2">
+                  Account
+                </span>
+
+                {isLoggedIn ? (
+                  <div className="space-y-2">
+                    <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3">
+                      <p className="text-xs font-black text-slate-900 truncate">{studentName}</p>
+                      <p className="text-[11px] text-slate-500 truncate">{studentEmail}</p>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <Link
+                        to="/app/dashboard"
+                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-indigo-700 bg-indigo-50/70 rounded-xl hover:bg-indigo-100 transition"
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        <LayoutDashboard className="w-3.5 h-3.5" />
+                        <span>Student Dashboard</span>
+                      </Link>
+
+                      <Link
+                        to="/app/profile"
+                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-gray-700 rounded-xl hover:bg-blue-50 hover:text-[#1E40AF] transition"
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        <User className="w-3.5 h-3.5 text-slate-400" />
+                        <span>My Profile</span>
+                      </Link>
+                    </div>
+
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 transition"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>Log Out</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      size="sm"
+                      className="w-full bg-[#1E40AF] hover:bg-[#1E3A8A] text-white text-xs font-bold rounded-xl py-2.5"
+                      onClick={() => {
+                        navigate("/auth/signup");
+                        setMobileOpen(false);
+                      }}
+                    >
+                      Create Free Account
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-xs font-bold border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl py-2.5"
+                      onClick={() => {
+                        navigate("/auth/login");
+                        setMobileOpen(false);
+                      }}
+                    >
+                      Login to Existing Account
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
