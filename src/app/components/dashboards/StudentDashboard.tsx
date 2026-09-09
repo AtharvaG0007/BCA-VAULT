@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock,
-  Download,
   FileText,
   Flame,
   HelpCircle,
@@ -30,6 +29,7 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import { supabase } from "@/lib/supabase/client";
 import { adminApi } from "@/lib/supabase/adminService";
+import { ProtectedPdfViewer } from "../viewer/ProtectedPdfViewer";
 import { StudentLearningView } from "../student/StudentLearningView";
 import { StudentProfileView } from "../student/StudentProfileView";
 import { StudentReferralView } from "../student/StudentReferralView";
@@ -91,6 +91,19 @@ export function StudentDashboard() {
   const [noteSearch, setNoteSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [activeViewer, setActiveViewer] = useState<{
+    url: string;
+    title: string;
+    subject?: string;
+    semester?: number;
+    expiresIn?: number;
+    watermarkData?: {
+      studentName?: string;
+      studentEmail?: string;
+      studentId?: string;
+      sessionTimestamp?: string;
+    };
+  } | null>(null);
   const [message, setMessage] = useState<{ text: string; type: "error" | "info" } | null>(null);
 
   // Sync tab with URL if user navigates
@@ -169,27 +182,24 @@ export function StudentDashboard() {
     setOpeningId(note.id);
     setMessage(null);
 
-    // Pre-open blank tab synchronously to guarantee browser popup blocker does not intercept
-    const newWindow = typeof window !== "undefined" ? window.open("about:blank", "_blank") : null;
-
     try {
       const res = await adminApi.getStudentSignedNoteUrl(note.id);
       if (res?.signedUrl) {
-        if (newWindow && !newWindow.closed) {
-          newWindow.location.href = res.signedUrl;
-        } else {
-          window.open(res.signedUrl, "_blank", "noopener,noreferrer");
-        }
+        setActiveViewer({
+          url: res.signedUrl,
+          title: note.title,
+          subject: note.subject ?? undefined,
+          semester: note.semester ?? undefined,
+          expiresIn: res.expiresIn || 180,
+          watermarkData: res.watermark,
+        });
         return;
       }
       throw new Error("Unable to open this document right now. Please try again.");
     } catch (err: any) {
       console.error("Open note error:", err);
-      if (newWindow && !newWindow.closed) {
-        newWindow.close();
-      }
       setMessage({
-        text: "Unable to open this document right now. Please try again.",
+        text: err?.message || "Unable to open this document right now. Please try again.",
         type: "error",
       });
     } finally {
@@ -1315,6 +1325,26 @@ export function StudentDashboard() {
           </div>
         )}
       </main>
+
+      {/* Controlled Protected PDF In-App Viewer (View Only, No Download) */}
+      {activeViewer && (
+        <ProtectedPdfViewer
+          url={activeViewer.url}
+          title={activeViewer.title}
+          subject={activeViewer.subject}
+          semester={activeViewer.semester}
+          expiresIn={activeViewer.expiresIn}
+          watermarkData={activeViewer.watermarkData}
+          onClose={() => setActiveViewer(null)}
+          onSessionExpired={() => {
+            setActiveViewer(null);
+            setMessage({
+              text: "Viewing session expired. Click 'View PDF' to refresh access.",
+              type: "info",
+            });
+          }}
+        />
+      )}
     </div>
   );
 }
