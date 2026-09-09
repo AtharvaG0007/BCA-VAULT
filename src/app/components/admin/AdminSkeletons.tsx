@@ -488,7 +488,16 @@ export function EmailConsoleSkeleton() {
 }
 
 /** Full Progressive Admin Shell Skeleton for initial page load or session restore */
-export function AdminShellSkeleton() {
+export function AdminShellSkeleton({ pathname = "" }: { pathname?: string }) {
+  const isStudents = pathname.includes("student");
+  const isPayments = pathname.includes("payment");
+  const isReferrals = pathname.includes("referral");
+  const isBundles = pathname.includes("bundle");
+  const isNotes = pathname.includes("note");
+  const isAccess = pathname.includes("access");
+  const isEmail = pathname.includes("email");
+  const isActivity = pathname.includes("activit");
+
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col lg:flex-row">
       {/* Sidebar Skeleton */}
@@ -523,7 +532,25 @@ export function AdminShellSkeleton() {
           <Skeleton className="h-8 w-24 rounded-xl" />
         </header>
 
-        <DashboardSkeleton />
+        {isStudents ? (
+          <StudentsTableSkeleton />
+        ) : isPayments ? (
+          <PaymentsTableSkeleton />
+        ) : isReferrals ? (
+          <ReferralsSkeleton />
+        ) : isBundles ? (
+          <BundlesSkeleton />
+        ) : isNotes ? (
+          <NotesTableSkeleton />
+        ) : isAccess ? (
+          <AccessTableSkeleton />
+        ) : isEmail ? (
+          <EmailConsoleSkeleton />
+        ) : isActivity ? (
+          <ActivityLogsSkeleton />
+        ) : (
+          <DashboardSkeleton />
+        )}
       </main>
     </div>
   );

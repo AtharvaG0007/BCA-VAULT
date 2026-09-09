@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "../auth/AuthContext";
+import { StudentReferralSkeleton } from "./StudentSkeletons";
 
 interface ReferralRow {
   id: string;
@@ -166,14 +167,7 @@ export function StudentReferralView({
   const successfulCount = referrals.filter((r) => r.status === "successful").length;
 
   if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center p-12">
-        <div className="flex flex-col items-center gap-3 text-slate-500">
-          <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-          <p className="text-xs font-semibold">Loading your referral status…</p>
-        </div>
-      </div>
-    );
+    return <StudentReferralSkeleton />;
   }
 
   return (

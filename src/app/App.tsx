@@ -40,6 +40,7 @@ import { AdminProtectedRoute } from "./components/guards/AdminProtectedRoute";
 import { PublicSupportChat } from "./components/chatbot/PublicSupportChat";
 import { WhatsAppFloatingButton } from "./components/support/WhatsAppFloatingButton";
 import { ReferralFloatingPromo } from "./components/marketing/ReferralFloatingPromo";
+import { StudentShellSkeleton } from "./components/student/StudentSkeletons";
 
 function PageWrapper({
   children,
@@ -63,12 +64,7 @@ function RoleRedirect() {
   const { user, role, loading } = useAuth();
   const { hasAccepted } = useLegal();
 
-  if (loading)
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="w-8 h-8 border-2 border-[#1E40AF] border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+  if (loading) return <StudentShellSkeleton />;
   if (!user) return <Navigate to="/auth/login" replace />;
   if (!hasAccepted)
     return <Navigate to="/legal-consent" replace />;

@@ -98,6 +98,10 @@ export function StudentProfileView() {
   const formatDate = (val?: string) =>
     val ? new Date(val).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
+  if (loading) {
+    return <StudentProfileSkeleton />;
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 space-y-8">
       {/* Header */}
@@ -108,13 +112,7 @@ export function StudentProfileView() {
         </p>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-        </div>
-      ) : (
-        <>
-          {/* Student Profile Card */}
+      {/* Student Profile Card */}
           <section className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-2xs">
             <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
               <div className="grid h-10 w-10 place-items-center rounded-xl bg-indigo-50 text-indigo-600">
@@ -250,8 +248,6 @@ export function StudentProfileView() {
               <span>Sign Out of Account</span>
             </button>
           </div>
-        </>
-      )}
-    </div>
-  );
-}
+        </div>
+      );
+    }

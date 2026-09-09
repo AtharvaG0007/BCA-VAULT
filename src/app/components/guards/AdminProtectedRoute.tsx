@@ -14,7 +14,7 @@ export function AdminProtectedRoute({
   const location = useLocation();
 
   if (loading) {
-    return <AdminShellSkeleton />;
+    return <AdminShellSkeleton pathname={location.pathname} />;
   }
 
   if (!user || !role || !allowedRoles.includes(role)) {
