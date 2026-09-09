@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { BookOpen, Twitter, Instagram, Youtube, Github, Mail, Phone, MapPin } from "lucide-react";
+import { BookOpen, Linkedin, Instagram, Github, Mail, Phone, MapPin } from "lucide-react";
 
 const footerLinks = {
   Platform: [
@@ -59,14 +59,15 @@ export function Footer() {
             </div>
             <div className="flex items-center gap-3 mt-6">
               {[
-                { icon: Twitter, href: "#", label: "Twitter" },
-                { icon: Instagram, href: "#", label: "Instagram" },
-                { icon: Youtube, href: "#", label: "YouTube" },
-                { icon: Github, href: "#", label: "GitHub" },
+                { icon: Linkedin, href: "https://www.linkedin.com/in/atharva-gogawale-259173354/", label: "LinkedIn" },
+                { icon: Instagram, href: "https://www.instagram.com/_athgo07/", label: "Instagram" },
+                { icon: Github, href: "https://github.com/AtharvaG0007", label: "GitHub" },
               ].map(({ icon: Icon, href, label }) => (
                 <a
                   key={label}
                   href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={label}
                   className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center text-gray-400 hover:bg-[#1E40AF] hover:text-white transition-colors"
                 >
