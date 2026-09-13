@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock,
+  Compass,
   FileText,
   Flame,
   HelpCircle,
@@ -18,6 +19,7 @@ import {
   MessageSquare,
   Package,
   RefreshCw,
+  Route,
   Search,
   ShieldAlert,
   ShieldCheck,
@@ -474,7 +476,7 @@ export function StudentDashboard() {
 
                   <button
                     onClick={() => {
-                      const el = document.getElementById("study-materials");
+                      const el = document.getElementById("exam-roadmaps") || document.getElementById("study-materials");
                       if (el) el.scrollIntoView({ behavior: "smooth" });
                     }}
                     className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-xs font-bold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 transition shrink-0 cursor-pointer"
@@ -719,32 +721,6 @@ export function StudentDashboard() {
               )}
             </section>
 
-            {/* AI Learning Assistant Hero Card */}
-            <section className="rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50/90 via-white to-blue-50/50 p-6 sm:p-7 shadow-2xs">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="space-y-1.5">
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1 text-[11px] font-bold text-indigo-800">
-                    <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                    AI Academic Assistant
-                  </div>
-                  <h2 className="text-base sm:text-lg font-bold text-slate-900">
-                    Need help understanding a topic?
-                  </h2>
-                  <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
-                    Ask the BCA Vault AI Learning Assistant for step-by-step topic explanations, code walkthroughs, and exam questions.
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => switchTab("ai")}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-xs font-bold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-700 transition shrink-0"
-                >
-                  <span>Ask AI</span>
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            </section>
-
             {/* ── Materials Categorization & Display ──────────────────────── */}
             {(() => {
               type CanonicalTopicSubject =
@@ -773,6 +749,13 @@ export function StudentDashboard() {
                 n.storage_path?.toLowerCase().includes("repted_questions") ||
                 n.storage_path?.toLowerCase().includes("questions_complete");
 
+              // Identify Exam Roadmap PDFs
+              const isExamRoadmap = (n: NoteItem) => {
+                const p = (n.storage_path || "").toLowerCase();
+                const t = (n.title || "").toLowerCase();
+                return p.includes("roadmap") || t.includes("roadmap");
+              };
+
               // The Algorithm & Program Design Using C record is an alternate batch/course naming duplicate of C Programming
               const isDuplicateCProgRecord = (n: NoteItem) =>
                 n.id === DUPLICATE_ALGORITHM_DESIGN_NOTE_ID ||
@@ -780,17 +763,13 @@ export function StudentDashboard() {
                   n.id !== CANONICAL_C_PROGRAMMING_NOTE_ID);
 
               const getNormalizedTopicSubject = (n: NoteItem): CanonicalTopicSubject | null => {
-                if (isReferralReward(n)) return null;
+                if (isReferralReward(n) || isExamRoadmap(n)) return null;
 
                 const s = (n.subject || "").toLowerCase();
                 const t = (n.title || "").toLowerCase();
                 const p = (n.storage_path || "").toLowerCase();
 
-                // 1. C Programming variations:
-                // - C Programming
-                // - Algorithms and Program Design Using C
-                // - Algorithm & Program Design Using C
-                // - C Programming / Algorithms and Program Design Using C
+                // 1. C Programming variations
                 if (
                   n.id === CANONICAL_C_PROGRAMMING_NOTE_ID ||
                   n.id === DUPLICATE_ALGORITHM_DESIGN_NOTE_ID ||
@@ -816,11 +795,7 @@ export function StudentDashboard() {
                   return "Foundation of Computing";
                 }
 
-                // 3. Client-Side Web Technology variations:
-                // - Client-Side Web Technology
-                // - Client-Side Web Technologies
-                // - HTML • CSS • JavaScript
-                // - HTML + CSS + JavaScript
+                // 3. Client-Side Web Technology variations
                 if (
                   s.includes("client-side") ||
                   s.includes("client side") ||
@@ -843,7 +818,7 @@ export function StudentDashboard() {
               };
 
               const isMostRepeatedTopic = (n: NoteItem) => {
-                if (isReferralReward(n) || isDuplicateCProgRecord(n)) return false;
+                if (isReferralReward(n) || isDuplicateCProgRecord(n) || isExamRoadmap(n)) return false;
                 if (
                   n.id === CANONICAL_C_PROGRAMMING_NOTE_ID ||
                   n.id === CANONICAL_FOUNDATION_NOTE_ID ||
@@ -864,7 +839,7 @@ export function StudentDashboard() {
               };
 
               const isStudyNote = (n: NoteItem) =>
-                !isMostRepeatedTopic(n) && !isReferralReward(n) && !isDuplicateCProgRecord(n);
+                !isMostRepeatedTopic(n) && !isReferralReward(n) && !isDuplicateCProgRecord(n) && !isExamRoadmap(n);
 
               // Formats canonical titles and subtitles for the Semester 1 Most Repeated Topics UI
               const formatCanonicalTopicNote = (n: NoteItem): NoteItem => {
@@ -902,15 +877,16 @@ export function StudentDashboard() {
                 return n;
               };
 
-              // Strictly Semester 1: exclude Semester 2, referral rewards, and duplicate C Programming records
+              // Strictly Semester 1: exclude Semester 2, referral rewards, duplicate C Programming records, and dedicated Roadmaps
               const displayableNotes = notes.filter(
                 (n) =>
                   (n.semester === 1 || n.semester === null) &&
                   !isReferralReward(n) &&
-                  !isDuplicateCProgRecord(n)
+                  !isDuplicateCProgRecord(n) &&
+                  !isExamRoadmap(n)
               );
 
-              // Canonical display order:
+              // Canonical display order for Most Repeated Topics:
               // 1. C Programming
               // 2. Foundation of Computing
               // 3. Client-Side Web Technology
@@ -977,95 +953,214 @@ export function StudentDashboard() {
                   return 0;
                 });
 
+              // Canonical Exam Roadmaps Configuration
+              // Strict display order:
+              // 1. C Programming
+              // 2. Foundation of Computing
+              // 3. Client-Side Web Technologies
+              interface ExamRoadmapCardConfig {
+                key: string;
+                cardTitle: string;
+                subjectSubtitle: string;
+                badge: string;
+                description: string;
+                revisionPlan: string;
+                pathMatch: string;
+                titleMatch: string;
+              }
+
+              const EXAM_ROADMAP_CONFIGS: ExamRoadmapCardConfig[] = [
+                {
+                  key: "c-programming",
+                  cardTitle: "C Programming",
+                  subjectSubtitle: "Algorithms and Program Design using C",
+                  badge: "SEMESTER 1",
+                  description:
+                    "Your step-by-step path from algorithms and C fundamentals to functions, pointers, arrays, structures and final revision.",
+                  revisionPlan: "15-day • 7-day • 3-day • Final revision",
+                  pathMatch: "c_programming_exam_roadmap",
+                  titleMatch: "c programming",
+                },
+                {
+                  key: "foundations-of-computing",
+                  cardTitle: "Foundations of Computing",
+                  subjectSubtitle: "Foundation of Computing",
+                  badge: "SEMESTER 1",
+                  description:
+                    "Follow the syllabus in the right order, focus on high-value areas, and use the 15/7/3-day plans when exams are close.",
+                  revisionPlan: "15-day • 7-day • 3-day • Final revision",
+                  pathMatch: "foundations_of_computing_exam_roadmap",
+                  titleMatch: "foundations of computing",
+                },
+                {
+                  key: "client-side-web-technologies",
+                  cardTitle: "Client-Side Web Technologies",
+                  subjectSubtitle: "Client-Side Web Technology",
+                  badge: "SEMESTER 1",
+                  description:
+                    "HTML → HTML5 → CSS → JavaScript → Forms, Validation, Events and DOM.",
+                  revisionPlan: "15-day • 7-day • 3-day • Final revision",
+                  pathMatch: "client_side_web_technologies_exam_roadmap",
+                  titleMatch: "client-side web",
+                },
+              ];
+
+              const examRoadmapCards = EXAM_ROADMAP_CONFIGS.map((cfg) => {
+                const matchedNote = notes.find((n) => {
+                  if (!isExamRoadmap(n)) return false;
+                  const p = (n.storage_path || "").toLowerCase();
+                  const t = (n.title || "").toLowerCase();
+                  return p.includes(cfg.pathMatch) || t.includes(cfg.titleMatch);
+                });
+                return {
+                  ...cfg,
+                  note: matchedNote,
+                };
+              });
+
               return (
                 <>
-                  {/* ── 📌 Most Repeated Topics Section ───────────────────────────── */}
-                  <section className="rounded-3xl border border-amber-200/80 bg-gradient-to-br from-amber-50/50 via-white to-orange-50/30 p-6 sm:p-8 shadow-2xs space-y-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-amber-100 pb-5">
+                  {/* ── 🧭 1. Exam Roadmaps Section (Command Center) ───────────── */}
+                  <section
+                    id="exam-roadmaps"
+                    className="rounded-3xl border border-indigo-200/90 bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/30 p-5 sm:p-7 lg:p-8 shadow-2xs space-y-6"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-indigo-100 pb-5">
                       <div className="space-y-1">
-                        <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-100/80 px-3 py-1 text-xs font-bold text-amber-900">
-                          <Flame className="h-3.5 w-3.5 text-amber-600" />
-                          <span>📌 Most Repeated Topics · BCA Semester 1</span>
+                        <div className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50/80 px-3 py-1 text-xs font-bold text-indigo-900">
+                          <Compass className="h-3.5 w-3.5 text-indigo-600" />
+                          <span>🧭 Exam Roadmaps · BCA Semester 1</span>
                         </div>
                         <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                          Most Repeated Topics
+                          Exam Roadmaps
                         </h2>
                         <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
-                          Focus your Semester 1 preparation on the topics that repeatedly appear across previous papers.
+                          Know what to study, what to prioritize, and what to revise before your Semester 1 exams.
                         </p>
                       </div>
-                      <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-amber-800 bg-amber-100/60 rounded-xl px-3 py-1.5 self-start">
-                        <span>Priority-focused study resource</span>
+                      <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-indigo-800 bg-indigo-100/60 rounded-xl px-3 py-1.5 self-start">
+                        <span>High-priority preparation guides</span>
                       </div>
                     </div>
 
-                    {/* 3 Subject Cards Grid */}
+                    {/* Step 9 Subtle Strategic Preparation Framework Banner */}
+                    <div className="rounded-2xl border border-indigo-100 bg-white/95 p-4 sm:p-5 shadow-2xs">
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <Route className="h-4 w-4 text-indigo-600 shrink-0" />
+                            <p className="text-xs font-bold text-slate-900">
+                              Not sure where to start?{" "}
+                              <span className="text-indigo-600 font-extrabold">
+                                Start with your Exam Roadmap.
+                              </span>
+                            </p>
+                          </div>
+                          <p className="text-[11px] text-slate-500">
+                            Decide what to do next with structured 15-day, 7-day, 3-day, and final revision pathways:
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-wrap text-[11px] font-bold text-indigo-900 bg-indigo-50/70 border border-indigo-100/80 px-3 py-1.5 rounded-xl self-start lg:self-auto">
+                          <span className="text-indigo-700" title="Complete Notes = Learn">
+                            Learn
+                          </span>
+                          <span className="text-indigo-300">→</span>
+                          <span className="text-amber-700" title="Most Repeated Topics = Prioritize">
+                            Prioritize
+                          </span>
+                          <span className="text-indigo-300">→</span>
+                          <span className="text-emerald-700" title="Active Recall = Test yourself">
+                            Recall
+                          </span>
+                          <span className="text-indigo-300">→</span>
+                          <span className="text-blue-700" title="Practice Writing Code/Answers">
+                            Write
+                          </span>
+                          <span className="text-indigo-300">→</span>
+                          <span className="text-purple-700" title="Final Exam Revision = Prepare for exam">
+                            Revise
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 3 Roadmap Cards Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {loading && mostRepeatedTopicNotes.length === 0 ? (
+                      {loading && !notes.some(isExamRoadmap) ? (
                         Array.from({ length: 3 }).map((_, i) => (
                           <div
                             key={i}
-                            className="flex flex-col justify-between rounded-2xl border border-amber-200 bg-white p-5 shadow-2xs space-y-4"
+                            className="flex flex-col justify-between rounded-2xl border border-indigo-100 bg-white p-5 shadow-2xs space-y-4"
                           >
                             <div className="space-y-3">
                               <div className="flex items-center justify-between">
-                                <div className="h-4 w-24 bg-amber-100 rounded-md animate-pulse" />
+                                <div className="h-4 w-28 bg-indigo-50 rounded-md animate-pulse" />
                                 <div className="h-3 w-16 bg-slate-200 rounded animate-pulse" />
                               </div>
-                              <div className="h-4 w-40 bg-slate-200 rounded animate-pulse" />
-                              <div className="h-3 w-32 bg-amber-100/70 rounded animate-pulse" />
+                              <div className="h-4 w-44 bg-slate-200 rounded animate-pulse" />
+                              <div className="h-3 w-32 bg-indigo-50 rounded animate-pulse" />
                               <div className="space-y-1.5 pt-1">
                                 <div className="h-3 w-full bg-slate-100 rounded animate-pulse" />
                                 <div className="h-3 w-4/5 bg-slate-100 rounded animate-pulse" />
                               </div>
                             </div>
-                            <div className="h-9 w-full rounded-xl bg-amber-300/60 animate-pulse mt-4" />
+                            <div className="h-9 w-full rounded-xl bg-indigo-100 animate-pulse mt-4" />
                           </div>
                         ))
                       ) : (
-                        mostRepeatedTopicNotes.map((note) => (
+                        examRoadmapCards.map((card) => (
                           <article
-                            key={note.id}
-                            className="flex flex-col justify-between rounded-2xl border border-amber-200 bg-white p-5 shadow-2xs hover:shadow-md transition"
+                            key={card.key}
+                            className="flex flex-col justify-between rounded-2xl border border-indigo-200/90 bg-white p-5 shadow-2xs hover:shadow-md hover:border-indigo-300 transition space-y-4"
                           >
                             <div className="space-y-3">
-                              <div className="flex items-center justify-between">
-                                <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">
-                                  <Flame className="h-3 w-3 text-amber-600" /> High Priority
-                                </span>
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                  Semester 1
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 border border-indigo-100 px-2 py-0.5 text-[10px] font-black text-indigo-700 uppercase tracking-wider">
+                                  <Compass className="h-3 w-3 text-indigo-600 shrink-0" />
+                                  <span>EXAM ROADMAP</span>
+                                </div>
+                                <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                                  {card.badge}
                                 </span>
                               </div>
 
                               <div>
-                                <h3 className="text-sm font-black text-slate-900 leading-snug">
-                                  {note.title}
+                                <h3 className="text-base font-black text-slate-900 leading-snug">
+                                  {card.cardTitle}
                                 </h3>
-                                <p className="text-[11px] font-semibold text-amber-800 mt-1">
-                                  {note.subject || "Semester 1 Core Subject"}
+                                <p className="text-xs font-semibold text-indigo-600 mt-1">
+                                  {card.subjectSubtitle}
                                 </p>
                               </div>
 
-                              <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed">
-                                {note.description || "Focus on the key topics repeatedly examined across previous semester papers."}
+                              <p className="text-xs text-slate-600 leading-relaxed">
+                                {card.description}
                               </p>
+
+                              <div className="pt-1">
+                                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 bg-slate-50 border border-slate-200/80 rounded-lg px-2.5 py-1">
+                                  <Clock className="h-3 w-3 text-indigo-500 shrink-0" />
+                                  <span>{card.revisionPlan}</span>
+                                </span>
+                              </div>
                             </div>
 
-                            <div className="mt-5 pt-3 border-t border-slate-100">
+                            <div className="mt-4 pt-3 border-t border-slate-100">
                               {hasActiveBundle ? (
                                 <button
-                                  onClick={() => void openNote(note)}
-                                  disabled={openingId === note.id}
-                                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 px-4 py-2.5 text-xs font-black transition shadow-xs disabled:bg-slate-200 uppercase tracking-wider cursor-pointer"
+                                  onClick={() => card.note && void openNote(card.note)}
+                                  disabled={!card.note || openingId === card.note?.id}
+                                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 text-xs font-bold transition shadow-xs disabled:bg-slate-200 cursor-pointer min-h-[42px]"
                                 >
-                                  {openingId === note.id ? (
+                                  {openingId === card.note?.id ? (
                                     <>
-                                      <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-950" /> Opening PDF…
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin text-white" />
+                                      <span>Opening Roadmap…</span>
                                     </>
                                   ) : (
                                     <>
-                                      <FileText className="h-3.5 w-3.5 text-slate-950" /> View PDF
+                                      <span>Open Roadmap</span>
+                                      <ArrowRight className="h-3.5 w-3.5" />
                                     </>
                                   )}
                                 </button>
@@ -1073,17 +1168,19 @@ export function StudentDashboard() {
                                 <div className="space-y-1">
                                   <button
                                     disabled
-                                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 px-4 py-2 text-xs font-bold opacity-90 cursor-not-allowed"
+                                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 px-4 py-2 text-xs font-bold opacity-90 cursor-not-allowed min-h-[42px]"
                                   >
                                     <Clock className="h-3.5 w-3.5 text-amber-700 animate-pulse" />
                                     <span>Payment Under Review</span>
                                   </button>
-                                  <p className="text-[10px] text-center text-slate-500">Unlocks automatically once approved</p>
+                                  <p className="text-[10px] text-center text-slate-500">
+                                    Unlocks automatically once approved
+                                  </p>
                                 </div>
                               ) : (
                                 <button
                                   onClick={() => navigate("/purchase")}
-                                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 text-xs font-bold transition shadow-xs cursor-pointer"
+                                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 text-xs font-bold transition shadow-xs cursor-pointer min-h-[42px]"
                                 >
                                   <Lock className="h-3.5 w-3.5" />
                                   <span>Unlock with Bundle (₹499)</span>
@@ -1096,31 +1193,7 @@ export function StudentDashboard() {
                     </div>
                   </section>
 
-                  {/* ── ❓ Referral Reward Callout (Most Repeated Questions) ─────────── */}
-                  <div className="rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-start sm:items-center gap-3">
-                      <div className="grid h-10 w-10 place-items-center rounded-xl bg-indigo-100 text-indigo-700 shrink-0">
-                        <Gift className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h3 className="text-xs sm:text-sm font-bold text-slate-900">
-                          Looking for ❓ Most Repeated Questions?
-                        </h3>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          Refer 3 friends who purchase Semester 1 to unlock the Most Repeated Questions Pack — FREE.
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => switchTab("referral")}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-indigo-200 bg-white px-4 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-50 transition shadow-2xs shrink-0 self-start sm:self-auto"
-                    >
-                      <span>Refer 3 Friends</span>
-                      <ChevronRight className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-
-                  {/* ── 📚 Study Materials Hub Section ───────────────────────────── */}
+                  {/* ── 📚 2. Study Notes & Materials Hub Section ───────────────── */}
                   <section id="study-materials" className="space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div>
@@ -1130,7 +1203,8 @@ export function StudentDashboard() {
                         </p>
                       </div>
                       <span className="text-xs font-semibold text-slate-400 self-start sm:self-auto">
-                        Showing {filteredNotes.length} of {displayableNotes.length} {displayableNotes.length === 1 ? "document" : "documents"}
+                        Showing {filteredNotes.length} of {displayableNotes.length}{" "}
+                        {displayableNotes.length === 1 ? "document" : "documents"}
                       </span>
                     </div>
 
@@ -1318,6 +1392,173 @@ export function StudentDashboard() {
                         })}
                       </div>
                     )}
+                  </section>
+
+                  {/* ── 📌 3. Most Repeated Topics Section ───────────────────────── */}
+                  <section className="rounded-3xl border border-amber-200/80 bg-gradient-to-br from-amber-50/50 via-white to-orange-50/30 p-6 sm:p-8 shadow-2xs space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-amber-100 pb-5">
+                      <div className="space-y-1">
+                        <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-100/80 px-3 py-1 text-xs font-bold text-amber-900">
+                          <Flame className="h-3.5 w-3.5 text-amber-600" />
+                          <span>📌 Most Repeated Topics · BCA Semester 1</span>
+                        </div>
+                        <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                          Most Repeated Topics
+                        </h2>
+                        <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
+                          Focus your Semester 1 preparation on the topics that repeatedly appear across previous papers.
+                        </p>
+                      </div>
+                      <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-amber-800 bg-amber-100/60 rounded-xl px-3 py-1.5 self-start">
+                        <span>Priority-focused study resource</span>
+                      </div>
+                    </div>
+
+                    {/* 3 Subject Cards Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {loading && mostRepeatedTopicNotes.length === 0 ? (
+                        Array.from({ length: 3 }).map((_, i) => (
+                          <div
+                            key={i}
+                            className="flex flex-col justify-between rounded-2xl border border-amber-200 bg-white p-5 shadow-2xs space-y-4"
+                          >
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div className="h-4 w-24 bg-amber-100 rounded-md animate-pulse" />
+                                <div className="h-3 w-16 bg-slate-200 rounded animate-pulse" />
+                              </div>
+                              <div className="h-4 w-40 bg-slate-200 rounded animate-pulse" />
+                              <div className="h-3 w-32 bg-amber-100/70 rounded animate-pulse" />
+                              <div className="space-y-1.5 pt-1">
+                                <div className="h-3 w-full bg-slate-100 rounded animate-pulse" />
+                                <div className="h-3 w-4/5 bg-slate-100 rounded animate-pulse" />
+                              </div>
+                            </div>
+                            <div className="h-9 w-full rounded-xl bg-amber-300/60 animate-pulse mt-4" />
+                          </div>
+                        ))
+                      ) : (
+                        mostRepeatedTopicNotes.map((note) => (
+                          <article
+                            key={note.id}
+                            className="flex flex-col justify-between rounded-2xl border border-amber-200 bg-white p-5 shadow-2xs hover:shadow-md transition"
+                          >
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">
+                                  <Flame className="h-3 w-3 text-amber-600" /> High Priority
+                                </span>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                  Semester 1
+                                </span>
+                              </div>
+
+                              <div>
+                                <h3 className="text-sm font-black text-slate-900 leading-snug">
+                                  {note.title}
+                                </h3>
+                                <p className="text-[11px] font-semibold text-amber-800 mt-1">
+                                  {note.subject || "Semester 1 Core Subject"}
+                                </p>
+                              </div>
+
+                              <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed">
+                                {note.description || "Focus on the key topics repeatedly examined across previous semester papers."}
+                              </p>
+                            </div>
+
+                            <div className="mt-5 pt-3 border-t border-slate-100">
+                              {hasActiveBundle ? (
+                                <button
+                                  onClick={() => void openNote(note)}
+                                  disabled={openingId === note.id}
+                                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 px-4 py-2.5 text-xs font-black transition shadow-xs disabled:bg-slate-200 uppercase tracking-wider cursor-pointer"
+                                >
+                                  {openingId === note.id ? (
+                                    <>
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-950" /> Opening PDF…
+                                    </>
+                                  ) : (
+                                    <>
+                                      <FileText className="h-3.5 w-3.5 text-slate-950" /> View PDF
+                                    </>
+                                  )}
+                                </button>
+                              ) : isPaymentPending ? (
+                                <div className="space-y-1">
+                                  <button
+                                    disabled
+                                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 px-4 py-2 text-xs font-bold opacity-90 cursor-not-allowed"
+                                  >
+                                    <Clock className="h-3.5 w-3.5 text-amber-700 animate-pulse" />
+                                    <span>Payment Under Review</span>
+                                  </button>
+                                  <p className="text-[10px] text-center text-slate-500">Unlocks automatically once approved</p>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => navigate("/purchase")}
+                                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 text-xs font-bold transition shadow-xs cursor-pointer"
+                                >
+                                  <Lock className="h-3.5 w-3.5" />
+                                  <span>Unlock with Bundle (₹499)</span>
+                                </button>
+                              )}
+                            </div>
+                          </article>
+                        ))
+                      )}
+                    </div>
+                  </section>
+
+                  {/* ── ❓ 4. Referral Reward Callout (Most Repeated Questions) ───── */}
+                  <div className="rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-start sm:items-center gap-3">
+                      <div className="grid h-10 w-10 place-items-center rounded-xl bg-indigo-100 text-indigo-700 shrink-0">
+                        <Gift className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs sm:text-sm font-bold text-slate-900">
+                          Looking for ❓ Most Repeated Questions?
+                        </h3>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Refer 3 friends who purchase Semester 1 to unlock the Most Repeated Questions Pack — FREE.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => switchTab("referral")}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-indigo-200 bg-white px-4 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-50 transition shadow-2xs shrink-0 self-start sm:self-auto cursor-pointer"
+                    >
+                      <span>Refer 3 Friends</span>
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+
+                  {/* ── 💡 5. AI Academic Assistant Hero Card ────────────────────── */}
+                  <section className="rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50/90 via-white to-blue-50/50 p-6 sm:p-7 shadow-2xs">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="space-y-1.5">
+                        <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1 text-[11px] font-bold text-indigo-800">
+                          <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                          AI Academic Assistant
+                        </div>
+                        <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                          Need help understanding a topic?
+                        </h2>
+                        <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
+                          Ask the BCA Vault AI Learning Assistant for step-by-step topic explanations, code walkthroughs, and exam questions.
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => switchTab("ai")}
+                        className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-xs font-bold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-700 transition shrink-0 cursor-pointer"
+                      >
+                        <span>Ask AI</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                    </div>
                   </section>
                 </>
               );
