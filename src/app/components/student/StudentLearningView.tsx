@@ -494,9 +494,11 @@ export function StudentLearningView({ onBackToDashboard }: StudentLearningViewPr
             </button>
           </div>
 
-          <div className="mt-2 flex items-center justify-between px-1 text-[10px] text-slate-400">
+          <div className="mt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 px-1 text-[10px] text-slate-500">
             <span>Press <strong>Enter</strong> to send, <strong>Shift + Enter</strong> for new line</span>
-            <span className="hidden sm:inline">BCA Vault AI Academic Companion</span>
+            <span className="text-amber-700 font-medium">
+              ⚠️ AI is in learning phase and may generate inaccurate output as model learns. Verify with notes.
+            </span>
           </div>
         </div>
       </footer>

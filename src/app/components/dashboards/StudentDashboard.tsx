@@ -1670,16 +1670,22 @@ export function StudentDashboard() {
                   {/* ── 💡 6. AI Academic Assistant Hero Card ────────────────────── */}
                   <section className="rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50/90 via-white to-blue-50/50 p-6 sm:p-7 shadow-2xs">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="space-y-1.5">
+                      <div className="space-y-2">
                         <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1 text-[11px] font-bold text-indigo-800">
                           <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                          AI Academic Assistant
+                          <span>AI Academic Assistant</span>
+                          <span className="ml-1 text-[10px] font-semibold text-indigo-700 bg-indigo-200/70 px-1.5 py-0.5 rounded-full">
+                            Beta / Learning Phase
+                          </span>
                         </div>
                         <h2 className="text-base sm:text-lg font-bold text-slate-900">
                           Need help understanding a topic?
                         </h2>
                         <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
                           Ask the BCA Vault AI Learning Assistant for step-by-step topic explanations, code walkthroughs, and exam questions.
+                        </p>
+                        <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200/80 rounded-xl px-3 py-1.5 inline-block leading-relaxed">
+                          ⚠️ <strong>Notice:</strong> The AI is currently in its learning phase and may not always provide completely correct output as the model continues to learn with more data. Please verify key concepts with your course notes.
                         </p>
                       </div>
 
