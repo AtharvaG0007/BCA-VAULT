@@ -1035,10 +1035,10 @@ export function StudentDashboard() {
                           Exam Roadmaps
                         </h2>
                         <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
-                          Know what to study, what to prioritize, and what to revise before your Semester 1 exams.
+                          Know what to study first, what to prioritize, and what to revise before your exam.
                         </p>
                       </div>
-                      <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-indigo-800 bg-indigo-100/60 rounded-xl px-3 py-1.5 self-start">
+                      <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-emerald-800 bg-emerald-100/60 rounded-xl px-3 py-1.5 self-start border border-emerald-200/60">
                         <span>High-priority preparation guides</span>
                       </div>
                     </div>
@@ -1048,10 +1048,10 @@ export function StudentDashboard() {
                       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-2">
-                            <Route className="h-4 w-4 text-indigo-600 shrink-0" />
+                            <Route className="h-4 w-4 text-emerald-600 shrink-0" />
                             <p className="text-xs font-bold text-slate-900">
                               Not sure where to start?{" "}
-                              <span className="text-indigo-600 font-extrabold">
+                              <span className="text-emerald-700 font-extrabold">
                                 Start with your Exam Roadmap.
                               </span>
                             </p>
@@ -1094,7 +1094,7 @@ export function StudentDashboard() {
                           >
                             <div className="space-y-3">
                               <div className="flex items-center justify-between">
-                                <div className="h-4 w-28 bg-indigo-50 rounded-md animate-pulse" />
+                                <div className="h-4 w-28 bg-emerald-50 rounded-md animate-pulse" />
                                 <div className="h-3 w-16 bg-slate-200 rounded animate-pulse" />
                               </div>
                               <div className="h-4 w-44 bg-slate-200 rounded animate-pulse" />
@@ -1104,20 +1104,20 @@ export function StudentDashboard() {
                                 <div className="h-3 w-4/5 bg-slate-100 rounded animate-pulse" />
                               </div>
                             </div>
-                            <div className="h-9 w-full rounded-xl bg-indigo-100 animate-pulse mt-4" />
+                            <div className="h-9 w-full rounded-xl bg-emerald-100 animate-pulse mt-4" />
                           </div>
                         ))
                       ) : (
                         examRoadmapCards.map((card) => (
                           <article
                             key={card.key}
-                            className="flex flex-col justify-between rounded-2xl border border-indigo-200/90 bg-white p-5 shadow-2xs hover:shadow-md hover:border-indigo-300 transition space-y-4"
+                            className="flex flex-col justify-between rounded-2xl border border-emerald-200/90 bg-white p-5 shadow-2xs hover:shadow-md hover:border-emerald-300 transition space-y-4 ring-1 ring-emerald-500/10"
                           >
                             <div className="space-y-3">
                               <div className="flex items-center justify-between gap-2">
-                                <div className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 border border-indigo-100 px-2 py-0.5 text-[10px] font-black text-indigo-700 uppercase tracking-wider">
-                                  <Compass className="h-3 w-3 text-indigo-600 shrink-0" />
-                                  <span>EXAM ROADMAP</span>
+                                <div className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 text-[10px] font-black text-emerald-800 uppercase tracking-wider">
+                                  <Compass className="h-3 w-3 text-emerald-600 shrink-0" />
+                                  <span>Exam Roadmap</span>
                                 </div>
                                 <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-600">
                                   {card.badge}
@@ -1128,7 +1128,7 @@ export function StudentDashboard() {
                                 <h3 className="text-base font-black text-slate-900 leading-snug">
                                   {card.cardTitle}
                                 </h3>
-                                <p className="text-xs font-semibold text-indigo-600 mt-1">
+                                <p className="text-xs font-semibold text-emerald-700 mt-1">
                                   {card.subjectSubtitle}
                                 </p>
                               </div>
@@ -1139,7 +1139,7 @@ export function StudentDashboard() {
 
                               <div className="pt-1">
                                 <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 bg-slate-50 border border-slate-200/80 rounded-lg px-2.5 py-1">
-                                  <Clock className="h-3 w-3 text-indigo-500 shrink-0" />
+                                  <Clock className="h-3 w-3 text-emerald-600 shrink-0" />
                                   <span>{card.revisionPlan}</span>
                                 </span>
                               </div>
@@ -1150,7 +1150,7 @@ export function StudentDashboard() {
                                 <button
                                   onClick={() => card.note && void openNote(card.note)}
                                   disabled={!card.note || openingId === card.note?.id}
-                                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 text-xs font-bold transition shadow-xs disabled:bg-slate-200 cursor-pointer min-h-[42px]"
+                                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-4 py-2.5 text-xs font-black transition shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/25 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:bg-slate-200 disabled:shadow-none cursor-pointer min-h-[42px]"
                                 >
                                   {openingId === card.note?.id ? (
                                     <>
@@ -1159,8 +1159,9 @@ export function StudentDashboard() {
                                     </>
                                   ) : (
                                     <>
-                                      <span>Open Roadmap</span>
-                                      <ArrowRight className="h-3.5 w-3.5" />
+                                      <Route className="h-3.5 w-3.5 shrink-0 text-emerald-100" />
+                                      <span>View Roadmap</span>
+                                      <ArrowRight className="h-3.5 w-3.5 shrink-0" />
                                     </>
                                   )}
                                 </button>
