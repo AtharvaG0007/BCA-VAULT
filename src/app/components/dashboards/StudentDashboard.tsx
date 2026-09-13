@@ -17,7 +17,9 @@ import {
   LogOut,
   Menu,
   MessageSquare,
+  NotebookPen,
   Package,
+  PenLine,
   RefreshCw,
   Route,
   Search,
@@ -476,7 +478,7 @@ export function StudentDashboard() {
 
                   <button
                     onClick={() => {
-                      const el = document.getElementById("exam-roadmaps") || document.getElementById("study-materials");
+                      const el = document.getElementById("study-materials") || document.getElementById("exam-roadmaps");
                       if (el) el.scrollIntoView({ behavior: "smooth" });
                     }}
                     className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-xs font-bold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 transition shrink-0 cursor-pointer"
@@ -756,6 +758,18 @@ export function StudentDashboard() {
                 return p.includes("roadmap") || t.includes("roadmap");
               };
 
+              // Identify Exam Answer Writing Guide PDF
+              const isExamAnswerWritingGuide = (n: NoteItem) => {
+                const p = (n.storage_path || "").toLowerCase();
+                const t = (n.title || "").toLowerCase();
+                return (
+                  p.includes("how_to_write_answers") ||
+                  p.includes("write_answers") ||
+                  t.includes("how to write answers") ||
+                  t.includes("answer writing")
+                );
+              };
+
               // The Algorithm & Program Design Using C record is an alternate batch/course naming duplicate of C Programming
               const isDuplicateCProgRecord = (n: NoteItem) =>
                 n.id === DUPLICATE_ALGORITHM_DESIGN_NOTE_ID ||
@@ -763,7 +777,7 @@ export function StudentDashboard() {
                   n.id !== CANONICAL_C_PROGRAMMING_NOTE_ID);
 
               const getNormalizedTopicSubject = (n: NoteItem): CanonicalTopicSubject | null => {
-                if (isReferralReward(n) || isExamRoadmap(n)) return null;
+                if (isReferralReward(n) || isExamRoadmap(n) || isExamAnswerWritingGuide(n)) return null;
 
                 const s = (n.subject || "").toLowerCase();
                 const t = (n.title || "").toLowerCase();
@@ -818,7 +832,7 @@ export function StudentDashboard() {
               };
 
               const isMostRepeatedTopic = (n: NoteItem) => {
-                if (isReferralReward(n) || isDuplicateCProgRecord(n) || isExamRoadmap(n)) return false;
+                if (isReferralReward(n) || isDuplicateCProgRecord(n) || isExamRoadmap(n) || isExamAnswerWritingGuide(n)) return false;
                 if (
                   n.id === CANONICAL_C_PROGRAMMING_NOTE_ID ||
                   n.id === CANONICAL_FOUNDATION_NOTE_ID ||
@@ -839,7 +853,7 @@ export function StudentDashboard() {
               };
 
               const isStudyNote = (n: NoteItem) =>
-                !isMostRepeatedTopic(n) && !isReferralReward(n) && !isDuplicateCProgRecord(n) && !isExamRoadmap(n);
+                !isMostRepeatedTopic(n) && !isReferralReward(n) && !isDuplicateCProgRecord(n) && !isExamRoadmap(n) && !isExamAnswerWritingGuide(n);
 
               // Formats canonical titles and subtitles for the Semester 1 Most Repeated Topics UI
               const formatCanonicalTopicNote = (n: NoteItem): NoteItem => {
@@ -877,13 +891,14 @@ export function StudentDashboard() {
                 return n;
               };
 
-              // Strictly Semester 1: exclude Semester 2, referral rewards, duplicate C Programming records, and dedicated Roadmaps
+              // Strictly Semester 1: exclude Semester 2, referral rewards, duplicate C Programming records, dedicated Roadmaps, and Exam Writing Guide
               const displayableNotes = notes.filter(
                 (n) =>
                   (n.semester === 1 || n.semester === null) &&
                   !isReferralReward(n) &&
                   !isDuplicateCProgRecord(n) &&
-                  !isExamRoadmap(n)
+                  !isExamRoadmap(n) &&
+                  !isExamAnswerWritingGuide(n)
               );
 
               // Canonical display order for Most Repeated Topics:
@@ -1018,9 +1033,213 @@ export function StudentDashboard() {
                 };
               });
 
+              // Retrieve the Exam Answer Writing Guide note
+              const examAnswerGuideNote = notes.find((n) => isExamAnswerWritingGuide(n));
+
               return (
                 <>
-                  {/* ── 🧭 1. Exam Roadmaps Section (Command Center) ───────────── */}
+                  {/* ── 📚 1. Study Notes & Materials Hub Section ───────────────── */}
+                  <section id="study-materials" className="space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <h2 className="text-lg font-bold text-slate-900">📚 Study Notes & Materials Hub</h2>
+                        <p className="text-xs text-slate-500">
+                          Categorized unit study notes & high-priority semester topic guides
+                        </p>
+                      </div>
+                      <span className="text-xs font-semibold text-slate-400 self-start sm:self-auto">
+                        Showing {filteredNotes.length} of {displayableNotes.length}{" "}
+                        {displayableNotes.length === 1 ? "document" : "documents"}
+                      </span>
+                    </div>
+
+                    {/* Category Filter Pills & Search Bar */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-200/60 rounded-2xl">
+                        <button
+                          onClick={() => setNoteCategory("all")}
+                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                            noteCategory === "all"
+                              ? "bg-white text-indigo-700 shadow-xs"
+                              : "text-slate-600 hover:text-slate-900"
+                          }`}
+                        >
+                          All ({displayableNotes.length})
+                        </button>
+                        <button
+                          onClick={() => setNoteCategory("repeated")}
+                          className={`inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                            noteCategory === "repeated"
+                              ? "bg-amber-400 text-slate-950 shadow-xs"
+                              : "text-slate-600 hover:text-slate-900"
+                          }`}
+                        >
+                          <Flame className="h-3.5 w-3.5 text-amber-600" />
+                          Most Repeated ({mostRepeatedTopicNotes.length})
+                        </button>
+                        <button
+                          onClick={() => setNoteCategory("theory")}
+                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                            noteCategory === "theory"
+                              ? "bg-white text-indigo-700 shadow-xs"
+                              : "text-slate-600 hover:text-slate-900"
+                          }`}
+                        >
+                          Study Notes ({displayableNotes.filter(isStudyNote).length})
+                        </button>
+                      </div>
+
+                      {/* Keyword Search */}
+                      <div className="relative w-full md:w-64">
+                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                        <input
+                          type="text"
+                          value={noteSearch}
+                          onChange={(e) => setNoteSearch(e.target.value)}
+                          placeholder="Search materials…"
+                          className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-xs outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100"
+                        />
+                      </div>
+                    </div>
+
+                    {loading ? (
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 pt-2">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                          <div
+                            key={i}
+                            className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs space-y-4"
+                          >
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div className="h-9 w-9 rounded-xl bg-indigo-50 animate-pulse" />
+                                <div className="h-4 w-16 rounded-full bg-slate-100 animate-pulse" />
+                              </div>
+                              <div className="h-4 w-44 bg-slate-200 rounded animate-pulse" />
+                              <div className="h-3 w-28 bg-indigo-50 rounded animate-pulse" />
+                              <div className="space-y-1.5 pt-1">
+                                <div className="h-3 w-full bg-slate-100 rounded animate-pulse" />
+                                <div className="h-3 w-2/3 bg-slate-100 rounded animate-pulse" />
+                              </div>
+                            </div>
+                            <div className="h-8 w-full rounded-xl bg-slate-100 animate-pulse mt-2" />
+                          </div>
+                        ))}
+                      </div>
+                    ) : filteredNotes.length === 0 ? (
+                      <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center">
+                        <BookOpen className="mx-auto h-10 w-10 text-slate-300" />
+                        <h3 className="mt-3 text-sm font-bold text-slate-800">No documents found</h3>
+                        <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+                          {noteSearch
+                            ? `No materials match your search "${noteSearch}". Try adjusting your filters.`
+                            : "No materials are currently published in this category."}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {filteredNotes.map((note) => {
+                          const isTopic = isMostRepeatedTopic(note);
+                          return (
+                            <article
+                              key={note.id}
+                              className={`flex flex-col justify-between rounded-2xl border bg-white p-5 shadow-2xs hover:shadow-sm transition ${
+                                isTopic ? "border-amber-300/80 ring-1 ring-amber-200/50" : "border-slate-200"
+                              }`}
+                            >
+                              <div>
+                                <div className="flex items-start justify-between gap-2">
+                                  <div
+                                    className={`grid h-9 w-9 place-items-center rounded-xl ${
+                                      isTopic
+                                        ? "bg-amber-100 text-amber-700"
+                                        : "bg-indigo-50 text-indigo-600"
+                                    }`}
+                                  >
+                                    {isTopic ? <Flame className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    {isTopic && (
+                                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                                        📌 Most Repeated
+                                      </span>
+                                    )}
+                                    <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">
+                                      {note.semester ? `Semester ${note.semester}` : "Semester 1"}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <h3 className="mt-3 text-sm font-bold text-slate-900 leading-snug">
+                                  {note.title}
+                                </h3>
+
+                                <p
+                                  className={`mt-1 text-[11px] font-semibold ${
+                                    isTopic
+                                      ? "text-amber-800"
+                                      : "text-indigo-600"
+                                  }`}
+                                >
+                                  {note.subject || "Study Material"}
+                                </p>
+
+                                {note.description && (
+                                  <p className="mt-2 text-xs leading-5 text-slate-500 line-clamp-2">
+                                    {note.description}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="mt-5 pt-3 border-t border-slate-100">
+                                {hasActiveBundle ? (
+                                  <button
+                                    onClick={() => void openNote(note)}
+                                    disabled={openingId === note.id}
+                                    className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white transition cursor-pointer ${
+                                      isTopic
+                                        ? "bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold"
+                                        : "bg-indigo-600 hover:bg-indigo-700"
+                                    } disabled:bg-slate-300`}
+                                  >
+                                    {openingId === note.id ? (
+                                      <>
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Opening PDF…
+                                      </>
+                                    ) : (
+                                      <>
+                                        <FileText className="h-3.5 w-3.5" /> View PDF
+                                      </>
+                                    )}
+                                  </button>
+                                ) : isPaymentPending ? (
+                                  <div className="space-y-1">
+                                    <button
+                                      disabled
+                                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-800 opacity-90 cursor-not-allowed"
+                                    >
+                                      <Clock className="h-3.5 w-3.5 text-amber-600 animate-pulse" />
+                                      <span>Payment Under Review</span>
+                                    </button>
+                                    <p className="text-[10px] text-center text-slate-500">Unlocks automatically once approved</p>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => navigate("/purchase")}
+                                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-xs font-bold text-white transition cursor-pointer shadow-xs"
+                                  >
+                                    <Lock className="h-3.5 w-3.5" />
+                                    <span>Unlock with Bundle (₹499)</span>
+                                  </button>
+                                )}
+                              </div>
+                            </article>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </section>
+
+                  {/* ── 🧭 2. Exam Roadmaps Section ────────────────────────────── */}
                   <section
                     id="exam-roadmaps"
                     className="rounded-3xl border border-indigo-200/90 bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/30 p-5 sm:p-7 lg:p-8 shadow-2xs space-y-6"
@@ -1194,208 +1413,120 @@ export function StudentDashboard() {
                     </div>
                   </section>
 
-                  {/* ── 📚 2. Study Notes & Materials Hub Section ───────────────── */}
-                  <section id="study-materials" className="space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div>
-                        <h2 className="text-lg font-bold text-slate-900">📚 Study Notes & Materials Hub</h2>
-                        <p className="text-xs text-slate-500">
-                          Categorized unit study notes & high-priority semester topic guides
+                  {/* ── ✍️ 3. Exam Answer Writing Guide Section ─────────────────── */}
+                  <section
+                    id="exam-answer-guide"
+                    className="rounded-3xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50/70 via-white to-teal-50/40 p-5 sm:p-7 lg:p-8 shadow-2xs space-y-6"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-emerald-100 pb-5">
+                      <div className="space-y-1">
+                        <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-900">
+                          <PenLine className="h-3.5 w-3.5 text-emerald-600" />
+                          <span>✍️ Exam Writing Guide · BCA Semester 1</span>
+                        </div>
+                        <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                          Exam Answer Writing Guide
+                        </h2>
+                        <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
+                          Learn how to structure your answers clearly and present your knowledge effectively in exams.
                         </p>
                       </div>
-                      <span className="text-xs font-semibold text-slate-400 self-start sm:self-auto">
-                        Showing {filteredNotes.length} of {displayableNotes.length}{" "}
-                        {displayableNotes.length === 1 ? "document" : "documents"}
-                      </span>
-                    </div>
-
-                    {/* Category Filter Pills & Search Bar */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                      <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-200/60 rounded-2xl">
-                        <button
-                          onClick={() => setNoteCategory("all")}
-                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
-                            noteCategory === "all"
-                              ? "bg-white text-indigo-700 shadow-xs"
-                              : "text-slate-600 hover:text-slate-900"
-                          }`}
-                        >
-                          All ({displayableNotes.length})
-                        </button>
-                        <button
-                          onClick={() => setNoteCategory("repeated")}
-                          className={`inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
-                            noteCategory === "repeated"
-                              ? "bg-amber-400 text-slate-950 shadow-xs"
-                              : "text-slate-600 hover:text-slate-900"
-                          }`}
-                        >
-                          <Flame className="h-3.5 w-3.5 text-amber-600" />
-                          Most Repeated ({mostRepeatedTopicNotes.length})
-                        </button>
-                        <button
-                          onClick={() => setNoteCategory("theory")}
-                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
-                            noteCategory === "theory"
-                              ? "bg-white text-indigo-700 shadow-xs"
-                              : "text-slate-600 hover:text-slate-900"
-                          }`}
-                        >
-                          Study Notes ({displayableNotes.filter(isStudyNote).length})
-                        </button>
-                      </div>
-
-                      {/* Keyword Search */}
-                      <div className="relative w-full md:w-64">
-                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                        <input
-                          type="text"
-                          value={noteSearch}
-                          onChange={(e) => setNoteSearch(e.target.value)}
-                          placeholder="Search materials…"
-                          className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-xs outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100"
-                        />
+                      <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-emerald-800 bg-emerald-100/60 rounded-xl px-3 py-1.5 self-start border border-emerald-200/60">
+                        <span>Official exam presentation guide</span>
                       </div>
                     </div>
 
-                    {loading ? (
-                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 pt-2">
-                        {Array.from({ length: 6 }).map((_, i) => (
-                          <div
-                            key={i}
-                            className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs space-y-4"
-                          >
-                            <div className="space-y-3">
-                              <div className="flex items-center justify-between">
-                                <div className="h-9 w-9 rounded-xl bg-indigo-50 animate-pulse" />
-                                <div className="h-4 w-16 rounded-full bg-slate-100 animate-pulse" />
-                              </div>
-                              <div className="h-4 w-44 bg-slate-200 rounded animate-pulse" />
-                              <div className="h-3 w-28 bg-indigo-50 rounded animate-pulse" />
-                              <div className="space-y-1.5 pt-1">
-                                <div className="h-3 w-full bg-slate-100 rounded animate-pulse" />
-                                <div className="h-3 w-2/3 bg-slate-100 rounded animate-pulse" />
-                              </div>
-                            </div>
-                            <div className="h-8 w-full rounded-xl bg-slate-100 animate-pulse mt-2" />
+                    <article className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 rounded-2xl border border-emerald-200/90 bg-white p-5 sm:p-6 lg:p-7 shadow-2xs hover:shadow-md transition">
+                      <div className="space-y-4 max-w-2xl">
+                        <div className="flex items-center gap-2">
+                          <div className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 text-[10px] font-black text-emerald-800 uppercase tracking-wider">
+                            <NotebookPen className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                            <span>Exam Writing Strategy</span>
                           </div>
-                        ))}
+                          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                            Semester 1
+                          </span>
+                        </div>
+
+                        <div>
+                          <h3 className="text-base sm:text-lg font-black text-slate-900 leading-snug">
+                            BCA Vault — How to Write Answers in Exams
+                          </h3>
+                          <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
+                            Learn how to write better answers in your BCA Semester 1 exams — from 8-mark theory questions to programming and short notes.
+                          </p>
+                        </div>
+
+                        {/* Feature Checklist */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-xs font-bold text-slate-700">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                            <span>8-Mark Theory Answers</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                            <span>C Programming & Coding Answers</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                            <span>Short Notes</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                            <span>Examples & Diagrams</span>
+                          </div>
+                          <div className="flex items-center gap-2 sm:col-span-2">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                            <span>Better Answer Presentation</span>
+                          </div>
+                        </div>
                       </div>
-                    ) : filteredNotes.length === 0 ? (
-                      <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center">
-                        <BookOpen className="mx-auto h-10 w-10 text-slate-300" />
-                        <h3 className="mt-3 text-sm font-bold text-slate-800">No documents found</h3>
-                        <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
-                          {noteSearch
-                            ? `No materials match your search "${noteSearch}". Try adjusting your filters.`
-                            : "No materials are currently published in this category."}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        {filteredNotes.map((note) => {
-                          const isTopic = isMostRepeatedTopic(note);
-                          return (
-                            <article
-                              key={note.id}
-                              className={`flex flex-col justify-between rounded-2xl border bg-white p-5 shadow-2xs hover:shadow-sm transition ${
-                                isTopic ? "border-amber-300/80 ring-1 ring-amber-200/50" : "border-slate-200"
-                              }`}
+
+                      {/* Primary CTA Area */}
+                      <div className="flex flex-col sm:flex-row lg:flex-col items-stretch lg:items-end justify-center gap-3 shrink-0 lg:min-w-[240px] pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+                        {hasActiveBundle ? (
+                          <button
+                            onClick={() => examAnswerGuideNote && void openNote(examAnswerGuideNote)}
+                            disabled={!examAnswerGuideNote || openingId === examAnswerGuideNote?.id}
+                            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-5 py-3 text-xs font-black transition shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/25 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:bg-slate-200 disabled:shadow-none cursor-pointer min-h-[44px]"
+                          >
+                            {openingId === examAnswerGuideNote?.id ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin text-white" />
+                                <span>Opening Guide…</span>
+                              </>
+                            ) : (
+                              <>
+                                <PenLine className="h-4 w-4 shrink-0 text-emerald-100" />
+                                <span>View Guide →</span>
+                              </>
+                            )}
+                          </button>
+                        ) : isPaymentPending ? (
+                          <div className="w-full space-y-1 text-center">
+                            <button
+                              disabled
+                              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 px-4 py-2.5 text-xs font-bold opacity-90 cursor-not-allowed min-h-[44px]"
                             >
-                              <div>
-                                <div className="flex items-start justify-between gap-2">
-                                  <div
-                                    className={`grid h-9 w-9 place-items-center rounded-xl ${
-                                      isTopic
-                                        ? "bg-amber-100 text-amber-700"
-                                        : "bg-indigo-50 text-indigo-600"
-                                    }`}
-                                  >
-                                    {isTopic ? <Flame className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
-                                  </div>
-                                  <div className="flex items-center gap-1.5">
-                                    {isTopic && (
-                                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                                        📌 Most Repeated
-                                      </span>
-                                    )}
-                                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                                      {note.semester ? `Semester ${note.semester}` : "Semester 1"}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                <h3 className="mt-3 text-sm font-bold text-slate-900 leading-snug">
-                                  {note.title}
-                                </h3>
-
-                                <p
-                                  className={`mt-1 text-[11px] font-semibold ${
-                                    isTopic
-                                      ? "text-amber-800"
-                                      : "text-indigo-600"
-                                  }`}
-                                >
-                                  {note.subject || "Study Material"}
-                                </p>
-
-                                {note.description && (
-                                  <p className="mt-2 text-xs leading-5 text-slate-500 line-clamp-2">
-                                    {note.description}
-                                  </p>
-                                )}
-                              </div>
-
-                              <div className="mt-5 pt-3 border-t border-slate-100">
-                                {hasActiveBundle ? (
-                                  <button
-                                    onClick={() => void openNote(note)}
-                                    disabled={openingId === note.id}
-                                    className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white transition cursor-pointer ${
-                                      isTopic
-                                        ? "bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold"
-                                        : "bg-indigo-600 hover:bg-indigo-700"
-                                    } disabled:bg-slate-300`}
-                                  >
-                                    {openingId === note.id ? (
-                                      <>
-                                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Opening PDF…
-                                      </>
-                                    ) : (
-                                      <>
-                                        <FileText className="h-3.5 w-3.5" /> View PDF
-                                      </>
-                                    )}
-                                  </button>
-                                ) : isPaymentPending ? (
-                                  <div className="space-y-1">
-                                    <button
-                                      disabled
-                                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-800 opacity-90 cursor-not-allowed"
-                                    >
-                                      <Clock className="h-3.5 w-3.5 text-amber-600 animate-pulse" />
-                                      <span>Payment Under Review</span>
-                                    </button>
-                                    <p className="text-[10px] text-center text-slate-500">Unlocks automatically once approved</p>
-                                  </div>
-                                ) : (
-                                  <button
-                                    onClick={() => navigate("/purchase")}
-                                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-xs font-bold text-white transition cursor-pointer shadow-xs"
-                                  >
-                                    <Lock className="h-3.5 w-3.5" />
-                                    <span>Unlock with Bundle (₹499)</span>
-                                  </button>
-                                )}
-                              </div>
-                            </article>
-                          );
-                        })}
+                              <Clock className="h-4 w-4 text-amber-700 animate-pulse" />
+                              <span>Payment Under Review</span>
+                            </button>
+                            <p className="text-[10px] text-slate-500">Unlocks automatically once approved</p>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => navigate("/purchase")}
+                            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 text-xs font-bold transition shadow-xs cursor-pointer min-h-[44px]"
+                          >
+                            <Lock className="h-4 w-4" />
+                            <span>Unlock with Bundle (₹499)</span>
+                          </button>
+                        )}
                       </div>
-                    )}
+                    </article>
                   </section>
 
-                  {/* ── 📌 3. Most Repeated Topics Section ───────────────────────── */}
+                  {/* ── 📌 4. Most Repeated Topics Section ───────────────────────── */}
                   <section className="rounded-3xl border border-amber-200/80 bg-gradient-to-br from-amber-50/50 via-white to-orange-50/30 p-6 sm:p-8 shadow-2xs space-y-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-amber-100 pb-5">
                       <div className="space-y-1">
@@ -1512,7 +1643,7 @@ export function StudentDashboard() {
                     </div>
                   </section>
 
-                  {/* ── ❓ 4. Referral Reward Callout (Most Repeated Questions) ───── */}
+                  {/* ── ❓ 5. Referral Reward Callout (Most Repeated Questions) ───── */}
                   <div className="rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-start sm:items-center gap-3">
                       <div className="grid h-10 w-10 place-items-center rounded-xl bg-indigo-100 text-indigo-700 shrink-0">
@@ -1536,7 +1667,7 @@ export function StudentDashboard() {
                     </button>
                   </div>
 
-                  {/* ── 💡 5. AI Academic Assistant Hero Card ────────────────────── */}
+                  {/* ── 💡 6. AI Academic Assistant Hero Card ────────────────────── */}
                   <section className="rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50/90 via-white to-blue-50/50 p-6 sm:p-7 shadow-2xs">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="space-y-1.5">
