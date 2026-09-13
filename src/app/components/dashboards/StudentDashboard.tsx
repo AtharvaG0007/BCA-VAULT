@@ -69,6 +69,232 @@ interface NoteItem {
 
 type TabType = "dashboard" | "ai" | "profile" | "referral";
 
+type CanonicalTopicSubject =
+  | "C Programming"
+  | "Foundation of Computing"
+  | "Client-Side Web Technology";
+
+const CANONICAL_C_PROGRAMMING_NOTE_ID = "9e59ab23-0de4-480e-a657-6a5de642c5e9";
+const DUPLICATE_ALGORITHM_DESIGN_NOTE_ID = "67223491-a665-44b0-8307-b2a22dd30de2";
+const CANONICAL_FOUNDATION_NOTE_ID = "480f00c8-b176-4d31-a030-2539e378a3c4";
+
+const SEM1_MOST_REPEATED_TOPIC_NOTE_IDS = [
+  CANONICAL_C_PROGRAMMING_NOTE_ID,
+  CANONICAL_FOUNDATION_NOTE_ID,
+];
+
+const REFERRAL_BONUS_QUESTION_NOTE_IDS = [
+  "6d971cc5-5677-43f5-958f-add182553c87", // C Programming — Most Repeated Questions
+  "33cc389f-4a00-4d3e-89dd-670e514e2ed3", // Foundation of Computing — Most Repeated Questions
+  "20af0ae2-66e3-46cb-bbc2-4ae8e12f0500", // Client-Side Web Technologies — Most Repeated Questions
+];
+
+const isReferralReward = (n: NoteItem) =>
+  REFERRAL_BONUS_QUESTION_NOTE_IDS.includes(n.id) ||
+  n.storage_path?.toLowerCase().includes("refral_bouns") ||
+  n.storage_path?.toLowerCase().includes("repted_questions") ||
+  n.storage_path?.toLowerCase().includes("questions_complete");
+
+// Identify Exam Roadmap PDFs
+const isExamRoadmap = (n: NoteItem) => {
+  const p = (n.storage_path || "").toLowerCase();
+  const t = (n.title || "").toLowerCase();
+  return p.includes("roadmap") || t.includes("roadmap");
+};
+
+// Identify Exam Answer Writing Guide PDF
+const isExamAnswerWritingGuide = (n: NoteItem) => {
+  const p = (n.storage_path || "").toLowerCase();
+  const t = (n.title || "").toLowerCase();
+  return (
+    p.includes("how_to_write_answers") ||
+    p.includes("write_answers") ||
+    t.includes("how to write answers") ||
+    t.includes("answer writing")
+  );
+};
+
+// The Algorithm & Program Design Using C record is an alternate batch/course naming duplicate of C Programming
+const isDuplicateCProgRecord = (n: NoteItem) =>
+  n.id === DUPLICATE_ALGORITHM_DESIGN_NOTE_ID ||
+  (Boolean(n.storage_path?.toLowerCase().includes("algorithm_program_design")) &&
+    n.id !== CANONICAL_C_PROGRAMMING_NOTE_ID);
+
+const getNormalizedTopicSubject = (n: NoteItem): CanonicalTopicSubject | null => {
+  if (isReferralReward(n) || isExamRoadmap(n) || isExamAnswerWritingGuide(n)) return null;
+
+  const s = (n.subject || "").toLowerCase();
+  const t = (n.title || "").toLowerCase();
+  const p = (n.storage_path || "").toLowerCase();
+
+  // 1. C Programming variations
+  if (
+    n.id === CANONICAL_C_PROGRAMMING_NOTE_ID ||
+    n.id === DUPLICATE_ALGORITHM_DESIGN_NOTE_ID ||
+    s.includes("c programming") ||
+    s.includes("algorithm") ||
+    s.includes("program design") ||
+    t.includes("c programming") ||
+    t.includes("algorithm") ||
+    t.includes("program design") ||
+    p.includes("c_programming") ||
+    p.includes("algorithm")
+  ) {
+    return "C Programming";
+  }
+
+  // 2. Foundation of Computing
+  if (
+    n.id === CANONICAL_FOUNDATION_NOTE_ID ||
+    s.includes("foundation") ||
+    t.includes("foundation") ||
+    p.includes("foundation")
+  ) {
+    return "Foundation of Computing";
+  }
+
+  // 3. Client-Side Web Technology variations
+  if (
+    s.includes("client-side") ||
+    s.includes("client side") ||
+    s.includes("web technolog") ||
+    s.includes("html") ||
+    s.includes("javascript") ||
+    t.includes("client-side") ||
+    t.includes("client side") ||
+    t.includes("web technolog") ||
+    t.includes("html") ||
+    p.includes("client_side") ||
+    p.includes("client-side") ||
+    p.includes("web_technolog") ||
+    p.includes("web-technolog")
+  ) {
+    return "Client-Side Web Technology";
+  }
+
+  return null;
+};
+
+const isMostRepeatedTopic = (n: NoteItem) => {
+  if (isReferralReward(n) || isDuplicateCProgRecord(n) || isExamRoadmap(n) || isExamAnswerWritingGuide(n)) return false;
+  if (
+    n.id === CANONICAL_C_PROGRAMMING_NOTE_ID ||
+    n.id === CANONICAL_FOUNDATION_NOTE_ID ||
+    SEM1_MOST_REPEATED_TOPIC_NOTE_IDS.includes(n.id)
+  ) {
+    return true;
+  }
+  const normSubject = getNormalizedTopicSubject(n);
+  if (!normSubject) return false;
+
+  const p = (n.storage_path || "").toLowerCase();
+  const t = (n.title || "").toLowerCase();
+  return (
+    p.includes("most_repeated_topics") ||
+    p.includes("repeated_topics") ||
+    (t.includes("repeated") && t.includes("topic"))
+  );
+};
+
+const isStudyNote = (n: NoteItem) =>
+  !isMostRepeatedTopic(n) && !isReferralReward(n) && !isDuplicateCProgRecord(n) && !isExamRoadmap(n) && !isExamAnswerWritingGuide(n);
+
+// Formats canonical titles and subtitles for the Semester 1 Most Repeated Topics UI
+const formatCanonicalTopicNote = (n: NoteItem): NoteItem => {
+  const normSubject = getNormalizedTopicSubject(n);
+  if (normSubject === "C Programming") {
+    return {
+      ...n,
+      title: "Most Repeated Topics — C Programming",
+      subject: "C Programming",
+      description:
+        n.description ||
+        "Focus on the key C programming and program design topics repeatedly examined across previous semester papers.",
+    };
+  }
+  if (normSubject === "Foundation of Computing") {
+    return {
+      ...n,
+      title: "Most Repeated Topics — Foundation of Computing",
+      subject: "Foundation of Computing",
+      description:
+        n.description ||
+        "Focus on the key computing fundamentals and architectural topics repeatedly examined across previous semester papers.",
+    };
+  }
+  if (normSubject === "Client-Side Web Technology") {
+    return {
+      ...n,
+      title: "Most Repeated Topics — Client-Side Web Technology",
+      subject: "Client-Side Web Technology",
+      description:
+        n.description ||
+        "Focus on the key HTML, CSS, and JavaScript topics repeatedly examined across previous semester papers.",
+    };
+  }
+  return n;
+};
+
+const CANONICAL_TOPIC_SUBJECTS: CanonicalTopicSubject[] = [
+  "C Programming",
+  "Foundation of Computing",
+  "Client-Side Web Technology",
+];
+
+const topicSortOrder = (subject: CanonicalTopicSubject | null | string) => {
+  if (subject === "C Programming") return 1;
+  if (subject === "Foundation of Computing") return 2;
+  if (subject === "Client-Side Web Technology") return 3;
+  return 4;
+};
+
+interface ExamRoadmapCardConfig {
+  key: string;
+  cardTitle: string;
+  subjectSubtitle: string;
+  badge: string;
+  description: string;
+  revisionPlan: string;
+  pathMatch: string;
+  titleMatch: string;
+}
+
+const EXAM_ROADMAP_CONFIGS: ExamRoadmapCardConfig[] = [
+  {
+    key: "c-programming",
+    cardTitle: "C Programming",
+    subjectSubtitle: "Algorithms and Program Design using C",
+    badge: "SEMESTER 1",
+    description:
+      "Your step-by-step path from algorithms and C fundamentals to functions, pointers, arrays, structures and final revision.",
+    revisionPlan: "15-day • 7-day • 3-day • Final revision",
+    pathMatch: "c_programming_exam_roadmap",
+    titleMatch: "c programming",
+  },
+  {
+    key: "foundations-of-computing",
+    cardTitle: "Foundations of Computing",
+    subjectSubtitle: "Foundation of Computing",
+    badge: "SEMESTER 1",
+    description:
+      "Follow the syllabus in the right order, focus on high-value areas, and use the 15/7/3-day plans when exams are close.",
+    revisionPlan: "15-day • 7-day • 3-day • Final revision",
+    pathMatch: "foundations_of_computing_exam_roadmap",
+    titleMatch: "foundations of computing",
+  },
+  {
+    key: "client-side-web-technologies",
+    cardTitle: "Client-Side Web Technologies",
+    subjectSubtitle: "Client-Side Web Technology",
+    badge: "SEMESTER 1",
+    description:
+      "HTML → HTML5 → CSS → JavaScript → Forms, Validation, Events and DOM.",
+    revisionPlan: "15-day • 7-day • 3-day • Final revision",
+    pathMatch: "client_side_web_technologies_exam_roadmap",
+    titleMatch: "client-side web",
+  },
+];
+
 export function StudentDashboard() {
   const { user, appUser, logout } = useAuth();
   const location = useLocation();
@@ -725,172 +951,6 @@ export function StudentDashboard() {
 
             {/* ── Materials Categorization & Display ──────────────────────── */}
             {(() => {
-              type CanonicalTopicSubject =
-                | "C Programming"
-                | "Foundation of Computing"
-                | "Client-Side Web Technology";
-
-              const CANONICAL_C_PROGRAMMING_NOTE_ID = "9e59ab23-0de4-480e-a657-6a5de642c5e9";
-              const DUPLICATE_ALGORITHM_DESIGN_NOTE_ID = "67223491-a665-44b0-8307-b2a22dd30de2";
-              const CANONICAL_FOUNDATION_NOTE_ID = "480f00c8-b176-4d31-a030-2539e378a3c4";
-
-              const SEM1_MOST_REPEATED_TOPIC_NOTE_IDS = [
-                CANONICAL_C_PROGRAMMING_NOTE_ID,
-                CANONICAL_FOUNDATION_NOTE_ID,
-              ];
-
-              const REFERRAL_BONUS_QUESTION_NOTE_IDS = [
-                "6d971cc5-5677-43f5-958f-add182553c87", // C Programming — Most Repeated Questions
-                "33cc389f-4a00-4d3e-89dd-670e514e2ed3", // Foundation of Computing — Most Repeated Questions
-                "20af0ae2-66e3-46cb-bbc2-4ae8e12f0500", // Client-Side Web Technologies — Most Repeated Questions
-              ];
-
-              const isReferralReward = (n: NoteItem) =>
-                REFERRAL_BONUS_QUESTION_NOTE_IDS.includes(n.id) ||
-                n.storage_path?.toLowerCase().includes("refral_bouns") ||
-                n.storage_path?.toLowerCase().includes("repted_questions") ||
-                n.storage_path?.toLowerCase().includes("questions_complete");
-
-              // Identify Exam Roadmap PDFs
-              const isExamRoadmap = (n: NoteItem) => {
-                const p = (n.storage_path || "").toLowerCase();
-                const t = (n.title || "").toLowerCase();
-                return p.includes("roadmap") || t.includes("roadmap");
-              };
-
-              // Identify Exam Answer Writing Guide PDF
-              const isExamAnswerWritingGuide = (n: NoteItem) => {
-                const p = (n.storage_path || "").toLowerCase();
-                const t = (n.title || "").toLowerCase();
-                return (
-                  p.includes("how_to_write_answers") ||
-                  p.includes("write_answers") ||
-                  t.includes("how to write answers") ||
-                  t.includes("answer writing")
-                );
-              };
-
-              // The Algorithm & Program Design Using C record is an alternate batch/course naming duplicate of C Programming
-              const isDuplicateCProgRecord = (n: NoteItem) =>
-                n.id === DUPLICATE_ALGORITHM_DESIGN_NOTE_ID ||
-                (Boolean(n.storage_path?.toLowerCase().includes("algorithm_program_design")) &&
-                  n.id !== CANONICAL_C_PROGRAMMING_NOTE_ID);
-
-              const getNormalizedTopicSubject = (n: NoteItem): CanonicalTopicSubject | null => {
-                if (isReferralReward(n) || isExamRoadmap(n) || isExamAnswerWritingGuide(n)) return null;
-
-                const s = (n.subject || "").toLowerCase();
-                const t = (n.title || "").toLowerCase();
-                const p = (n.storage_path || "").toLowerCase();
-
-                // 1. C Programming variations
-                if (
-                  n.id === CANONICAL_C_PROGRAMMING_NOTE_ID ||
-                  n.id === DUPLICATE_ALGORITHM_DESIGN_NOTE_ID ||
-                  s.includes("c programming") ||
-                  s.includes("algorithm") ||
-                  s.includes("program design") ||
-                  t.includes("c programming") ||
-                  t.includes("algorithm") ||
-                  t.includes("program design") ||
-                  p.includes("c_programming") ||
-                  p.includes("algorithm")
-                ) {
-                  return "C Programming";
-                }
-
-                // 2. Foundation of Computing
-                if (
-                  n.id === CANONICAL_FOUNDATION_NOTE_ID ||
-                  s.includes("foundation") ||
-                  t.includes("foundation") ||
-                  p.includes("foundation")
-                ) {
-                  return "Foundation of Computing";
-                }
-
-                // 3. Client-Side Web Technology variations
-                if (
-                  s.includes("client-side") ||
-                  s.includes("client side") ||
-                  s.includes("web technolog") ||
-                  s.includes("html") ||
-                  s.includes("javascript") ||
-                  t.includes("client-side") ||
-                  t.includes("client side") ||
-                  t.includes("web technolog") ||
-                  t.includes("html") ||
-                  p.includes("client_side") ||
-                  p.includes("client-side") ||
-                  p.includes("web_technolog") ||
-                  p.includes("web-technolog")
-                ) {
-                  return "Client-Side Web Technology";
-                }
-
-                return null;
-              };
-
-              const isMostRepeatedTopic = (n: NoteItem) => {
-                if (isReferralReward(n) || isDuplicateCProgRecord(n) || isExamRoadmap(n) || isExamAnswerWritingGuide(n)) return false;
-                if (
-                  n.id === CANONICAL_C_PROGRAMMING_NOTE_ID ||
-                  n.id === CANONICAL_FOUNDATION_NOTE_ID ||
-                  SEM1_MOST_REPEATED_TOPIC_NOTE_IDS.includes(n.id)
-                ) {
-                  return true;
-                }
-                const normSubject = getNormalizedTopicSubject(n);
-                if (!normSubject) return false;
-
-                const p = (n.storage_path || "").toLowerCase();
-                const t = (n.title || "").toLowerCase();
-                return (
-                  p.includes("most_repeated_topics") ||
-                  p.includes("repeated_topics") ||
-                  (t.includes("repeated") && t.includes("topic"))
-                );
-              };
-
-              const isStudyNote = (n: NoteItem) =>
-                !isMostRepeatedTopic(n) && !isReferralReward(n) && !isDuplicateCProgRecord(n) && !isExamRoadmap(n) && !isExamAnswerWritingGuide(n);
-
-              // Formats canonical titles and subtitles for the Semester 1 Most Repeated Topics UI
-              const formatCanonicalTopicNote = (n: NoteItem): NoteItem => {
-                const normSubject = getNormalizedTopicSubject(n);
-                if (normSubject === "C Programming") {
-                  return {
-                    ...n,
-                    title: "Most Repeated Topics — C Programming",
-                    subject: "C Programming",
-                    description:
-                      n.description ||
-                      "Focus on the key C programming and program design topics repeatedly examined across previous semester papers.",
-                  };
-                }
-                if (normSubject === "Foundation of Computing") {
-                  return {
-                    ...n,
-                    title: "Most Repeated Topics — Foundation of Computing",
-                    subject: "Foundation of Computing",
-                    description:
-                      n.description ||
-                      "Focus on the key computing fundamentals and architectural topics repeatedly examined across previous semester papers.",
-                  };
-                }
-                if (normSubject === "Client-Side Web Technology") {
-                  return {
-                    ...n,
-                    title: "Most Repeated Topics — Client-Side Web Technology",
-                    subject: "Client-Side Web Technology",
-                    description:
-                      n.description ||
-                      "Focus on the key HTML, CSS, and JavaScript topics repeatedly examined across previous semester papers.",
-                  };
-                }
-                return n;
-              };
-
               // Strictly Semester 1: exclude Semester 2, referral rewards, duplicate C Programming records, dedicated Roadmaps, and Exam Writing Guide
               const displayableNotes = notes.filter(
                 (n) =>
@@ -900,23 +960,6 @@ export function StudentDashboard() {
                   !isExamRoadmap(n) &&
                   !isExamAnswerWritingGuide(n)
               );
-
-              // Canonical display order for Most Repeated Topics:
-              // 1. C Programming
-              // 2. Foundation of Computing
-              // 3. Client-Side Web Technology
-              const CANONICAL_TOPIC_SUBJECTS: CanonicalTopicSubject[] = [
-                "C Programming",
-                "Foundation of Computing",
-                "Client-Side Web Technology",
-              ];
-
-              const topicSortOrder = (subject: CanonicalTopicSubject | null | string) => {
-                if (subject === "C Programming") return 1;
-                if (subject === "Foundation of Computing") return 2;
-                if (subject === "Client-Side Web Technology") return 3;
-                return 4;
-              };
 
               // Deduplicate so each normalized subject has AT MOST one canonical note
               const mostRepeatedTopicNotes = CANONICAL_TOPIC_SUBJECTS.map((subjectKey) => {
@@ -967,58 +1010,6 @@ export function StudentDashboard() {
                   if (!isTopicA && isTopicB) return 1;
                   return 0;
                 });
-
-              // Canonical Exam Roadmaps Configuration
-              // Strict display order:
-              // 1. C Programming
-              // 2. Foundation of Computing
-              // 3. Client-Side Web Technologies
-              interface ExamRoadmapCardConfig {
-                key: string;
-                cardTitle: string;
-                subjectSubtitle: string;
-                badge: string;
-                description: string;
-                revisionPlan: string;
-                pathMatch: string;
-                titleMatch: string;
-              }
-
-              const EXAM_ROADMAP_CONFIGS: ExamRoadmapCardConfig[] = [
-                {
-                  key: "c-programming",
-                  cardTitle: "C Programming",
-                  subjectSubtitle: "Algorithms and Program Design using C",
-                  badge: "SEMESTER 1",
-                  description:
-                    "Your step-by-step path from algorithms and C fundamentals to functions, pointers, arrays, structures and final revision.",
-                  revisionPlan: "15-day • 7-day • 3-day • Final revision",
-                  pathMatch: "c_programming_exam_roadmap",
-                  titleMatch: "c programming",
-                },
-                {
-                  key: "foundations-of-computing",
-                  cardTitle: "Foundations of Computing",
-                  subjectSubtitle: "Foundation of Computing",
-                  badge: "SEMESTER 1",
-                  description:
-                    "Follow the syllabus in the right order, focus on high-value areas, and use the 15/7/3-day plans when exams are close.",
-                  revisionPlan: "15-day • 7-day • 3-day • Final revision",
-                  pathMatch: "foundations_of_computing_exam_roadmap",
-                  titleMatch: "foundations of computing",
-                },
-                {
-                  key: "client-side-web-technologies",
-                  cardTitle: "Client-Side Web Technologies",
-                  subjectSubtitle: "Client-Side Web Technology",
-                  badge: "SEMESTER 1",
-                  description:
-                    "HTML → HTML5 → CSS → JavaScript → Forms, Validation, Events and DOM.",
-                  revisionPlan: "15-day • 7-day • 3-day • Final revision",
-                  pathMatch: "client_side_web_technologies_exam_roadmap",
-                  titleMatch: "client-side web",
-                },
-              ];
 
               const examRoadmapCards = EXAM_ROADMAP_CONFIGS.map((cfg) => {
                 const matchedNote = notes.find((n) => {
@@ -1097,6 +1088,7 @@ export function StudentDashboard() {
                           value={noteSearch}
                           onChange={(e) => setNoteSearch(e.target.value)}
                           placeholder="Search materials…"
+                          aria-label="Search study materials"
                           className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-xs outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100"
                         />
                       </div>

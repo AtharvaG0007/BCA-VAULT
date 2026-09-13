@@ -17,30 +17,33 @@ import {
 } from "./components/legal/LegalContext";
 import { DisclaimerModal } from "./components/legal/DisclaimerModal";
 import { ProtectedRoute } from "./components/guards/ProtectedRoute";
+import { lazy, Suspense } from "react";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
-import { HomePage } from "./components/pages/HomePage";
-import { NotesPage } from "./components/pages/NotesPage";
-import { PYQPage } from "./components/pages/PYQPage";
-import { BundlesPage } from "./components/pages/BundlesPage";
-import { PricingPage } from "./components/pages/PricingPage";
-import { ReferralPage } from "./components/pages/ReferralPage";
-import { LoginPage } from "./components/pages/LoginPage";
-import { SuperAdminDashboard } from "./components/dashboards/SuperAdminDashboard";
-import { StudentDashboard } from "./components/dashboards/StudentDashboard";
-import { TermsPage } from "./components/pages/TermsPage";
-import { PrivacyPage } from "./components/pages/PrivacyPage";
-import { LegalConsentPage } from "./components/pages/LegalConsentPage";
-import { SuccessPage } from "./components/pages/SuccessPage";
-import { PaymentPage } from "./components/pages/PaymentPage";
-import { AdminLoginPage } from "./components/pages/AdminLoginPage";
-import { AdminEmailPage } from "./components/pages/AdminEmailPage";
 import { AdminAuthProvider } from "@/app/components/auth/AdminAuthContext";
 import { AdminProtectedRoute } from "./components/guards/AdminProtectedRoute";
 import { PublicSupportChat } from "./components/chatbot/PublicSupportChat";
 import { WhatsAppFloatingButton } from "./components/support/WhatsAppFloatingButton";
 import { ReferralFloatingPromo } from "./components/marketing/ReferralFloatingPromo";
 import { StudentShellSkeleton } from "./components/student/StudentSkeletons";
+
+// Route-level code splitting for production performance & initial bundle isolation
+const HomePage = lazy(() => import("./components/pages/HomePage").then((m) => ({ default: m.HomePage })));
+const NotesPage = lazy(() => import("./components/pages/NotesPage").then((m) => ({ default: m.NotesPage })));
+const PYQPage = lazy(() => import("./components/pages/PYQPage").then((m) => ({ default: m.PYQPage })));
+const BundlesPage = lazy(() => import("./components/pages/BundlesPage").then((m) => ({ default: m.BundlesPage })));
+const PricingPage = lazy(() => import("./components/pages/PricingPage").then((m) => ({ default: m.PricingPage })));
+const ReferralPage = lazy(() => import("./components/pages/ReferralPage").then((m) => ({ default: m.ReferralPage })));
+const LoginPage = lazy(() => import("./components/pages/LoginPage").then((m) => ({ default: m.LoginPage })));
+const SuperAdminDashboard = lazy(() => import("./components/dashboards/SuperAdminDashboard").then((m) => ({ default: m.SuperAdminDashboard })));
+const StudentDashboard = lazy(() => import("./components/dashboards/StudentDashboard").then((m) => ({ default: m.StudentDashboard })));
+const TermsPage = lazy(() => import("./components/pages/TermsPage").then((m) => ({ default: m.TermsPage })));
+const PrivacyPage = lazy(() => import("./components/pages/PrivacyPage").then((m) => ({ default: m.PrivacyPage })));
+const LegalConsentPage = lazy(() => import("./components/pages/LegalConsentPage").then((m) => ({ default: m.LegalConsentPage })));
+const SuccessPage = lazy(() => import("./components/pages/SuccessPage").then((m) => ({ default: m.SuccessPage })));
+const PaymentPage = lazy(() => import("./components/pages/PaymentPage").then((m) => ({ default: m.PaymentPage })));
+const AdminLoginPage = lazy(() => import("./components/pages/AdminLoginPage").then((m) => ({ default: m.AdminLoginPage })));
+const AdminEmailPage = lazy(() => import("./components/pages/AdminEmailPage").then((m) => ({ default: m.AdminEmailPage })));
 
 function PageWrapper({
   children,
@@ -114,8 +117,9 @@ function AppLayout() {
       {showDisclaimer && <DisclaimerModal />}
       {!hideNav && <Navbar />}
       <div className="flex-1 w-full min-w-0">
-        <AnimatePresence mode="wait">
-          <Routes location={location} key={location.pathname}>
+        <Suspense fallback={<StudentShellSkeleton />}>
+          <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
             {/* ── Public pages ─────────────────────────────────────────── */}
             <Route
               path="/"
@@ -396,6 +400,7 @@ function AppLayout() {
             />
           </Routes>
         </AnimatePresence>
+        </Suspense>
       </div>
       {!hideNav && <Footer />}
       {!isAdminRoute && <WhatsAppFloatingButton />}
