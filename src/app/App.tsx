@@ -26,6 +26,7 @@ import { PublicSupportChat } from "./components/chatbot/PublicSupportChat";
 import { WhatsAppFloatingButton } from "./components/support/WhatsAppFloatingButton";
 import { ReferralFloatingPromo } from "./components/marketing/ReferralFloatingPromo";
 import { StudentShellSkeleton } from "./components/student/StudentSkeletons";
+import { AdminSystemDeletionNav } from "./components/admin/AdminSystemDeletionNav";
 
 // Route-level code splitting for production performance & initial bundle isolation
 const HomePage = lazy(() => import("./components/pages/HomePage").then((m) => ({ default: m.HomePage })));
@@ -104,6 +105,7 @@ function AppLayout() {
       {showDisclaimer && <DisclaimerModal />}
       {!hideNav && <Navbar />}
       <div className="flex-1 w-full min-w-0">
+        {isAdminRoute && <AdminSystemDeletionNav />}
         <Suspense fallback={<StudentShellSkeleton />}>
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
@@ -138,7 +140,7 @@ function AppLayout() {
               <Route path="/admin/:subpage" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
 
               <Route path="/admin-root" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
-              <Route path="/admin-root/email" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminEmailPage /></AdminProtectedRoute>} />
+              <Route path="/admin-root/email" element={<AdminEmailPage />} />
               <Route path="/admin-root/dashboard" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/admin-root/:subpage" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
 
