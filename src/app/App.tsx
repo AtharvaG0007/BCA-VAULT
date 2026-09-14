@@ -1,20 +1,7 @@
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  useLocation,
-  Navigate,
-} from "react-router";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router";
 import { AnimatePresence, motion } from "motion/react";
-import { Toaster } from "./components/ui/sonner";
-import {
-  AuthProvider,
-  useAuth,
-} from "@/app/components/auth/AuthContext";
-import {
-  LegalProvider,
-  useLegal,
-} from "./components/legal/LegalContext";
+import { AuthProvider, useAuth } from "@/app/components/auth/AuthContext";
+import { LegalProvider, useLegal } from "./components/legal/LegalContext";
 import { DisclaimerModal } from "./components/legal/DisclaimerModal";
 import { ProtectedRoute } from "./components/guards/ProtectedRoute";
 import { lazy, Suspense } from "react";
@@ -70,7 +57,6 @@ function AppLayout() {
   const { hasAccepted } = useLegal();
   const hideNav = noNavRoutes.some((p) => location.pathname.startsWith(p));
   const isStudentRoute = location.pathname.startsWith("/app");
-  const isStudentDashboard = location.pathname === "/app/dashboard";
   const isPurchaseRoute = location.pathname.startsWith("/purchase");
   const isAdminRoute = location.pathname.startsWith("/admin") || location.pathname.startsWith("/admin-root");
   const showDisclaimer = !hasAccepted && !noDisclaimerRoutes.some((p) => location.pathname.startsWith(p));
@@ -81,7 +67,7 @@ function AppLayout() {
       {!hideNav && <Navbar />}
       <div className="flex-1 w-full min-w-0">
         {isAdminRoute && <AdminSystemDeletionNav />}
-        {isStudentDashboard && <StudentAdminNotice />}
+        {isStudentRoute && <StudentAdminNotice />}
         <Suspense fallback={<StudentShellSkeleton />}>
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
