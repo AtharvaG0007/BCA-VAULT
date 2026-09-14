@@ -1,69 +1,39 @@
 import { useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
 
-type Notice = { id: string; title: string; message: string; type: string; priority: string; published_at: string | null };
+type Notice = { id: string };
 
 export function StudentAdminNotice() {
   useEffect(() => {
     let cancelled = false;
-    let notices: Notice[] = [];
     let observer: MutationObserver | null = null;
 
-    const createNotice = (notice: Notice) => {
-      const card = document.createElement("div");
-      card.className = "rounded-xl border border-slate-200 bg-white p-2.5";
-      const title = document.createElement("p");
-      title.className = "text-[11px] font-black text-slate-900";
-      title.textContent = notice.title;
-      const message = document.createElement("p");
-      message.className = "mt-1 whitespace-pre-wrap text-[10px] leading-4 text-slate-600";
-      message.textContent = notice.message;
-      card.append(title, message);
-      return card;
-    };
-
-    const sync = () => {
-      if (cancelled || !notices.length) return;
-      const referrals = Array.from(document.querySelectorAll<HTMLButtonElement>("button"))
-        .filter((button) => button.textContent?.includes("Referral Program"));
-
+    const sync = (count: number) => {
+      if (cancelled) return;
+      const referrals = Array.from(document.querySelectorAll<HTMLButtonElement>("button")).filter((button) => button.textContent?.includes("Referral Program"));
       referrals.forEach((referral) => {
-        if (referral.parentElement?.querySelector('[data-student-notice-board="true"]')) return;
-        const wrap = document.createElement("div");
-        wrap.dataset.studentNoticeBoard = "true";
-        wrap.className = "mb-1.5";
-
-        const trigger = document.createElement("button");
-        trigger.type = "button";
-        trigger.className = "flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 hover:bg-violet-50 hover:text-violet-700 transition text-left";
-        trigger.textContent = `🔔 Notice Board (${notices.length})`;
-
-        const panel = document.createElement("div");
-        panel.className = "hidden mt-1.5 rounded-2xl border border-violet-100 bg-violet-50 p-2 space-y-2";
-        notices.forEach((notice) => panel.append(createNotice(notice)));
-
-        trigger.addEventListener("click", () => panel.classList.toggle("hidden"));
-        wrap.append(trigger, panel);
-        referral.parentElement?.insertBefore(wrap, referral);
+        const parent = referral.parentElement;
+        if (!parent || parent.querySelector('[data-student-notice-board="true"]')) return;
+        const link = document.createElement("a");
+        link.href = "/app/notices";
+        link.dataset.studentNoticeBoard = "true";
+        link.className = "mb-1.5 flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 hover:bg-violet-50 hover:text-violet-700 transition text-left";
+        link.setAttribute("aria-label", `Notice Board${count ? `, ${count} notices` : ""}`);
+        link.innerHTML = `<span aria-hidden="true">🔔</span><span>Notice Board</span>${count ? `<span class="ml-auto rounded-full bg-violet-100 px-1.5 py-0.5 text-[9px] font-black text-violet-700">${count}</span>` : ""}`;
+        parent.insertBefore(link, referral);
       });
     };
 
     const load = async () => {
-      const { data, error } = await supabase
-        .from("admin_notices")
-        .select("id,title,message,type,priority,published_at")
-        .eq("published", true)
-        .order("published_at", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(5);
+      const { count, error } = await supabase.from("admin_notices").select("id", { count: "exact", head: true }).eq("published", true);
       if (cancelled) return;
       if (error) {
-        console.warn("[StudentAdminNotice] Unable to load notices:", error.message);
-        return;
+        console.warn("[StudentAdminNotice] Unable to load notice count:", error.message);
+        sync(0);
+      } else {
+        sync(count ?? 0);
       }
-      notices = (data ?? []) as Notice[];
-      sync();
-      observer = new MutationObserver(sync);
+      observer = new MutationObserver(() => sync(count ?? 0));
       observer.observe(document.body, { childList: true, subtree: true });
     };
 
