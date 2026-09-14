@@ -356,5 +356,65 @@ export const adminApi = {
   paymentUrl: (bucket: string, path: string) => adminFn<{ url: string }>("/payments/signed-url", { bucket, path }),
   noteUploadUrl: (fileName: string, semester = 1) => adminFn<{ bucket: string; path: string; token: string }>("/notes/upload-url", { fileName, contentType: "application/pdf", semester }),
   deleteNote: (id: string) => adminFn("/notes/delete", { id }),
+
+  // ── Notice Board (Admin) ──────────────────────────────────────────────
+  listAllNotices: () =>
+    adminSupabase
+      .from("notices")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .range(0, 99),
+
+  createNotice: async (notice: {
+    title: string;
+    message: string;
+    notice_type: string;
+    priority: string;
+    published: boolean;
+  }) => {
+    const { data: { user } } = await adminSupabase.auth.getUser();
+    if (!user) throw new Error("Unauthenticated");
+    const { error } = await adminSupabase.from("notices").insert({
+      ...notice,
+      created_by: user.id,
+    });
+    if (error) throw error;
+  },
+
+  updateNotice: async (
+    id: string,
+    updates: Partial<{
+      title: string;
+      message: string;
+      notice_type: string;
+      priority: string;
+      published: boolean;
+    }>
+  ) => {
+    const { error } = await adminSupabase
+      .from("notices")
+      .update(updates)
+      .eq("id", id);
+    if (error) throw error;
+  },
+
+  deleteNoticeById: async (id: string) => {
+    const { error } = await adminSupabase
+      .from("notices")
+      .delete()
+      .eq("id", id);
+    if (error) throw error;
+  },
 };
 
+// ── Student Notice Board ──────────────────────────────────────────────────
+// Fetches only published notices using the student Supabase client (RLS enforced).
+export async function fetchPublishedNotices() {
+  const { data, error } = await supabase
+    .from("notices")
+    .select("id,title,message,notice_type,priority,published,created_at")
+    .eq("published", true)
+    .order("created_at", { ascending: false })
+    .range(0, 50);
+  return { data: data ?? [], error };
+}

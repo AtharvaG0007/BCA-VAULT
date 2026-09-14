@@ -136,19 +136,10 @@ export function Navbar() {
 
             {isLoggedIn ? (
               <>
-                {/* Desktop: Quick Dashboard CTA */}
+                {/* Desktop/Tablet: Dashboard CTA */}
                 <button
                   onClick={() => navigate("/app/dashboard")}
                   className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#1E40AF] rounded-xl text-white hover:bg-[#1E3A8A] transition text-xs font-bold shadow-xs"
-                >
-                  <LayoutDashboard className="w-3.5 h-3.5" />
-                  <span>Dashboard</span>
-                </button>
-
-                {/* Tablet: Visible Dashboard button */}
-                <button
-                  onClick={() => navigate("/app/dashboard")}
-                  className="hidden sm:inline-flex lg:hidden items-center gap-1 px-2.5 py-1.5 bg-[#1E40AF] rounded-lg text-white hover:bg-[#1E3A8A] transition text-xs font-bold shadow-xs"
                 >
                   <LayoutDashboard className="w-3.5 h-3.5" />
                   <span>Dashboard</span>

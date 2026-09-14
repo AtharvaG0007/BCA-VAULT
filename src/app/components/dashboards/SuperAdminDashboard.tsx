@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import {
   AlertCircle,
   BarChart3,
+  Bell,
   BookOpen,
   CheckCircle2,
   ChevronRight,
@@ -61,6 +62,7 @@ const PAGES = [
   { key: "students", label: "Students", icon: Users, group: "STUDENTS" },
   { key: "payments", label: "Payment CRM", icon: ShieldCheck, group: "PAYMENTS" },
   { key: "referrals", label: "Referral Management", icon: Gift, group: "REFERRALS" },
+  { key: "notices", label: "Notice Board", icon: Bell, group: "NOTICES" },
   { key: "bundles", label: "Bundles", icon: Package, group: "CONTENT" },
   { key: "notes", label: "Study Notes", icon: BookOpen, group: "CONTENT" },
   { key: "access", label: "Access Control", icon: KeyRound, group: "CONTENT" },
@@ -114,6 +116,351 @@ function AuthStatusBadge({ isVerified, confirmedAt }: { isVerified?: boolean; co
       <span className="h-1.5 w-1.5 rounded-full bg-amber-400"></span>
       🟡 Email Unverified
     </span>
+  );
+}
+
+// ── Admin Notice Board Management ─────────────────────────────────────────────
+const NOTICE_TYPES = ["general", "academic", "payment", "study", "important"] as const;
+const NOTICE_PRIORITIES = ["normal", "important"] as const;
+
+interface AdminNotice {
+  id: string;
+  title: string;
+  message: string;
+  notice_type: string;
+  priority: string;
+  published: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+function AdminNoticeBoard() {
+  const [notices, setNotices] = useState<AdminNotice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+
+  // Form state
+  const [formTitle, setFormTitle] = useState("");
+  const [formMessage, setFormMessage] = useState("");
+  const [formType, setFormType] = useState<string>("general");
+  const [formPriority, setFormPriority] = useState<string>("normal");
+  const [formPublished, setFormPublished] = useState(false);
+
+  const resetForm = () => {
+    setFormTitle("");
+    setFormMessage("");
+    setFormType("general");
+    setFormPriority("normal");
+    setFormPublished(false);
+    setEditId(null);
+    setShowForm(false);
+  };
+
+  const loadNotices = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const { data, error: fetchErr } = await adminApi.listAllNotices();
+      if (fetchErr) {
+        // Table might not exist yet
+        if (fetchErr.code === "42P01" || fetchErr.message?.includes("does not exist")) {
+          setNotices([]);
+        } else {
+          throw fetchErr;
+        }
+      } else {
+        setNotices((data ?? []) as AdminNotice[]);
+      }
+    } catch (err: any) {
+      console.error("[AdminNoticeBoard] load error:", err);
+      setError(err.message || "Failed to load notices.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadNotices();
+  }, []);
+
+  const startEdit = (n: AdminNotice) => {
+    setFormTitle(n.title);
+    setFormMessage(n.message);
+    setFormType(n.notice_type);
+    setFormPriority(n.priority);
+    setFormPublished(n.published);
+    setEditId(n.id);
+    setShowForm(true);
+  };
+
+  const handleSave = async () => {
+    if (!formTitle.trim() || !formMessage.trim()) {
+      setError("Title and message are required.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      if (editId) {
+        await adminApi.updateNotice(editId, {
+          title: formTitle.trim(),
+          message: formMessage.trim(),
+          notice_type: formType,
+          priority: formPriority,
+          published: formPublished,
+        });
+        toast.success("Notice updated.");
+      } else {
+        await adminApi.createNotice({
+          title: formTitle.trim(),
+          message: formMessage.trim(),
+          notice_type: formType,
+          priority: formPriority,
+          published: formPublished,
+        });
+        toast.success("Notice created.");
+      }
+      resetForm();
+      await loadNotices();
+    } catch (err: any) {
+      console.error("[AdminNoticeBoard] save error:", err);
+      setError(err.message || "Failed to save notice.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const togglePublish = async (n: AdminNotice) => {
+    try {
+      await adminApi.updateNotice(n.id, { published: !n.published });
+      toast.success(n.published ? "Notice hidden." : "Notice published.");
+      await loadNotices();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update notice.");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Permanently delete this notice?")) return;
+    try {
+      await adminApi.deleteNoticeById(id);
+      toast.success("Notice deleted.");
+      await loadNotices();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete notice.");
+    }
+  };
+
+  const typeBadgeClass: Record<string, string> = {
+    general: "bg-slate-700 text-slate-200 border-slate-600",
+    academic: "bg-indigo-900 text-indigo-200 border-indigo-700",
+    payment: "bg-emerald-900 text-emerald-200 border-emerald-700",
+    study: "bg-blue-900 text-blue-200 border-blue-700",
+    important: "bg-amber-900 text-amber-200 border-amber-700",
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Action Bar */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-slate-400">
+          {notices.length} notice{notices.length !== 1 ? "s" : ""} total
+        </p>
+        <button
+          onClick={() => { resetForm(); setShowForm(true); }}
+          className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-500 transition"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Create Notice
+        </button>
+      </div>
+
+      {error && (
+        <div className="rounded-xl border border-rose-800 bg-rose-950/60 p-3 text-xs text-rose-300">
+          {error}
+        </div>
+      )}
+
+      {/* Create / Edit Form */}
+      {showForm && (
+        <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5 space-y-4">
+          <h3 className="text-sm font-bold text-white">
+            {editId ? "Edit Notice" : "Create New Notice"}
+          </h3>
+          <div className="space-y-3">
+            <label className="block">
+              <span className="text-xs font-bold text-slate-400">Title</span>
+              <input
+                value={formTitle}
+                onChange={(e) => setFormTitle(e.target.value)}
+                className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 p-2.5 text-sm text-white outline-none focus:border-indigo-500"
+                placeholder="Notice title"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-bold text-slate-400">Message</span>
+              <textarea
+                value={formMessage}
+                onChange={(e) => setFormMessage(e.target.value)}
+                rows={4}
+                className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 p-2.5 text-sm text-white outline-none focus:border-indigo-500 resize-y"
+                placeholder="Notice message content"
+              />
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label className="block">
+                <span className="text-xs font-bold text-slate-400">Type</span>
+                <select
+                  value={formType}
+                  onChange={(e) => setFormType(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 p-2.5 text-sm text-white outline-none"
+                >
+                  {NOTICE_TYPES.map((t) => (
+                    <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className="text-xs font-bold text-slate-400">Priority</span>
+                <select
+                  value={formPriority}
+                  onChange={(e) => setFormPriority(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 p-2.5 text-sm text-white outline-none"
+                >
+                  {NOTICE_PRIORITIES.map((p) => (
+                    <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formPublished}
+                onChange={(e) => setFormPublished(e.target.checked)}
+                className="h-4 w-4 rounded accent-indigo-600"
+              />
+              <span className="text-xs font-bold text-slate-300">Publish immediately (visible to students)</span>
+            </label>
+          </div>
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+            <button
+              onClick={resetForm}
+              className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-bold text-slate-300 hover:bg-slate-700"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => void handleSave()}
+              disabled={saving}
+              className="rounded-xl bg-indigo-600 px-5 py-2 text-xs font-bold text-white hover:bg-indigo-500 disabled:opacity-50"
+            >
+              {saving ? "Saving…" : editId ? "Update Notice" : "Create Notice"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Loading */}
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-7 w-7 animate-spin text-indigo-400" />
+        </div>
+      )}
+
+      {/* Notices Table */}
+      {!loading && notices.length === 0 && !showForm && (
+        <div className="rounded-2xl border border-slate-800 bg-slate-950 p-8 text-center">
+          <Bell className="h-10 w-10 text-slate-600 mx-auto mb-3" />
+          <p className="text-sm font-bold text-slate-400">No notices yet</p>
+          <p className="text-xs text-slate-500 mt-1">Create your first notice to communicate with students.</p>
+        </div>
+      )}
+
+      {!loading && notices.length > 0 && (
+        <div className="rounded-2xl border border-slate-800 bg-slate-950 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-slate-800 text-left">
+                  <th className="px-4 py-3 text-slate-400 font-bold">Title</th>
+                  <th className="px-4 py-3 text-slate-400 font-bold">Type</th>
+                  <th className="px-4 py-3 text-slate-400 font-bold">Priority</th>
+                  <th className="px-4 py-3 text-slate-400 font-bold">Status</th>
+                  <th className="px-4 py-3 text-slate-400 font-bold">Date</th>
+                  <th className="px-4 py-3 text-slate-400 font-bold text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/50">
+                {notices.map((n) => (
+                  <tr key={n.id} className="hover:bg-slate-900/50">
+                    <td className="px-4 py-3 font-semibold text-white max-w-[200px] truncate">
+                      {n.title}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold border ${typeBadgeClass[n.notice_type] || typeBadgeClass.general}`}>
+                        {n.notice_type}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {n.priority === "important" ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-900 px-2.5 py-0.5 text-[11px] font-bold text-amber-200 border border-amber-700">
+                          <AlertCircle className="h-3 w-3" /> Important
+                        </span>
+                      ) : (
+                        <span className="text-slate-500">Normal</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {n.published ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-950 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300 border border-emerald-700">
+                          <Eye className="h-3 w-3" /> Published
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2.5 py-0.5 text-[11px] font-bold text-slate-400 border border-slate-700">
+                          <EyeOff className="h-3 w-3" /> Hidden
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-slate-500">{formatDate(n.created_at)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => startEdit(n)}
+                          className="rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-[11px] font-bold text-slate-300 hover:bg-slate-700 transition"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => void togglePublish(n)}
+                          className={`rounded-lg border px-2.5 py-1.5 text-[11px] font-bold transition ${
+                            n.published
+                              ? "border-amber-700 bg-amber-950 text-amber-300 hover:bg-amber-900"
+                              : "border-emerald-700 bg-emerald-950 text-emerald-300 hover:bg-emerald-900"
+                          }`}
+                        >
+                          {n.published ? "Hide" : "Publish"}
+                        </button>
+                        <button
+                          onClick={() => void handleDelete(n.id)}
+                          className="rounded-lg border border-rose-700 bg-rose-950 px-2.5 py-1.5 text-[11px] font-bold text-rose-300 hover:bg-rose-900 transition"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -412,7 +759,7 @@ export function SuperAdminDashboard() {
           </div>
 
           <nav className="space-y-4">
-            {["DASHBOARD", "STUDENTS", "PAYMENTS", "REFERRALS", "CONTENT", "SYSTEM"].map((groupName) => {
+          {["DASHBOARD", "STUDENTS", "PAYMENTS", "REFERRALS", "NOTICES", "CONTENT", "SYSTEM"].map((groupName) => {
               const groupPages = PAGES.filter((p) => p.group === groupName);
               if (!groupPages.length) return null;
               return (
@@ -1367,6 +1714,11 @@ export function SuperAdminDashboard() {
 
             {activeTab === "email" && (
               <AdminEmailPage embedded />
+            )}
+
+            {/* ── NOTICE BOARD MANAGEMENT ────────────────────────────── */}
+            {activeTab === "notices" && (
+              <AdminNoticeBoard />
             )}
           </>
         )}

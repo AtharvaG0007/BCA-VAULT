@@ -37,7 +37,8 @@ import { ProtectedPdfViewer } from "../viewer/ProtectedPdfViewer";
 import { StudentLearningView } from "../student/StudentLearningView";
 import { StudentProfileView } from "../student/StudentProfileView";
 import { StudentReferralView } from "../student/StudentReferralView";
-import { Gift } from "lucide-react";
+import { StudentNoticeBoard } from "../student/StudentNoticeBoard";
+import { Bell, Gift } from "lucide-react";
 
 interface AccessItem {
   id: string;
@@ -67,7 +68,7 @@ interface NoteItem {
   status?: string | null;
 }
 
-type TabType = "dashboard" | "ai" | "profile" | "referral";
+type TabType = "dashboard" | "ai" | "profile" | "notices" | "referral";
 
 type CanonicalTopicSubject =
   | "C Programming"
@@ -307,6 +308,8 @@ export function StudentDashboard() {
       ? "ai"
       : pathSegment === "profile"
       ? "profile"
+      : pathSegment === "notices"
+      ? "notices"
       : pathSegment === "referral"
       ? "referral"
       : "dashboard";
@@ -340,6 +343,7 @@ export function StudentDashboard() {
   useEffect(() => {
     if (pathSegment === "ai") setActiveTab("ai");
     else if (pathSegment === "profile") setActiveTab("profile");
+    else if (pathSegment === "notices") setActiveTab("notices");
     else if (pathSegment === "referral") setActiveTab("referral");
     else setActiveTab("dashboard");
   }, [location.pathname]);
@@ -502,6 +506,18 @@ export function StudentDashboard() {
             </button>
 
             <button
+              onClick={() => switchTab("notices")}
+              className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold transition text-left ${
+                activeTab === "notices"
+                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+              }`}
+            >
+              <Bell className="h-4 w-4 shrink-0 text-amber-500" />
+              <span>Notice Board</span>
+            </button>
+
+            <button
               onClick={() => switchTab("referral")}
               className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold transition text-left ${
                 activeTab === "referral"
@@ -594,6 +610,17 @@ export function StudentDashboard() {
               <span>My Profile</span>
             </button>
             <button
+              onClick={() => switchTab("notices")}
+              className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-xs font-bold transition text-left ${
+                activeTab === "notices"
+                  ? "bg-indigo-600 text-white"
+                  : "text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              <Bell className="h-4 w-4 text-amber-500" />
+              <span>Notice Board</span>
+            </button>
+            <button
               onClick={() => switchTab("referral")}
               className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-xs font-bold transition text-left ${
                 activeTab === "referral"
@@ -625,7 +652,10 @@ export function StudentDashboard() {
         {/* VIEW 2: MY PROFILE */}
         {activeTab === "profile" && <StudentProfileView />}
 
-        {/* VIEW 3: REFERRAL PROGRAM */}
+        {/* VIEW 3: NOTICE BOARD */}
+        {activeTab === "notices" && <StudentNoticeBoard />}
+
+        {/* VIEW 4: REFERRAL PROGRAM */}
         {activeTab === "referral" && (
           <StudentReferralView
             onOpenNote={(note) => void openNote(note)}
