@@ -27,6 +27,7 @@ const LoginPage = lazy(() => import("./components/pages/LoginPage").then((m) => 
 const SuperAdminDashboard = lazy(() => import("./components/dashboards/SuperAdminDashboard").then((m) => ({ default: m.SuperAdminDashboard })));
 const AdminUserDeletionPage = lazy(() => import("./components/pages/AdminUserDeletionPage").then((m) => ({ default: m.AdminUserDeletionPage })));
 const AdminNoticeBoardPage = lazy(() => import("./components/pages/AdminNoticeBoardPage").then((m) => ({ default: m.AdminNoticeBoardPage })));
+const StudentNoticeBoardPage = lazy(() => import("./components/pages/StudentNoticeBoardPage").then((m) => ({ default: m.StudentNoticeBoardPage })));
 const StudentDashboard = lazy(() => import("./components/dashboards/StudentDashboard").then((m) => ({ default: m.StudentDashboard })));
 const TermsPage = lazy(() => import("./components/pages/TermsPage").then((m) => ({ default: m.TermsPage })));
 const PrivacyPage = lazy(() => import("./components/pages/PrivacyPage").then((m) => ({ default: m.PrivacyPage })));
@@ -105,6 +106,7 @@ function AppLayout() {
               <Route path="/superadmin" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/superadmin/*" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/app/dashboard" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
+              <Route path="/app/notices" element={<ProtectedRoute allowedRoles={["member"]}><StudentNoticeBoardPage /></ProtectedRoute>} />
               <Route path="/app/*" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
               <Route path="/student" element={<Navigate to="/app/dashboard" replace />} />
               <Route path="/student/*" element={<Navigate to="/app/dashboard" replace />} />
