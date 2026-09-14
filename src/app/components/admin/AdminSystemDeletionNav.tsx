@@ -1,12 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router";
 
-/**
- * Adds Permanent User Deletion to the existing Super Admin sidebar.
- * The dashboard sidebar is rendered asynchronously, so observe the DOM
- * until the existing System navigation is available instead of relying on
- * a single effect that can run before the sidebar has mounted.
- */
+/** Adds Permanent User Deletion to the existing Super Admin sidebar. */
 export function AdminSystemDeletionNav() {
   const location = useLocation();
 
@@ -20,7 +15,6 @@ export function AdminSystemDeletionNav() {
       const emailLink = document.querySelector<HTMLAnchorElement>('a[href="/admin/email"]');
       if (!emailLink) return;
 
-      // Insert immediately after Email Console, which keeps this action inside SYSTEM.
       if (!insertedLink || !document.body.contains(insertedLink)) {
         const existing = document.querySelector<HTMLAnchorElement>('a[data-admin-delete-users="true"]');
         if (existing) {
@@ -49,6 +43,12 @@ export function AdminSystemDeletionNav() {
         insertedLink.className = active
           ? "flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold transition bg-rose-600 text-white shadow-lg shadow-rose-600/20"
           : "flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold transition bg-transparent text-slate-400 hover:bg-rose-950/40 hover:text-rose-300";
+
+        insertedLink.onclick = (event) => {
+          event.preventDefault();
+          window.history.pushState({}, "", "/admin/delete-users");
+          window.dispatchEvent(new PopStateEvent("popstate"));
+        };
       }
     };
 
