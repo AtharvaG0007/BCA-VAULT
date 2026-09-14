@@ -15,6 +15,7 @@ import { ReferralFloatingPromo } from "./components/marketing/ReferralFloatingPr
 import { StudentShellSkeleton } from "./components/student/StudentSkeletons";
 import { AdminSystemDeletionNav } from "./components/admin/AdminSystemDeletionNav";
 import { StudentAdminNotice } from "./components/student/StudentAdminNotice";
+import { Toaster } from "./components/ui/sonner";
 
 const HomePage = lazy(() => import("./components/pages/HomePage").then((m) => ({ default: m.HomePage })));
 const NotesPage = lazy(() => import("./components/pages/NotesPage").then((m) => ({ default: m.NotesPage })));
