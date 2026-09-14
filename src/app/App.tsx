@@ -27,8 +27,8 @@ import { WhatsAppFloatingButton } from "./components/support/WhatsAppFloatingBut
 import { ReferralFloatingPromo } from "./components/marketing/ReferralFloatingPromo";
 import { StudentShellSkeleton } from "./components/student/StudentSkeletons";
 import { AdminSystemDeletionNav } from "./components/admin/AdminSystemDeletionNav";
+import { StudentAdminNotice } from "./components/student/StudentAdminNotice";
 
-// Route-level code splitting for production performance & initial bundle isolation
 const HomePage = lazy(() => import("./components/pages/HomePage").then((m) => ({ default: m.HomePage })));
 const NotesPage = lazy(() => import("./components/pages/NotesPage").then((m) => ({ default: m.NotesPage })));
 const PYQPage = lazy(() => import("./components/pages/PYQPage").then((m) => ({ default: m.PYQPage })));
@@ -38,6 +38,7 @@ const ReferralPage = lazy(() => import("./components/pages/ReferralPage").then((
 const LoginPage = lazy(() => import("./components/pages/LoginPage").then((m) => ({ default: m.LoginPage })));
 const SuperAdminDashboard = lazy(() => import("./components/dashboards/SuperAdminDashboard").then((m) => ({ default: m.SuperAdminDashboard })));
 const AdminUserDeletionPage = lazy(() => import("./components/pages/AdminUserDeletionPage").then((m) => ({ default: m.AdminUserDeletionPage })));
+const AdminNoticeBoardPage = lazy(() => import("./components/pages/AdminNoticeBoardPage").then((m) => ({ default: m.AdminNoticeBoardPage })));
 const StudentDashboard = lazy(() => import("./components/dashboards/StudentDashboard").then((m) => ({ default: m.StudentDashboard })));
 const TermsPage = lazy(() => import("./components/pages/TermsPage").then((m) => ({ default: m.TermsPage })));
 const PrivacyPage = lazy(() => import("./components/pages/PrivacyPage").then((m) => ({ default: m.PrivacyPage })));
@@ -47,22 +48,8 @@ const PaymentPage = lazy(() => import("./components/pages/PaymentPage").then((m)
 const AdminLoginPage = lazy(() => import("./components/pages/AdminLoginPage").then((m) => ({ default: m.AdminLoginPage })));
 const AdminEmailPage = lazy(() => import("./components/pages/AdminEmailPage").then((m) => ({ default: m.AdminEmailPage })));
 
-function PageWrapper({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 8 }}
-      transition={{ duration: 0.22, ease: "easeOut" }}
-      className="w-full max-w-full min-w-0"
-    >
-      {children}
-    </motion.div>
-  );
+function PageWrapper({ children }: { children: React.ReactNode }) {
+  return <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }} className="w-full max-w-full min-w-0">{children}</motion.div>;
 }
 
 function RoleRedirect() {
@@ -75,27 +62,15 @@ function RoleRedirect() {
   return <Navigate to="/app/dashboard" replace />;
 }
 
-const noNavRoutes = [
-  "/auth/",
-  "/admin",
-  "/admin-root",
-  "/admin-root-login",
-  "/admin-login",
-  "/app",
-  "/legal-consent",
-];
-
-const noDisclaimerRoutes = [
-  "/terms-and-conditions",
-  "/privacy-policy",
-  "/legal-consent",
-];
+const noNavRoutes = ["/auth/", "/admin", "/admin-root", "/admin-root-login", "/admin-login", "/app", "/legal-consent"];
+const noDisclaimerRoutes = ["/terms-and-conditions", "/privacy-policy", "/legal-consent"];
 
 function AppLayout() {
   const location = useLocation();
   const { hasAccepted } = useLegal();
   const hideNav = noNavRoutes.some((p) => location.pathname.startsWith(p));
   const isStudentRoute = location.pathname.startsWith("/app");
+  const isStudentDashboard = location.pathname === "/app/dashboard";
   const isPurchaseRoute = location.pathname.startsWith("/purchase");
   const isAdminRoute = location.pathname.startsWith("/admin") || location.pathname.startsWith("/admin-root");
   const showDisclaimer = !hasAccepted && !noDisclaimerRoutes.some((p) => location.pathname.startsWith(p));
@@ -106,6 +81,7 @@ function AppLayout() {
       {!hideNav && <Navbar />}
       <div className="flex-1 w-full min-w-0">
         {isAdminRoute && <AdminSystemDeletionNav />}
+        {isStudentDashboard && <StudentAdminNotice />}
         <Suspense fallback={<StudentShellSkeleton />}>
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
@@ -120,42 +96,34 @@ function AppLayout() {
               <Route path="/semester/:sem" element={<PageWrapper><NotesPage /></PageWrapper>} />
               <Route path="/success" element={<PageWrapper><SuccessPage /></PageWrapper>} />
               <Route path="/purchase" element={<PageWrapper><PaymentPage /></PageWrapper>} />
-
               <Route path="/auth/login" element={<PageWrapper><LoginPage /></PageWrapper>} />
               <Route path="/auth/signup" element={<PageWrapper><LoginPage initialMode="signup" /></PageWrapper>} />
               <Route path="/auth/register" element={<PageWrapper><LoginPage initialMode="signup" /></PageWrapper>} />
-
               <Route path="/admin-root-login" element={<AdminLoginPage />} />
               <Route path="/admin-root/login" element={<Navigate to="/admin-root-login" replace />} />
               <Route path="/admin-login" element={<Navigate to="/admin-root-login" replace />} />
               <Route path="/admin/login" element={<Navigate to="/admin-root-login" replace />} />
-
               <Route path="/dashboard" element={<RoleRedirect />} />
               <Route path="/dashboard/*" element={<RoleRedirect />} />
-
               <Route path="/admin" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/admin/dashboard" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/admin/email" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminEmailPage /></AdminProtectedRoute>} />
               <Route path="/admin/delete-users" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminUserDeletionPage /></AdminProtectedRoute>} />
+              <Route path="/admin/notices" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminNoticeBoardPage /></AdminProtectedRoute>} />
               <Route path="/admin/:subpage" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
-
               <Route path="/admin-root" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/admin-root/email" element={<AdminEmailPage />} />
               <Route path="/admin-root/dashboard" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/admin-root/:subpage" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
-
               <Route path="/superadmin" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/superadmin/*" element={<Navigate to="/admin/dashboard" replace />} />
-
               <Route path="/app/dashboard" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
               <Route path="/app/*" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
               <Route path="/student" element={<Navigate to="/app/dashboard" replace />} />
               <Route path="/student/*" element={<Navigate to="/app/dashboard" replace />} />
-
               <Route path="/terms-and-conditions" element={<TermsPage />} />
               <Route path="/privacy-policy" element={<PrivacyPage />} />
               <Route path="/legal-consent" element={<LegalConsentPage />} />
-
               <Route path="*" element={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="text-center"><p className="text-8xl font-black text-gray-100 mb-4" style={{ fontFamily: "var(--font-mono)" }}>404</p><h1 className="text-2xl font-bold text-gray-900 mb-2" style={{ fontFamily: "var(--font-display)" }}>Page not found</h1><a href="/" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#1E40AF] text-white rounded-xl text-sm font-semibold hover:bg-[#1E3A8A] transition-colors mt-4">Go back home</a></div></div>} />
             </Routes>
           </AnimatePresence>
@@ -170,15 +138,5 @@ function AppLayout() {
 }
 
 export default function App() {
-  return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AdminAuthProvider>
-          <LegalProvider>
-            <AppLayout />
-          </LegalProvider>
-        </AdminAuthProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  );
+  return <BrowserRouter><AuthProvider><AdminAuthProvider><LegalProvider><AppLayout /></LegalProvider></AdminAuthProvider></AuthProvider></BrowserRouter>;
 }
