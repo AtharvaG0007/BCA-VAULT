@@ -50,6 +50,12 @@ export function PaymentEvidenceSuccess({ referenceId, guestData, onDashboard, on
       });
       if (invokeError) throw invokeError;
       if (!data?.success || !data?.user_id) throw new Error(data?.error || "Unable to create your account.");
+
+      // The claim endpoint creates a confirmed account without sending a Supabase
+      // Auth email, so we can immediately establish the normal student session.
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email: guestData.email, password });
+      if (signInError) throw new Error("Your account was created, but automatic sign-in failed. Please use Sign In with the same email and password.");
+
       setAccountCreated(true);
       setPassword("");
       setConfirmPassword("");
@@ -87,7 +93,7 @@ export function PaymentEvidenceSuccess({ referenceId, guestData, onDashboard, on
             <p className="mt-3 text-[11px] leading-4 text-slate-500">If account creation is temporarily unavailable, do not submit your payment again. Your reference ID above is enough for support.</p>
           </div>
         ) : accountCreated ? (
-          <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-center"><p className="text-xs font-bold text-emerald-800">✓ Account created and linked to your payment!</p><p className="mt-1 text-xs text-emerald-700">You can now sign in. Admin will activate your course access once your payment is verified.</p><button type="button" onClick={onDashboard} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-xs font-bold text-white"><LayoutDashboard className="h-4 w-4" /> Go to Student Dashboard</button></div>
+          <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-center"><p className="text-xs font-bold text-emerald-800">✓ Account created and linked to your payment!</p><p className="mt-1 text-xs text-emerald-700">You are signed in. Admin will activate your course access once your payment is verified.</p><button type="button" onClick={onDashboard} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-xs font-bold text-white"><LayoutDashboard className="h-4 w-4" /> Go to Student Dashboard</button></div>
         ) : null}
       </div>
     </div>
