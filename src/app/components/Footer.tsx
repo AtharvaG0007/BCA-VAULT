@@ -99,8 +99,27 @@ export function Footer() {
           ))}
         </div>
 
+        {/* SiteCrafters Credit */}
+        <div className="border-t border-white/10 mt-12 pt-5 pb-1">
+          <a
+            href="https://sitecrafters-five.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Visit SiteCrafters website"
+            className="mx-auto w-fit flex items-center justify-center gap-2.5 text-xs sm:text-sm text-gray-400 hover:text-white transition-colors"
+          >
+            <span>Designed by</span>
+            <img
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-dhZVabMRvDh6Pi5SloFCu1tGOOfzc5.png"
+              alt="SiteCrafters logo"
+              className="w-6 h-6 object-contain"
+            />
+            <span className="font-semibold text-gray-300">SiteCrafters</span>
+          </a>
+        </div>
+
         {/* Independent Platform Notice */}
-        <div className="border-t border-white/10 mt-12 pt-6 mb-4">
+        <div className="border-t border-white/10 mt-5 pt-6 mb-4">
           <div className="bg-white/3 border border-white/8 rounded-2xl px-5 py-4">
             <p className="text-xs text-gray-500 leading-relaxed text-center">
               <span className="font-semibold text-gray-400">⚠️ Independent Platform Disclaimer:</span>{" "}
