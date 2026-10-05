@@ -190,10 +190,35 @@ Deno.serve(async (request: Request) => {
         return respond({ success: false, error: "Your upload session is invalid. Please select your screenshot again." }, 400, corsHeaders);
       }
 
-      // Valid prices: 349 (regular) or 299 (Top 3 winner)
+      // Regular payments are ₹349. The ₹299 price is only valid with a server-issued
+      // Top 3 winner redemption belonging to the authenticated student.
       const allowedPrices = [349, 299];
       if (!allowedPrices.includes(amount)) {
-        return respond({ success: false, error: "Invalid payment amount. Valid pricing is ₹349 or ₹299 for verified Top 3 winners." }, 400, corsHeaders);
+        return respond({ success: false, error: "Invalid payment amount. Valid pricing is ₹349 or ₹299." }, 400, corsHeaders);
+      }
+
+      const winnerRedemptionId = text(body.winner_redemption_id);
+      let couponRedemptionId: string | null = null;
+
+      if (amount === 299) {
+        if (!effectiveUserId || !winnerRedemptionId) {
+          return respond({ success: false, error: "The ₹299 winner price requires a valid Top 3 winner redemption while signed in." }, 403, corsHeaders);
+        }
+
+        const { data: redemption, error: redemptionError } = await admin
+          .from("coupon_redemptions")
+          .select("id, user_id, campaign_id, coupon_campaigns!inner(code, is_active)")
+          .eq("id", winnerRedemptionId)
+          .eq("user_id", effectiveUserId)
+          .eq("coupon_campaigns.code", "WINNER150")
+          .eq("coupon_campaigns.is_active", true)
+          .maybeSingle();
+
+        if (redemptionError || !redemption) {
+          return respond({ success: false, error: "This Top 3 winner offer is invalid or has expired." }, 403, corsHeaders);
+        }
+
+        couponRedemptionId = redemption.id;
       }
 
       const folder = path.slice(0, path.lastIndexOf("/"));
@@ -268,10 +293,14 @@ Deno.serve(async (request: Request) => {
         status: "pending",
         referral_code: validReferralIdentifier,
         referral_identifier: validReferralIdentifier,
+        coupon_redemption_id: couponRedemptionId,
       });
 
       if (insertError?.code === "23505") {
-        return respond({ success: false, error: "This UTR or payment reference has already been submitted." }, 409, corsHeaders);
+        const message = couponRedemptionId
+          ? "This Top 3 winner redemption has already been used."
+          : "This UTR or payment reference has already been submitted.";
+        return respond({ success: false, error: message }, 409, corsHeaders);
       }
 
       if (insertError) {
