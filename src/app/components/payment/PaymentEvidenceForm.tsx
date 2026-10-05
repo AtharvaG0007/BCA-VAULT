@@ -32,7 +32,7 @@ async function callPaymentFunction<T = any>(body: Record<string, unknown>): Prom
   return json as T;
 }
 
-export function PaymentEvidenceForm({ onClose, initialBundleId, initialPrice = 349, initialReferralIdentifier }: { onClose: () => void; initialBundleId?: string; initialPrice?: number; initialReferralIdentifier?: string; }) {
+export function PaymentEvidenceForm({ onClose, initialBundleId, initialPrice = 349, initialReferralIdentifier, initialWinnerRedemptionId }: { onClose: () => void; initialBundleId?: string; initialPrice?: number; initialReferralIdentifier?: string; initialWinnerRedemptionId?: string; }) {
   const navigate = useNavigate();
   const { user, appUser } = useAuth();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -55,7 +55,7 @@ export function PaymentEvidenceForm({ onClose, initialBundleId, initialPrice = 3
       const { submission_id, storage_path, token } = createUploadData;
       const { error: uploadError } = await supabase.storage.from("bca-payment-evidence").uploadToSignedUrl(storage_path, token, file, { contentType: file.type });
       if (uploadError) throw new Error("Failed to upload payment screenshot. Please check your internet connection and try again.");
-      const submitData = await callPaymentFunction<{ submission_id: string; status: string }>({ action: "submit", bundle_id: initialBundleId || undefined, full_name: form.fullName.trim(), phone: form.phone.trim(), email: form.email.trim().toLowerCase(), course: form.course.trim(), semester: Number(form.semester) || 1, amount: Number(form.amountPaid), utr: form.utr.trim().toUpperCase(), referral_code: form.referralCode.trim() || undefined, referral_identifier: form.referralCode.trim() || undefined, submission_id, storage_path });
+      const submitData = await callPaymentFunction<{ submission_id: string; status: string }>({ action: "submit", bundle_id: initialBundleId || undefined, full_name: form.fullName.trim(), phone: form.phone.trim(), email: form.email.trim().toLowerCase(), course: form.course.trim(), semester: Number(form.semester) || 1, amount: Number(form.amountPaid), utr: form.utr.trim().toUpperCase(), referral_code: form.referralCode.trim() || undefined, referral_identifier: form.referralCode.trim() || undefined, winner_redemption_id: initialWinnerRedemptionId || undefined, submission_id, storage_path });
       if (!submitData.submission_id) throw new Error("Failed to finalize payment record. Please contact support if payment was debited.");
       try { sessionStorage.setItem("bca_payment_lead", JSON.stringify({ fullName: form.fullName.trim(), email: form.email.trim().toLowerCase(), phone: form.phone.trim(), course: form.course.trim(), semester: Number(form.semester) || 1, referenceId: submitData.submission_id, amount: Number(form.amountPaid) })); } catch { /* Ignore session storage errors */ }
       setReferenceId(submitData.submission_id);
