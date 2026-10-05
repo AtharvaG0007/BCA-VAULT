@@ -18,7 +18,7 @@ function getCorsHeaders(req: Request) {
     origin.endsWith(".workers.dev") ||
     origin.endsWith(".figma.site") ||
     /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
-  const allowOrigin = isAllowed ? origin : (origin || "https://bca-vault.portalbcavault.workers.dev");
+  const allowOrigin = isAllowed ? origin : "https://bca-vault.portalbcavault.workers.dev";
 
   return {
     "Access-Control-Allow-Origin": allowOrigin,
@@ -214,7 +214,7 @@ Deno.serve(async (request: Request) => {
           .select("id, user_id, campaign_id, coupon_campaigns!inner(code_hash, is_active)")
           .eq("id", winnerRedemptionId)
           .eq("user_id", effectiveUserId)
-          .eq("coupon_campaigns.code_hash", "4fe53ca1f3aa59448112e9f2756a5f7606eb9d5e552d54ba19b37b1f896c6244")
+          .eq("coupon_campaigns.code_hash", "ba99b2cd89d9740b111e23b789f9b9ddb37c06b197196bbb623ff4fddfaf21f2")
           .eq("coupon_campaigns.is_active", true)
           .maybeSingle();
 
