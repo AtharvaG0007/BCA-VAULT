@@ -21,7 +21,14 @@ function isAllowedOrigin(origin: string): boolean {
 
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get("Origin") || "";
+<<<<<<< HEAD
   const allowOrigin = isAllowedOrigin(origin) ? origin : "https://bcavault.in";
+=======
+  const isAllowed =
+    ALLOWED_ORIGINS.includes(origin) ||
+    /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+  const allowOrigin = isAllowed ? origin : "https://bca-vault.portalbcavault.workers.dev";
+>>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
 
   return {
     "Access-Control-Allow-Origin": allowOrigin,
@@ -153,7 +160,11 @@ Deno.serve(async (request: Request) => {
           submission_id: submissionId,
           storage_path: path,
           token: data.token,
+<<<<<<< HEAD
           bundle: { id: bundle.id, title: bundle.title, price: Number(bundle.price) || 349 },
+=======
+          bundle: { id: bundle.id, title: bundle.title, price: 349 },
+>>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
         },
         200,
         corsHeaders
@@ -194,6 +205,7 @@ Deno.serve(async (request: Request) => {
         return respond({ success: false, error: "Your upload session is invalid. Please select your screenshot again." }, 400, corsHeaders);
       }
 
+<<<<<<< HEAD
       // If student is logged in, attach their user_id. If guest, check if profile exists with email.
       let effectiveUserId = user?.id || null;
       if (!effectiveUserId) {
@@ -273,6 +285,41 @@ Deno.serve(async (request: Request) => {
           400,
           corsHeaders
         );
+=======
+      // Regular payments are ₹349. The ₹299 price is only valid with a server-issued
+      // Top 3 winner redemption belonging to the authenticated student.
+      const allowedPrices = [349, 299];
+      if (!allowedPrices.includes(amount)) {
+        return respond({ success: false, error: "Invalid payment amount. Valid pricing is ₹349 or ₹299." }, 400, corsHeaders);
+      }
+
+      const winnerRedemptionId = text(body.winner_redemption_id);
+      let couponRedemptionId: string | null = null;
+
+      // Resolve the caller once before any price/coupon authorization checks.
+      // A ₹299 payment must always be bound to the authenticated Supabase user.
+      let effectiveUserId = user?.id || null;
+
+      if (amount === 299) {
+        if (!effectiveUserId || !winnerRedemptionId) {
+          return respond({ success: false, error: "The ₹299 winner price requires a valid Top 3 winner redemption while signed in." }, 403, corsHeaders);
+        }
+
+        const { data: redemption, error: redemptionError } = await admin
+          .from("coupon_redemptions")
+          .select("id, user_id, campaign_id, coupon_campaigns!inner(code_hash, is_active)")
+          .eq("id", winnerRedemptionId)
+          .eq("user_id", effectiveUserId)
+          .eq("coupon_campaigns.code_hash", "ba99b2cd89d9740b111e23b789f9b9ddb37c06b197196bbb623ff4fddfaf21f2")
+          .eq("coupon_campaigns.is_active", true)
+          .maybeSingle();
+
+        if (redemptionError || !redemption) {
+          return respond({ success: false, error: "This Top 3 winner offer is invalid or has expired." }, 403, corsHeaders);
+        }
+
+        couponRedemptionId = redemption.id;
+>>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
       }
 
       const folder = path.slice(0, path.lastIndexOf("/"));
@@ -291,6 +338,21 @@ Deno.serve(async (request: Request) => {
         return respond({ success: false, error: "Your uploaded screenshot could not be verified in storage. Please upload again." }, 400, corsHeaders);
       }
 
+<<<<<<< HEAD
+=======
+      // If the caller is a guest, check whether the submitted email belongs to an existing profile.
+      if (!effectiveUserId) {
+        const { data: existingProfile } = await admin
+          .from("profiles")
+          .select("user_id")
+          .ilike("email", email)
+          .maybeSingle();
+        if (existingProfile?.user_id) {
+          effectiveUserId = existingProfile.user_id;
+        }
+      }
+
+>>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
       // Referral identifier handling (optional)
       const rawReferralInput = text(body.referral_identifier || body.referral_code || body.referralCode);
       let validReferralIdentifier: string | null = null;
@@ -360,9 +422,22 @@ Deno.serve(async (request: Request) => {
         status: "pending",
         referral_code: validReferralIdentifier,
         referral_identifier: validReferralIdentifier,
+<<<<<<< HEAD
         winner_redemption_id: amount === 299 ? winnerRedemptionId : null,
       });
 
+=======
+        coupon_redemption_id: couponRedemptionId,
+      });
+
+      if (insertError?.code === "23505") {
+        const message = couponRedemptionId
+          ? "This Top 3 winner redemption has already been used."
+          : "This UTR or payment reference has already been submitted.";
+        return respond({ success: false, error: message }, 409, corsHeaders);
+      }
+
+>>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
       if (insertError) {
         // Rollback consumed redemption if submission insert failed
         if (consumedRedemptionId) {

@@ -65,6 +65,17 @@ function mapAdmin(row: any): AppUser {
   };
 }
 
+function isEmailConfirmationRequired(user: User | null, session: any): boolean {
+  if (!user || session) return false;
+  // Supabase returns a user without a session when email confirmation is required.
+  return !user.email_confirmed_at;
+}
+
+function isRateLimitError(error: any): boolean {
+  const message = String(error?.message || error || "").toLowerCase();
+  return message.includes("rate limit") || message.includes("too many requests") || message.includes("email rate limit");
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [appUser, setAppUser] = useState<AppUser | null>(null);
@@ -94,7 +105,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq("user_id", nextUser.id)
         .maybeSingle();
 
-      // Auto-repair missing student profile in profiles table
       if (!profile) {
         try {
           const rawSem = nextUser.user_metadata?.semester;
@@ -252,29 +262,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
-        throw error;
-      }
-
-      let activeSession = data.session;
-      let activeUser = data.user;
-
-      // Attempt immediate sign-in if session wasn't returned on signup
-      if (!activeSession && activeUser) {
-        try {
-          const { data: signInData } = await supabase.auth.signInWithPassword({
-            email: cleanEmail,
-            password,
-          });
-          if (signInData?.session) {
-            activeSession = signInData.session;
-            activeUser = signInData.user;
-          }
-        } catch {
-          // Ignore fallback sign-in error
+        // Never perform a fallback sign-in after a signup failure. It can create
+        // additional Auth traffic and makes rate-limit incidents worse.
+        if (isRateLimitError(error)) {
+          console.warn("[AuthContext] Signup rate limited; payment remains independent.");
         }
+        return {
+          user: null,
+          session: null,
+          needsEmailConfirmation: false,
+          error,
+        };
       }
 
-      if (activeUser) {
+      const activeUser = data.user ?? null;
+      const activeSession = data.session ?? null;
+      const needsEmailConfirmation = isEmailConfirmationRequired(activeUser, activeSession);
+
+      if (activeSession && activeUser) {
         setUser(activeUser);
         await loadProfile(activeUser);
       }
@@ -282,7 +287,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return {
         user: activeUser,
         session: activeSession,
-        needsEmailConfirmation: false,
+        needsEmailConfirmation,
       };
     } catch (err: any) {
       return {
@@ -346,9 +351,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 export function useAuth() {
-  const value = useContext(AuthContext);
-  if (!value) throw new Error("Authentication context is unavailable.");
-  return value;
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
+  return context;
 }
-
-

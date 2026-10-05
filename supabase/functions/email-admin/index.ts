@@ -66,7 +66,7 @@ function generateDeterministicEmail(eventType: string, payload: Record<string, u
   if (eventType === "payment_approved") {
     const studentName = String(payload.student_name || "Student").trim();
     const course = String(payload.course || "BCA").trim();
-    const rawAmount = payload.amount_paid ? String(payload.amount_paid) : payload.amount ? `₹${payload.amount}` : "₹499";
+    const rawAmount = payload.amount_paid ? String(payload.amount_paid) : payload.amount ? `₹${payload.amount}` : "₹349";
     const amountPaid = rawAmount.startsWith("₹") ? rawAmount : `₹${rawAmount}`;
     const bundleName = String(payload.bundle_name || "BCA Vault Bundle").trim();
 

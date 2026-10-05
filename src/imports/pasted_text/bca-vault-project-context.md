@@ -486,6 +486,7 @@ Google Form submission alone MUST NOT grant access.
 COUPONS
 ============================================================
 
+<<<<<<< HEAD
 BUDMS50:
 
 ₹50 OFF
@@ -495,6 +496,16 @@ WINNER_ACCESS:
 
 Top 3 Quiz Winner Special Price
 Final ₹299 (requires server-side verified redemption)
+=======
+WINNER150:
+
+₹50 OFF
+Final ₹299
+
+Regular price:
+
+₹349
+>>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
 
 No coupon:
 
