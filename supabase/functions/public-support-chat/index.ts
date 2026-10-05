@@ -190,11 +190,11 @@ function generateSupportFallback(message: string): string {
   const q = message.toLowerCase();
 
   if (q.includes("price") || q.includes("cost") || q.includes("how much")) {
-    return `The BCA Vault All-Access Bundle is originally priced at **₹899**.\n\n🎉 **Active offers:**\n- Use coupon **BUDMS400** → Get ₹400 OFF → Pay only **₹499**\n- Use coupon **WINNER150** → Pay only **₹349**\n\nVisit the [Pricing Page](https://bcavault.in/pricing) to purchase!\n\nNeed help? WhatsApp us at **+91 93263 42123**.`;
+    return `The BCA Vault Semester 1 Bundle is **₹349** at the regular price.\n\n🎉 **Top 3 Quiz Winners:** Use coupon **WINNER150** to pay only **₹299**.\n\nVisit the [Pricing Page](https://bcavault.in/pricing) to purchase!\n\nNeed help? WhatsApp us at **+91 93263 42123**.`;
   }
 
   if (q.includes("bundle") || q.includes("include") || q.includes("what do i get")) {
-    return `The **BCA Vault All-Access Bundle** includes:\n\n📚 Complete semester-wise notes (Sem 1–6)\n📝 Previous Year Questions (PYQs)\n⭐ Important questions & exam preparation material\n💡 Subject-wise organized content\n🔒 Lifetime access after one-time purchase\n\nOriginal price: ₹899 | With coupon BUDMS400: **₹499**\n\nVisit [Bundles](https://bcavault.in/bundles) for details!`;
+    return `The **BCA Vault All-Access Bundle** includes:\n\n📚 Complete semester-wise notes (Sem 1–6)\n📝 Previous Year Questions (PYQs)\n⭐ Important questions & exam preparation material\n💡 Subject-wise organized content\n🔒 Lifetime access after one-time purchase\n\nRegular price: **₹349** | Top 3 Quiz Winner price with WINNER150: **₹299**\n\nVisit [Bundles](https://bcavault.in/bundles) for details!`;
   }
 
   if (q.includes("pay") || q.includes("upi") || q.includes("payment")) {
@@ -210,7 +210,7 @@ function generateSupportFallback(message: string): string {
   }
 
   if (q.includes("coupon") || q.includes("discount") || q.includes("offer")) {
-    return `**Active Coupon Codes:**\n\n🏷️ **BUDMS400** — ₹400 OFF (Final price: ₹499)\n🏷️ **WINNER150** — Special discount (Final price: ₹349)\n\nApply the coupon during checkout on the [Payment Page](https://bcavault.in/purchase)!`;
+    return `**Active Coupon Codes:**\n\n🏷️ **WINNER150** — Top 3 Quiz Winner price (Final price: ₹299)\n🏷️ Regular price — **₹349**\n\nApply the coupon during checkout on the [Payment Page](https://bcavault.in/purchase)!`;
   }
 
   if (q.includes("refund")) {
