@@ -50,7 +50,7 @@ export function Newsletter() {
                 ₹349
               </p>
               <p className="text-xs text-slate-300 mt-1">
-                Top 3 quiz performers get special access at ₹349 with code WINNER150.
+                Top 3 quiz performers get special access at ₹299 with code WINNER150.
               </p>
             </div>
 
@@ -60,10 +60,10 @@ export function Newsletter() {
                 First-Batch Students
               </div>
               <p className="text-2xl font-black text-white" style={{ fontFamily: 'var(--font-mono)' }}>
-                ₹499
+                ₹349
               </p>
               <p className="text-xs text-slate-300 mt-1">
-                Everyone else can access the first-batch student offer at ₹499, subject to eligibility.
+                Regular first-batch price is ₹349.
               </p>
             </div>
           </div>
