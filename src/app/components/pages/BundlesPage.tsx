@@ -6,7 +6,7 @@ import { useAuth } from "../auth/AuthContext";
 const includes = ["Semester 1 BCA Study Notes", "Semester 1 Most Repeated Topics", "Unit-Wise & Topic-Wise Theory Notes", "Exam-Oriented Preparation Format", "Regular Content Updates"];
 const steps = [
   { icon: UserCheck, label: "Create Account", desc: "Create your student account" },
-  { icon: ShoppingBag, label: "Purchase Bundle", desc: "Pay ₹499 from your dashboard" },
+  { icon: ShoppingBag, label: "Purchase Bundle", desc: "Pay ₹349 from your dashboard" },
   { icon: Clock, label: "Payment Reviewed", desc: "Admin verifies your payment" },
   { icon: ShieldCheck, label: "Access Activated", desc: "Materials unlock after approval" },
   { icon: BookOpen, label: "Start Studying", desc: "Open your Semester 1 materials" },
