@@ -35,7 +35,7 @@ const VALID_COUPONS: Record<string, { discount: number; finalPrice: number; desc
 };
 
 const instructions = [
-  "Pay ₹299 (or ₹299 as a Top 3 winner) using any UPI app or QR code.",
+  "Pay ₹349 (or ₹299 as a verified Top 3 winner) using any UPI app or QR code.",
   "Capture a screenshot showing the 12-digit UTR / UPI Transaction ID.",
   "Click 'Submit Payment Form' and upload your payment details.",
   "Create your BCA Vault account — your payment details will be auto-filled.",
