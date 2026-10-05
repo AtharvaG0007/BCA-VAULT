@@ -15,8 +15,6 @@ function getCorsHeaders(req: Request) {
   const origin = req.headers.get("Origin") || "";
   const isAllowed =
     ALLOWED_ORIGINS.includes(origin) ||
-    origin.endsWith(".workers.dev") ||
-    origin.endsWith(".figma.site") ||
     /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
   const allowOrigin = isAllowed ? origin : "https://bca-vault.portalbcavault.workers.dev";
 
