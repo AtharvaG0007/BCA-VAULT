@@ -149,7 +149,7 @@ Deno.serve(async (request: Request) => {
           submission_id: submissionId,
           storage_path: path,
           token: data.token,
-          bundle: { id: bundle.id, title: bundle.title, price: 499 },
+          bundle: { id: bundle.id, title: bundle.title, price: 349 },
         },
         200,
         corsHeaders
@@ -190,10 +190,10 @@ Deno.serve(async (request: Request) => {
         return respond({ success: false, error: "Your upload session is invalid. Please select your screenshot again." }, 400, corsHeaders);
       }
 
-      // Valid prices: 499 (normal) or 349 (winner/coupon)
-      const allowedPrices = [499, 349, Number(bundle.price)];
+      // Valid prices: 349 (regular) or 299 (Top 3 winner)
+      const allowedPrices = [349, 299, Number(bundle.price)];
       if (!allowedPrices.includes(amount)) {
-        return respond({ success: false, error: "Invalid payment amount. Valid pricing is ₹499 or ₹349." }, 400, corsHeaders);
+        return respond({ success: false, error: "Invalid payment amount. Valid pricing is ₹349 or ₹299 for verified Top 3 winners." }, 400, corsHeaders);
       }
 
       const folder = path.slice(0, path.lastIndexOf("/"));
