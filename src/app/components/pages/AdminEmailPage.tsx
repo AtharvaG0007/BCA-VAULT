@@ -169,7 +169,7 @@ const DEFAULT_PAYMENT_APPROVED_HTML = `<div style="font-family: Arial, sans-seri
   <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
     <p style="margin: 5px 0;"><strong>Course:</strong> BCA</p>
     <p style="margin: 5px 0;"><strong>Bundle:</strong> BCA Vault Bundle</p>
-    <p style="margin: 5px 0;"><strong>Amount:</strong> ₹499</p>
+    <p style="margin: 5px 0;"><strong>Amount:</strong> ₹349</p>
     <p style="margin: 5px 0;">
       <strong>Status:</strong>
       <span style="color: #2e7d32; font-weight: bold;">Approved</span>
