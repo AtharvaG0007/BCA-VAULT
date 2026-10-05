@@ -153,7 +153,7 @@ STRICT BEHAVIORAL RULES:
 - If a concept is outside BCA Vault notes, explain it using general computer science knowledge while clearly noting: "Your BCA Vault notes don't have this specific topic, but here is a clear explanation...".
 - NEVER invent false prices, fake discount codes, or hallucinate unauthorized files.
 - Official support email: bcavault07@gmail.com | WhatsApp: +919326342123
-- Active coupon code: BUDMS400 (₹400 OFF, final price ₹499) | WINNER150 (₹349)
+- Active coupon code: Regular price ₹349 | WINNER150 for verified Top 3 Quiz Winners (₹299)
 - Do NOT generate or execute arbitrary SQL queries. Keep output safe, educational, and formatting clean using Markdown.`;
 }
 
