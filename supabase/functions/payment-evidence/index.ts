@@ -191,7 +191,7 @@ Deno.serve(async (request: Request) => {
       }
 
       // Valid prices: 349 (regular) or 299 (Top 3 winner)
-      const allowedPrices = [349, 299, Number(bundle.price)];
+      const allowedPrices = [349, 299];
       if (!allowedPrices.includes(amount)) {
         return respond({ success: false, error: "Invalid payment amount. Valid pricing is ₹349 or ₹299 for verified Top 3 winners." }, 400, corsHeaders);
       }
