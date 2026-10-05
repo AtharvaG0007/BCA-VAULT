@@ -486,15 +486,14 @@ Google Form submission alone MUST NOT grant access.
 COUPONS
 ============================================================
 
-BUDMS50:
-
-₹50 OFF
-Final ₹849
-
 WINNER150:
 
-₹150 OFF
-Final ₹749
+₹50 OFF
+Final ₹299
+
+Regular price:
+
+₹349
 
 No coupon:
 
