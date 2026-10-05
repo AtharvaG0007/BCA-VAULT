@@ -30,7 +30,7 @@ begin
     where table_schema = 'public' and table_name = 'coupon_campaigns' and column_name = 'code'
   ) then
     update public.coupon_campaigns
-    set code_hash = extensions.encode(extensions.digest(upper(trim(code)), 'sha256'), 'hex')
+    set code_hash = encode(extensions.digest(upper(trim(code)), 'sha256'), 'hex')
     where code_hash is null;
     alter table public.coupon_campaigns drop column code;
   end if;
@@ -76,7 +76,7 @@ begin
 
   select * into v_campaign
   from public.coupon_campaigns
-  where code_hash = extensions.encode(extensions.digest(upper(trim(p_code)), 'sha256'), 'hex')
+  where code_hash = encode(extensions.digest(upper(trim(p_code)), 'sha256'), 'hex')
     and is_active = true
   for update;
 
