@@ -118,7 +118,7 @@ export function PopularBundles() {
                 <div className="text-center mb-6">
                   <div className="flex items-baseline justify-center gap-1.5 mb-1">
                     <span className="text-lg font-bold text-gray-500">₹</span>
-                    <span className="text-5xl font-black text-gray-900" style={{ fontFamily: "var(--font-mono)" }}>499</span>
+                    <span className="text-5xl font-black text-gray-900" style={{ fontFamily: "var(--font-mono)" }}>349</span>
                     <span className="text-sm font-bold text-gray-400 line-through">₹899</span>
                   </div>
                   <p className="text-xs font-bold text-emerald-700">First-Batch Regular Price</p>
