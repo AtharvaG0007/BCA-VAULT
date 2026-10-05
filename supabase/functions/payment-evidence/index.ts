@@ -207,10 +207,10 @@ Deno.serve(async (request: Request) => {
 
         const { data: redemption, error: redemptionError } = await admin
           .from("coupon_redemptions")
-          .select("id, user_id, campaign_id, coupon_campaigns!inner(code, is_active)")
+          .select("id, user_id, campaign_id, coupon_campaigns!inner(code_hash, is_active)")
           .eq("id", winnerRedemptionId)
           .eq("user_id", effectiveUserId)
-          .eq("coupon_campaigns.code", "WINNER150")
+          .eq("coupon_campaigns.code_hash", "4fe53ca1f3aa59448112e9f2756a5f7606eb9d5e552d54ba19b37b1f896c6244")
           .eq("coupon_campaigns.is_active", true)
           .maybeSingle();
 
