@@ -32,7 +32,7 @@ async function callPaymentFunction<T = any>(body: Record<string, unknown>): Prom
   return json as T;
 }
 
-export function PaymentEvidenceForm({ onClose, initialBundleId, initialPrice = 499, initialReferralIdentifier }: { onClose: () => void; initialBundleId?: string; initialPrice?: number; initialReferralIdentifier?: string; }) {
+export function PaymentEvidenceForm({ onClose, initialBundleId, initialPrice = 349, initialReferralIdentifier }: { onClose: () => void; initialBundleId?: string; initialPrice?: number; initialReferralIdentifier?: string; }) {
   const navigate = useNavigate();
   const { user, appUser } = useAuth();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -40,7 +40,7 @@ export function PaymentEvidenceForm({ onClose, initialBundleId, initialPrice = 4
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [referenceId, setReferenceId] = useState<string | null>(null);
-  const [form, setForm] = useState({ fullName: appUser?.name || "", phone: "", email: user?.email || appUser?.email || "", course: "BCA", semester: appUser?.semester ? String(appUser.semester) : "1", amountPaid: String(initialPrice || 499), utr: "", referralCode: initialReferralIdentifier || "", paymentConfirmation: false });
+  const [form, setForm] = useState({ fullName: appUser?.name || "", phone: "", email: user?.email || appUser?.email || "", course: "BCA", semester: appUser?.semester ? String(appUser.semester) : "1", amountPaid: String(initialPrice || 349), utr: "", referralCode: initialReferralIdentifier || "", paymentConfirmation: false });
   const update = (key: keyof typeof form, value: string | boolean) => setForm((current) => ({ ...current, [key]: value }));
   function chooseFile(nextFile: File | undefined) { setError(""); if (!nextFile) return; if (!ACCEPTED_TYPES.includes(nextFile.type)) return setError("Please upload a PNG, JPG, or WebP image."); if (nextFile.size > MAX_FILE_SIZE) return setError("Payment screenshot must be 5 MB or smaller."); setFile(nextFile); }
   async function submit(event: FormEvent<HTMLFormElement>) {
