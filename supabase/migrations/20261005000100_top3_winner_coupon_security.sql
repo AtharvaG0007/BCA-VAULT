@@ -39,13 +39,13 @@ $$;
 
 update public.coupon_campaigns
 set max_redemptions = 3, is_active = true
-where code_hash = '4fe53ca1f3aa59448112e9f2756a5f7606eb9d5e552d54ba19b37b1f896c6244';
+where code_hash = 'ba99b2cd89d9740b111e23b789f9b9ddb37c06b197196bbb623ff4fddfaf21f2';
 
 insert into public.coupon_campaigns (max_redemptions, is_active, code_hash)
-select 3, true, '4fe53ca1f3aa59448112e9f2756a5f7606eb9d5e552d54ba19b37b1f896c6244'
+select 3, true, 'ba99b2cd89d9740b111e23b789f9b9ddb37c06b197196bbb623ff4fddfaf21f2'
 where not exists (
   select 1 from public.coupon_campaigns
-  where code_hash = '4fe53ca1f3aa59448112e9f2756a5f7606eb9d5e552d54ba19b37b1f896c6244'
+  where code_hash = 'ba99b2cd89d9740b111e23b789f9b9ddb37c06b197196bbb623ff4fddfaf21f2'
 );
 
 create unique index if not exists coupon_campaigns_code_hash_unique
