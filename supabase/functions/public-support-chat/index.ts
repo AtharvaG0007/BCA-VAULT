@@ -76,8 +76,8 @@ ABOUT BCA VAULT:
 BUNDLE & PRICING:
 - BCA Vault offers an All-Access Bundle containing complete semester-wise notes for BCA.
 - Original price: ₹899
-- Active coupon: BUDMS400 → ₹400 OFF → final price ₹499
-- Active coupon: WINNER150 → additional discount → final price ₹349
+- Regular price: ₹349
+- Top 3 Quiz Winner price: ₹299 with coupon WINNER150
 - Bundle includes: All semester notes, PYQs, important questions, exam preparation material.
 - One-time purchase, lifetime access.
 
