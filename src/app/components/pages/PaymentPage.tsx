@@ -26,13 +26,7 @@ const UPI_ID = "gogawaleatharva997-1@oksbi";
 const UPI_NAME = "BCA Vault";
 const BASE_PRICE = 349;
 
-const VALID_COUPONS: Record<string, { discount: number; finalPrice: number; description: string }> = {
-  WINNER150: {
-    discount: 50,
-    finalPrice: 299,
-    description: "Top 3 Quiz Winner Price — Final Price ₹299",
-  },
-};
+const TOP3_WINNER_PRICE = 299;
 
 const instructions = [
   "Pay ₹349 (or ₹299 as a verified Top 3 winner) using any UPI app or QR code.",
@@ -46,7 +40,8 @@ export function PaymentPage() {
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   const [couponInput, setCouponInput] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<"TOP3_WINNER" | null>(null);
+  const [winnerRedemptionId, setWinnerRedemptionId] = useState<string | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
 
   // Student DMS Referral state (separate from price discount coupons)
@@ -73,8 +68,10 @@ export function PaymentPage() {
     return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   };
 
-  const currentCouponInfo = appliedCoupon ? VALID_COUPONS[appliedCoupon] : null;
-  const currentPrice = currentCouponInfo ? currentCouponInfo.finalPrice : BASE_PRICE;
+  const currentCouponInfo = appliedCoupon
+    ? { discount: BASE_PRICE - TOP3_WINNER_PRICE, finalPrice: TOP3_WINNER_PRICE, description: "Top 3 Winner Price — Final Price ₹299" }
+    : null;
+  const currentPrice = currentCouponInfo?.finalPrice ?? BASE_PRICE;
 
   const upiUrl = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(
     UPI_NAME
@@ -82,20 +79,39 @@ export function PaymentPage() {
     `BCA Vault Semester 1 Bundle${appliedCoupon ? ` (${appliedCoupon})` : ""}`
   )}`;
 
-  const handleApplyCoupon = (codeToApply?: string) => {
-    const raw = (codeToApply ?? couponInput).trim().toUpperCase();
+  const handleApplyCoupon = async (codeToApply?: string) => {
+    const raw = (codeToApply ?? couponInput).trim();
     setCouponError(null);
 
     if (!raw) {
       setAppliedCoupon(null);
+      setWinnerRedemptionId(null);
       return;
     }
 
-    if (VALID_COUPONS[raw]) {
-      setAppliedCoupon(raw);
-      setCouponInput(raw);
-    } else {
-      setCouponError("Invalid coupon code. Use WINNER150 only if you are a verified Top 3 quiz winner.");
+    if (!user) {
+      setCouponError("Please sign in before using the Top 3 winner offer.");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc("redeem_top3_winner_coupon", { p_code: raw });
+      if (error) throw error;
+      if (!data?.success) {
+        setAppliedCoupon(null);
+        setWinnerRedemptionId(null);
+        setCouponError(data?.error || "Invalid or expired winner code.");
+        return;
+      }
+
+      setAppliedCoupon("TOP3_WINNER");
+      setWinnerRedemptionId(data.redemption_id);
+      setCouponInput("");
+      setCouponError(null);
+    } catch (err: any) {
+      setAppliedCoupon(null);
+      setWinnerRedemptionId(null);
+      setCouponError(err?.message || "Unable to verify the winner code. Please try again.");
     }
   };
 
@@ -169,7 +185,7 @@ export function PaymentPage() {
           <div className="flex items-start sm:items-center gap-2 font-medium min-w-0">
             <Timer className="h-4 w-4 text-amber-400 animate-pulse shrink-0 mt-0.5 sm:mt-0" />
             <span className="leading-snug">
-              BCA Sem 1: Regular price <strong className="text-emerald-300 font-bold">₹349</strong> · Top 3 Quiz Winners pay <strong className="text-amber-300 font-bold">₹299</strong> with code <strong className="text-amber-300 font-mono tracking-wider">WINNER150</strong>.
+              BCA Sem 1: Regular price <strong className="text-emerald-300 font-bold">₹349</strong> · Top 3 Quiz Winners can unlock the <strong className="text-amber-300 font-bold">₹299</strong> price with their private winner code.
             </span>
           </div>
           <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto shrink-0 pt-1.5 sm:pt-0 border-t border-white/10 sm:border-t-0">
@@ -177,13 +193,10 @@ export function PaymentPage() {
               <span>Offer timer:</span>
               <span className="text-white">{formatTimer(secondsRemaining)}</span>
             </div>
-            {appliedCoupon !== "WINNER150" && (
-              <button
-                onClick={() => handleApplyCoupon("WINNER150")}
-                className="rounded-lg bg-amber-400 px-3 py-1 text-xs font-bold text-slate-950 hover:bg-amber-300 transition shrink-0 cursor-pointer shadow-xs"
-              >
-                Apply Top 3 Winner Price
-              </button>
+            {appliedCoupon && (
+              <span className="rounded-lg bg-emerald-400/20 px-3 py-1 text-xs font-bold text-emerald-200 shrink-0">
+                Winner offer unlocked
+              </span>
             )}
           </div>
         </div>
@@ -230,12 +243,12 @@ export function PaymentPage() {
                   type="text"
                   value={couponInput}
                   onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                  placeholder="e.g. WINNER150"
+                  placeholder="Enter your private winner code"
                   className="flex-1 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-mono font-bold uppercase text-slate-900 placeholder:font-sans placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none"
                 />
                 <button
                   type="button"
-                  onClick={() => handleApplyCoupon()}
+                  onClick={() => void handleApplyCoupon()}
                   className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition"
                 >
                   Apply
@@ -248,7 +261,7 @@ export function PaymentPage() {
               )}
               {appliedCoupon && (
                 <p className="mt-2 text-[11px] text-emerald-700 font-medium">
-                  ✓ {VALID_COUPONS[appliedCoupon]?.description}
+                  ✓ {currentCouponInfo?.description}
                 </p>
               )}
             </div>
@@ -449,6 +462,7 @@ export function PaymentPage() {
                 onClose={() => setShowEvidenceModal(false)}
                 initialPrice={currentPrice}
                 initialReferralIdentifier={appliedReferral || undefined}
+                initialWinnerRedemptionId={winnerRedemptionId || undefined}
               />
             )}
           </div>
