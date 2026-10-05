@@ -209,7 +209,7 @@ function renderPaymentApprovedHtml(
   const safeName = escapeHtml(studentName || "Student");
   const safeCourse = escapeHtml(course || "BCA");
   const safeBundle = escapeHtml(bundleTitle || "BCA Vault Bundle");
-  const safeAmount = escapeHtml(amountText || "₹499");
+  const safeAmount = escapeHtml(amountText || "₹349");
 
   return `<div style="font-family: Arial, sans-serif; color: #333333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
   <h2 style="color: #2e7d32; margin-top: 0;">Payment Approved</h2>
