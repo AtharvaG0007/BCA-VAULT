@@ -200,6 +200,10 @@ Deno.serve(async (request: Request) => {
       const winnerRedemptionId = text(body.winner_redemption_id);
       let couponRedemptionId: string | null = null;
 
+      // Resolve the caller once before any price/coupon authorization checks.
+      // A ₹299 payment must always be bound to the authenticated Supabase user.
+      let effectiveUserId = user?.id || null;
+
       if (amount === 299) {
         if (!effectiveUserId || !winnerRedemptionId) {
           return respond({ success: false, error: "The ₹299 winner price requires a valid Top 3 winner redemption while signed in." }, 403, corsHeaders);
@@ -237,8 +241,7 @@ Deno.serve(async (request: Request) => {
         return respond({ success: false, error: "Your uploaded screenshot could not be verified in storage. Please upload again." }, 400, corsHeaders);
       }
 
-      // If student is logged in, attach their user_id. If guest, check if profile exists with email.
-      let effectiveUserId = user?.id || null;
+      // If the caller is a guest, check whether the submitted email belongs to an existing profile.
       if (!effectiveUserId) {
         const { data: existingProfile } = await admin
           .from("profiles")
