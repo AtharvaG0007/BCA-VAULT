@@ -339,7 +339,7 @@ Admin should be able to:
 Example:
 
 BCA Semester 1 Complete Notes
-₹499
+₹349
 
 BCA Semester 2 Complete Notes
 ₹499
