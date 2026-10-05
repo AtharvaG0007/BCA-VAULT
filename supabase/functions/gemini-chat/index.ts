@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const ALLOWED_ORIGINS = [
+const ALLOWED_ORIGINS = new Set([
   "https://bca-vault.portalbcavault.workers.dev",
   "https://bcavault.in",
   "https://www.bcavault.in",
@@ -9,16 +9,19 @@ const ALLOWED_ORIGINS = [
   "http://127.0.0.1:5173",
   "http://localhost:3000",
   "http://localhost:4173",
-];
+]);
+
+function isAllowedOrigin(origin: string): boolean {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.has(origin)) return true;
+  if (/^https:\/\/bca-vault(-[a-z0-9]+)?\.portalbcavault\.workers\.dev$/.test(origin)) return true;
+  if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
+  return false;
+}
 
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get("Origin") || "";
-  const isAllowed =
-    ALLOWED_ORIGINS.includes(origin) ||
-    origin.endsWith(".workers.dev") ||
-    origin.endsWith(".figma.site") ||
-    /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
-  const allowOrigin = isAllowed ? origin : (origin || "https://bca-vault.portalbcavault.workers.dev");
+  const allowOrigin = isAllowedOrigin(origin) ? origin : "https://bcavault.in";
 
   return {
     "Access-Control-Allow-Origin": allowOrigin,
@@ -26,6 +29,7 @@ function getCorsHeaders(req: Request) {
       "authorization, x-client-info, apikey, content-type, x-requested-with",
     "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
     "Access-Control-Max-Age": "86400",
+    "Vary": "Origin",
   };
 }
 
@@ -153,7 +157,7 @@ STRICT BEHAVIORAL RULES:
 - If a concept is outside BCA Vault notes, explain it using general computer science knowledge while clearly noting: "Your BCA Vault notes don't have this specific topic, but here is a clear explanation...".
 - NEVER invent false prices, fake discount codes, or hallucinate unauthorized files.
 - Official support email: bcavault07@gmail.com | WhatsApp: +919326342123
-- Active coupon code: BUDMS400 (₹400 OFF, final price ₹499) | WINNER150 (₹349)
+- Current pricing: Launch offer ₹349 (Regular ₹499) | Top 3 Quiz Winners unlock ₹299 via private winner verification. NEVER disclose secret coupon codes.
 - Do NOT generate or execute arbitrary SQL queries. Keep output safe, educational, and formatting clean using Markdown.`;
 }
 
@@ -308,7 +312,10 @@ Deno.serve(async (request: Request) => {
   }
 
   try {
-    const clientIp = request.headers.get("x-forwarded-for") || "anonymous";
+    const cfIp = request.headers.get("cf-connecting-ip");
+    const realIp = request.headers.get("x-real-ip");
+    const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+    const clientIp = cfIp || realIp || forwarded || "anonymous";
     const authHeader = request.headers.get("Authorization") || "";
     const token = authHeader.replace(/^Bearer\s+/i, "");
 
@@ -434,21 +441,27 @@ Deno.serve(async (request: Request) => {
       );
     }
 
-    // Format conversation history for Gemini API
+    // Format conversation history for Gemini API with size bounds and validated roles
     const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
 
     for (const item of history.slice(-8)) {
-      if (item && item.content && (item.role === "user" || item.role === "model")) {
+      if (
+        item &&
+        typeof item === "object" &&
+        (item.role === "user" || item.role === "model") &&
+        typeof item.content === "string" &&
+        item.content.trim().length > 0
+      ) {
         contents.push({
           role: item.role,
-          parts: [{ text: String(item.content) }],
+          parts: [{ text: item.content.slice(0, 1500) }],
         });
       }
     }
 
     contents.push({
       role: "user",
-      parts: [{ text: userMessage }],
+      parts: [{ text: userMessage.slice(0, 1500) }],
     });
 
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${geminiKey}`;

@@ -102,18 +102,18 @@ export function PricingPage() {
             <div className="text-center mb-6 py-5 border-y border-gray-100">
               <div className="flex items-baseline justify-center gap-2">
                 <span className="text-2xl font-bold text-slate-400">₹</span>
-                <span className="text-5xl sm:text-6xl font-black text-gray-900" style={{ fontFamily: "var(--font-mono)" }}>499</span>
-                <span className="text-lg font-bold text-gray-400 line-through">₹899</span>
+                <span className="text-5xl sm:text-6xl font-black text-gray-900" style={{ fontFamily: "var(--font-mono)" }}>349</span>
+                <span className="text-lg font-bold text-gray-400 line-through">₹499</span>
               </div>
               <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3.5 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
-                <span>First-Batch Offer (BUDMS400)</span>
+                <span>First-Batch Launch Offer</span>
               </div>
               <p className="text-xs text-gray-400 mt-2">One-time payment · Semester 1 Complete Access</p>
 
               {/* Quiz winner info */}
               <div className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
                 <Trophy className="h-4 w-4 text-amber-600 shrink-0" />
-                <span>Top 3 Quiz Winners → <strong>₹349</strong> with code WINNER150</span>
+                <span>Top 3 Quiz Winners → <strong>₹299</strong> with exclusive winner access</span>
               </div>
             </div>
 

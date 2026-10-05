@@ -14,6 +14,7 @@ import {
   Sparkles,
   AlertCircle,
   Loader2,
+  Trophy,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "../auth/AuthContext";
@@ -24,23 +25,14 @@ export const GOOGLE_PAYMENT_FORM_URL =
 
 const UPI_ID = "gogawaleatharva997-1@oksbi";
 const UPI_NAME = "BCA Vault";
-const BASE_PRICE = 499;
 
-const VALID_COUPONS: Record<string, { discount: number; finalPrice: number; description: string }> = {
-  WINNER150: {
-    discount: 150,
-    finalPrice: 349,
-    description: "Special Winner / Discount Price — Final Price ₹349",
-  },
-  SPECIAL349: {
-    discount: 150,
-    finalPrice: 349,
-    description: "Special Discount Access — Final Price ₹349",
-  },
-};
+/** Regular price — always enforced server-side */
+const REGULAR_PRICE = 349;
+/** Top 3 Winner price — requires authenticated server-side redemption */
+const WINNER_PRICE = 299;
 
 const instructions = [
-  "Pay ₹499 (or ₹349 with winner discount) using any UPI app or QR code.",
+  "Pay ₹349 (or ₹299 for eligible Top 3 Quiz Winners) using any UPI app or QR code.",
   "Capture a screenshot showing the 12-digit UTR / UPI Transaction ID.",
   "Click 'Submit Payment Form' and upload your payment details.",
   "Create your BCA Vault account — your payment details will be auto-filled.",
@@ -50,11 +42,14 @@ const instructions = [
 export function PaymentPage() {
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
-  const [couponInput, setCouponInput] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
-  const [couponError, setCouponError] = useState<string | null>(null);
 
-  // Student DMS Referral state (separate from price discount coupons)
+  // Secure server-side winner redemption state
+  const [winnerCodeInput, setWinnerCodeInput] = useState("");
+  const [winnerRedemptionId, setWinnerRedemptionId] = useState<string | null>(null);
+  const [winnerRedeeming, setWinnerRedeeming] = useState(false);
+  const [winnerError, setWinnerError] = useState<string | null>(null);
+
+  // Student DMS Referral state (separate from winner redemption)
   const [referralInput, setReferralInput] = useState("");
   const [appliedReferral, setAppliedReferral] = useState<string | null>(null);
   const [referralValidating, setReferralValidating] = useState(false);
@@ -78,29 +73,57 @@ export function PaymentPage() {
     return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   };
 
-  const currentCouponInfo = appliedCoupon ? VALID_COUPONS[appliedCoupon] : null;
-  const currentPrice = currentCouponInfo ? currentCouponInfo.finalPrice : BASE_PRICE;
+  /** Server-authorized price — ₹299 only with valid redemption */
+  const currentPrice = winnerRedemptionId ? WINNER_PRICE : REGULAR_PRICE;
 
   const upiUrl = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(
     UPI_NAME
   )}&am=${currentPrice}&cu=INR&tn=${encodeURIComponent(
-    `BCA Vault Semester 1 Bundle${appliedCoupon ? ` (${appliedCoupon})` : ""}`
+    `BCA Vault Semester 1 Bundle`
   )}`;
 
-  const handleApplyCoupon = (codeToApply?: string) => {
-    const raw = (codeToApply ?? couponInput).trim().toUpperCase();
-    setCouponError(null);
+  /**
+   * Redeem winner code via server-side RPC.
+   * The coupon code is NEVER stored in the frontend — it is sent to the server
+   * for hashed verification, redemption counting, and one-per-user enforcement.
+   */
+  const handleRedeemWinnerCode = async () => {
+    const raw = winnerCodeInput.trim();
+    setWinnerError(null);
 
     if (!raw) {
-      setAppliedCoupon(null);
+      setWinnerError("Please enter your winner code.");
       return;
     }
 
-    if (VALID_COUPONS[raw]) {
-      setAppliedCoupon(raw);
-      setCouponInput(raw);
-    } else {
-      setCouponError("Invalid coupon code. Try BUDMS400 for ₹400 OFF.");
+    if (!user) {
+      setWinnerError("Please sign in to redeem your winner code.");
+      return;
+    }
+
+    setWinnerRedeeming(true);
+    try {
+      const { data, error } = await supabase.rpc("redeem_winner_coupon", {
+        p_coupon_code: raw,
+      });
+
+      if (error) {
+        setWinnerError(error.message || "Unable to verify winner code.");
+        return;
+      }
+
+      if (!data || !data.success) {
+        setWinnerError(data?.error || "Invalid or expired winner code.");
+        return;
+      }
+
+      setWinnerRedemptionId(data.redemption_id);
+      setWinnerCodeInput("");
+      setWinnerError(null);
+    } catch (err: any) {
+      setWinnerError(err?.message || "Unable to verify winner code. Please try again.");
+    } finally {
+      setWinnerRedeeming(false);
     }
   };
 
@@ -174,7 +197,7 @@ export function PaymentPage() {
           <div className="flex items-start sm:items-center gap-2 font-medium min-w-0">
             <Timer className="h-4 w-4 text-amber-400 animate-pulse shrink-0 mt-0.5 sm:mt-0" />
             <span className="leading-snug">
-              BCA Sem 1: Standard price <strong className="text-emerald-300 font-bold">₹499</strong> · Code <strong className="text-amber-300 font-mono tracking-wider">WINNER150</strong> for <strong className="text-amber-300 font-bold">₹349</strong>!
+              BCA Sem 1: <strong className="text-emerald-300 font-bold">₹349</strong> · Top 3 Quiz Winners: <strong className="text-amber-300 font-bold">₹299</strong>
             </span>
           </div>
           <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto shrink-0 pt-1.5 sm:pt-0 border-t border-white/10 sm:border-t-0">
@@ -182,14 +205,6 @@ export function PaymentPage() {
               <span>Offer timer:</span>
               <span className="text-white">{formatTimer(secondsRemaining)}</span>
             </div>
-            {appliedCoupon !== "WINNER150" && (
-              <button
-                onClick={() => handleApplyCoupon("WINNER150")}
-                className="rounded-lg bg-amber-400 px-3 py-1 text-xs font-bold text-slate-950 hover:bg-amber-300 transition shrink-0 cursor-pointer shadow-xs"
-              >
-                Apply Winner Price
-              </button>
-            )}
           </div>
         </div>
       </div>
@@ -207,54 +222,91 @@ export function PaymentPage() {
               Semester 1 Notes + Most Repeated Topics
             </p>
 
-            {/* Price Box with Coupon Calculation */}
+            {/* Price Box */}
             <div className="my-5 border-y border-slate-100 py-4 sm:py-5">
               <div className="flex items-baseline gap-3">
                 <p className="font-mono text-4xl sm:text-5xl font-extrabold text-slate-950">₹{currentPrice}</p>
-                {currentPrice < BASE_PRICE && (
-                  <span className="font-mono text-lg sm:text-xl text-slate-400 line-through">₹{BASE_PRICE}</span>
+                {winnerRedemptionId && (
+                  <span className="font-mono text-lg sm:text-xl text-slate-400 line-through">₹{REGULAR_PRICE}</span>
                 )}
               </div>
-              {currentCouponInfo ? (
+              {winnerRedemptionId ? (
                 <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
-                  <Tag className="h-3 w-3" />
-                  <span>Coupon {appliedCoupon} applied (Saved ₹{currentCouponInfo.discount})</span>
+                  <Trophy className="h-3 w-3" />
+                  <span>Top 3 Winner discount applied — ₹299</span>
                 </div>
               ) : (
                 <p className="mt-1.5 text-xs text-slate-500">One-time manual UPI payment</p>
               )}
             </div>
 
-            {/* Coupon Code Input */}
+            {/* Winner Code Redemption — Server-verified */}
             <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                Have a discount coupon?
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={couponInput}
-                  onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                  placeholder="e.g. BUDMS400"
-                  className="flex-1 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-mono font-bold uppercase text-slate-900 placeholder:font-sans placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleApplyCoupon()}
-                  className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition"
-                >
-                  Apply
-                </button>
+              <div className="mb-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Top 3 Quiz Winner?
+                </label>
+                <p className="mt-0.5 text-[11px] text-slate-500 leading-normal">
+                  If you're a Top 3 quiz winner, enter your private winner code to unlock ₹299 pricing. Requires sign-in.
+                </p>
               </div>
-              {couponError && (
-                <p className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-rose-600">
-                  <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {couponError}
-                </p>
-              )}
-              {appliedCoupon && (
-                <p className="mt-2 text-[11px] text-emerald-700 font-medium">
-                  ✓ {VALID_COUPONS[appliedCoupon]?.description}
-                </p>
+
+              {!winnerRedemptionId ? (
+                <div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={winnerCodeInput}
+                      onChange={(e) => {
+                        setWinnerCodeInput(e.target.value);
+                        if (winnerError) setWinnerError(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          void handleRedeemWinnerCode();
+                        }
+                      }}
+                      placeholder="Enter your private winner code"
+                      disabled={winnerRedeeming}
+                      className="flex-1 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-mono font-bold uppercase text-slate-900 placeholder:font-sans placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none disabled:bg-slate-100"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => void handleRedeemWinnerCode()}
+                      disabled={winnerRedeeming}
+                      className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition disabled:bg-slate-400 shrink-0 inline-flex items-center gap-1.5"
+                    >
+                      {winnerRedeeming ? (
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <span>Verifying…</span>
+                        </>
+                      ) : (
+                        "Redeem"
+                      )}
+                    </button>
+                  </div>
+
+                  {winnerError && (
+                    <p className="mt-2 flex items-start gap-1 text-[11px] font-semibold text-rose-600">
+                      <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      <span>{winnerError}</span>
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1 text-xs font-bold text-emerald-800">
+                      <Check className="h-3.5 w-3.5 text-emerald-600" />
+                      <span>✓ Winner discount verified</span>
+                    </div>
+                    <p className="mt-0.5 text-[11px] font-medium text-emerald-700">
+                      Price: <strong className="font-semibold text-slate-900">₹299</strong> (saved ₹50)
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
 
@@ -454,6 +506,7 @@ export function PaymentPage() {
                 onClose={() => setShowEvidenceModal(false)}
                 initialPrice={currentPrice}
                 initialReferralIdentifier={appliedReferral || undefined}
+                winnerRedemptionId={winnerRedemptionId || undefined}
               />
             )}
           </div>

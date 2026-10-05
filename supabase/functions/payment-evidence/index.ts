@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const ALLOWED_ORIGINS = [
+const ALLOWED_ORIGINS = new Set([
   "https://bca-vault.portalbcavault.workers.dev",
   "https://bcavault.in",
   "https://www.bcavault.in",
@@ -9,16 +9,19 @@ const ALLOWED_ORIGINS = [
   "http://127.0.0.1:5173",
   "http://localhost:3000",
   "http://localhost:4173",
-];
+]);
+
+function isAllowedOrigin(origin: string): boolean {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.has(origin)) return true;
+  if (/^https:\/\/bca-vault(-[a-z0-9]+)?\.portalbcavault\.workers\.dev$/.test(origin)) return true;
+  if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
+  return false;
+}
 
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get("Origin") || "";
-  const isAllowed =
-    ALLOWED_ORIGINS.includes(origin) ||
-    origin.endsWith(".workers.dev") ||
-    origin.endsWith(".figma.site") ||
-    /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
-  const allowOrigin = isAllowed ? origin : (origin || "https://bca-vault.portalbcavault.workers.dev");
+  const allowOrigin = isAllowedOrigin(origin) ? origin : "https://bcavault.in";
 
   return {
     "Access-Control-Allow-Origin": allowOrigin,
@@ -26,6 +29,7 @@ function getCorsHeaders(req: Request) {
       "authorization, x-client-info, apikey, content-type, x-requested-with",
     "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
     "Access-Control-Max-Age": "86400",
+    "Vary": "Origin",
   };
 }
 
@@ -149,7 +153,7 @@ Deno.serve(async (request: Request) => {
           submission_id: submissionId,
           storage_path: path,
           token: data.token,
-          bundle: { id: bundle.id, title: bundle.title, price: 499 },
+          bundle: { id: bundle.id, title: bundle.title, price: Number(bundle.price) || 349 },
         },
         200,
         corsHeaders
@@ -190,10 +194,67 @@ Deno.serve(async (request: Request) => {
         return respond({ success: false, error: "Your upload session is invalid. Please select your screenshot again." }, 400, corsHeaders);
       }
 
-      // Valid prices: 499 (normal) or 349 (winner/coupon)
-      const allowedPrices = [499, 349, Number(bundle.price)];
-      if (!allowedPrices.includes(amount)) {
-        return respond({ success: false, error: "Invalid payment amount. Valid pricing is ₹499 or ₹349." }, 400, corsHeaders);
+      // If student is logged in, attach their user_id. If guest, check if profile exists with email.
+      let effectiveUserId = user?.id || null;
+      if (!effectiveUserId) {
+        const { data: existingProfile } = await admin
+          .from("profiles")
+          .select("user_id")
+          .ilike("email", email)
+          .maybeSingle();
+        if (existingProfile?.user_id) {
+          effectiveUserId = existingProfile.user_id;
+        }
+      }
+
+      // Valid prices: ₹349 (launch) or ₹499 (regular), or ₹299 (strictly with verified winner redemption)
+      const allowedStandardPrices = [349, 499, Number(bundle.price)];
+      const winnerRedemptionId = text(body.winner_redemption_id || body.redemption_id);
+
+      if (amount === 299) {
+        if (!winnerRedemptionId) {
+          return respond(
+            { success: false, error: "Top 3 quiz winner price (₹299) requires a verified winner redemption ID." },
+            400,
+            corsHeaders
+          );
+        }
+
+        const { data: redemption, error: redErr } = await admin
+          .from("winner_redemptions")
+          .select("id, status, user_id, email")
+          .eq("id", winnerRedemptionId)
+          .maybeSingle();
+
+        if (redErr || !redemption) {
+          return respond(
+            { success: false, error: "Invalid or expired winner redemption. Please verify your winner code first." },
+            400,
+            corsHeaders
+          );
+        }
+
+        if (redemption.status === "consumed") {
+          return respond(
+            { success: false, error: "This winner redemption has already been used for another payment." },
+            400,
+            corsHeaders
+          );
+        }
+
+        if (effectiveUserId && redemption.user_id && redemption.user_id !== effectiveUserId) {
+          return respond(
+            { success: false, error: "This winner redemption belongs to another account." },
+            403,
+            corsHeaders
+          );
+        }
+      } else if (!allowedStandardPrices.includes(amount)) {
+        return respond(
+          { success: false, error: "Invalid payment amount. Standard pricing is ₹349." },
+          400,
+          corsHeaders
+        );
       }
 
       const folder = path.slice(0, path.lastIndexOf("/"));
@@ -210,19 +271,6 @@ Deno.serve(async (request: Request) => {
         Number(file.metadata?.size) > maxFileSize
       ) {
         return respond({ success: false, error: "Your uploaded screenshot could not be verified in storage. Please upload again." }, 400, corsHeaders);
-      }
-
-      // If student is logged in, attach their user_id. If guest, check if profile exists with email.
-      let effectiveUserId = user?.id || null;
-      if (!effectiveUserId) {
-        const { data: existingProfile } = await admin
-          .from("profiles")
-          .select("user_id")
-          .ilike("email", email)
-          .maybeSingle();
-        if (existingProfile?.user_id) {
-          effectiveUserId = existingProfile.user_id;
-        }
       }
 
       // Referral identifier handling (optional)
@@ -268,6 +316,7 @@ Deno.serve(async (request: Request) => {
         status: "pending",
         referral_code: validReferralIdentifier,
         referral_identifier: validReferralIdentifier,
+        winner_redemption_id: amount === 299 ? winnerRedemptionId : null,
       });
 
       if (insertError?.code === "23505") {
@@ -277,6 +326,18 @@ Deno.serve(async (request: Request) => {
       if (insertError) {
         console.error("Insert error:", insertError);
         throw insertError;
+      }
+
+      // If winner redemption used, mark it consumed
+      if (amount === 299 && winnerRedemptionId) {
+        await admin
+          .from("winner_redemptions")
+          .update({
+            status: "consumed",
+            consumed_at: new Date().toISOString(),
+            used_in_submission_id: submissionId,
+          })
+          .eq("id", winnerRedemptionId);
       }
 
       // If a valid referral identifier was supplied and we have an identified student, create pending referral

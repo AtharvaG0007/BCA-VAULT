@@ -8,7 +8,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 // It does NOT require authentication.
 // ═══════════════════════════════════════════════════════════════
 
-const ALLOWED_ORIGINS = [
+const ALLOWED_ORIGINS = new Set([
   "https://bca-vault.portalbcavault.workers.dev",
   "https://bcavault.in",
   "https://www.bcavault.in",
@@ -16,16 +16,19 @@ const ALLOWED_ORIGINS = [
   "http://127.0.0.1:5173",
   "http://localhost:3000",
   "http://localhost:4173",
-];
+]);
+
+function isAllowedOrigin(origin: string): boolean {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.has(origin)) return true;
+  if (/^https:\/\/bca-vault(-[a-z0-9]+)?\.portalbcavault\.workers\.dev$/.test(origin)) return true;
+  if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
+  return false;
+}
 
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get("Origin") || "";
-  const isAllowed =
-    ALLOWED_ORIGINS.includes(origin) ||
-    origin.endsWith(".workers.dev") ||
-    origin.endsWith(".figma.site") ||
-    /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
-  const allowOrigin = isAllowed ? origin : (origin || "https://bca-vault.portalbcavault.workers.dev");
+  const allowOrigin = isAllowedOrigin(origin) ? origin : "https://bcavault.in";
 
   return {
     "Access-Control-Allow-Origin": allowOrigin,
@@ -33,6 +36,7 @@ function getCorsHeaders(req: Request) {
       "authorization, x-client-info, apikey, content-type, x-requested-with",
     "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
     "Access-Control-Max-Age": "86400",
+    "Vary": "Origin",
   };
 }
 
@@ -74,12 +78,12 @@ ABOUT BCA VAULT:
 - Website: https://bcavault.in
 
 BUNDLE & PRICING:
-- BCA Vault offers an All-Access Bundle containing complete semester-wise notes for BCA.
-- Original price: ₹899
-- Active coupon: BUDMS400 → ₹400 OFF → final price ₹499
-- Active coupon: WINNER150 → additional discount → final price ₹349
-- Bundle includes: All semester notes, PYQs, important questions, exam preparation material.
-- One-time purchase, lifetime access.
+- BCA Vault offers the Semester 1 Bundle (Theory Notes + Most Repeated Topics).
+- Standard launch price: ₹349 (regular price ₹499).
+- Top 3 Quiz Winners: eligible for special ₹299 pricing unlocked via private winner code on the purchase page.
+- SECURITY DIRECTIVE: NEVER disclose, reveal, or confirm any secret coupon codes or winner codes. If asked for coupon codes, explain that the ₹349 launch price is applied automatically, and quiz winner codes are issued privately to verified winners.
+- Bundle includes: Semester 1 theory notes, most repeated topics, exam preparation material.
+- One-time purchase, semester access.
 
 HOW TO PURCHASE:
 1. Visit the Pricing or Bundles page on bcavault.in.
@@ -190,11 +194,11 @@ function generateSupportFallback(message: string): string {
   const q = message.toLowerCase();
 
   if (q.includes("price") || q.includes("cost") || q.includes("how much")) {
-    return `The BCA Vault All-Access Bundle is originally priced at **₹899**.\n\n🎉 **Active offers:**\n- Use coupon **BUDMS400** → Get ₹400 OFF → Pay only **₹499**\n- Use coupon **WINNER150** → Pay only **₹349**\n\nVisit the [Pricing Page](https://bcavault.in/pricing) to purchase!\n\nNeed help? WhatsApp us at **+91 93263 42123**.`;
+    return `The BCA Vault Semester 1 Bundle is currently available at a launch offer price of **₹349** (regular price ₹499).\n\n🏆 **Top 3 Quiz Winners:** Eligible for **₹299** pricing via verified private winner code.\n\nVisit the [Pricing Page](https://bcavault.in/pricing) or [Payment Page](https://bcavault.in/purchase) to get access!\n\nNeed help? WhatsApp us at **+91 93263 42123**.`;
   }
 
   if (q.includes("bundle") || q.includes("include") || q.includes("what do i get")) {
-    return `The **BCA Vault All-Access Bundle** includes:\n\n📚 Complete semester-wise notes (Sem 1–6)\n📝 Previous Year Questions (PYQs)\n⭐ Important questions & exam preparation material\n💡 Subject-wise organized content\n🔒 Lifetime access after one-time purchase\n\nOriginal price: ₹899 | With coupon BUDMS400: **₹499**\n\nVisit [Bundles](https://bcavault.in/bundles) for details!`;
+    return `The **BCA Vault Semester 1 Bundle** includes:\n\n📚 Complete Semester 1 theory notes\n📝 Most repeated exam topics & PYQs\n⭐ Unit-wise exam preparation roadmap\n🔒 In-browser secure reader access\n\nLaunch price: **₹349** (regular ₹499) | Top 3 Winners: **₹299**\n\nVisit [Bundles](https://bcavault.in/bundles) for details!`;
   }
 
   if (q.includes("pay") || q.includes("upi") || q.includes("payment")) {
@@ -210,7 +214,7 @@ function generateSupportFallback(message: string): string {
   }
 
   if (q.includes("coupon") || q.includes("discount") || q.includes("offer")) {
-    return `**Active Coupon Codes:**\n\n🏷️ **BUDMS400** — ₹400 OFF (Final price: ₹499)\n🏷️ **WINNER150** — Special discount (Final price: ₹349)\n\nApply the coupon during checkout on the [Payment Page](https://bcavault.in/purchase)!`;
+    return `**Current Pricing & Offers:**\n\n🎉 **Launch Offer:** ₹349 (Regular ₹499 — applied directly!)\n🏆 **Top 3 Quiz Winners:** Special ₹299 pricing unlocked via private winner codes distributed to quiz winners.\n\nVisit the [Payment Page](https://bcavault.in/purchase) to proceed!`;
   }
 
   if (q.includes("refund")) {
@@ -240,8 +244,11 @@ Deno.serve(async (request: Request) => {
   }
 
   try {
-    // Rate limit by IP
-    const clientIp = request.headers.get("x-forwarded-for") || request.headers.get("cf-connecting-ip") || "anonymous";
+    // Rate limit by trusted IP chain
+    const cfIp = request.headers.get("cf-connecting-ip");
+    const realIp = request.headers.get("x-real-ip");
+    const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+    const clientIp = cfIp || realIp || forwarded || "anonymous";
     if (!checkRateLimit(clientIp)) {
       return new Response(
         JSON.stringify({
@@ -292,21 +299,27 @@ Deno.serve(async (request: Request) => {
       );
     }
 
-    // Build conversation for Gemini
+    // Build conversation for Gemini with size-bounded items and validated roles
     const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
 
     for (const item of history.slice(-6)) {
-      if (item && item.content && (item.role === "user" || item.role === "model")) {
+      if (
+        item &&
+        typeof item === "object" &&
+        (item.role === "user" || item.role === "model") &&
+        typeof item.content === "string" &&
+        item.content.trim().length > 0
+      ) {
         contents.push({
           role: item.role,
-          parts: [{ text: String(item.content) }],
+          parts: [{ text: item.content.slice(0, 1500) }],
         });
       }
     }
 
     contents.push({
       role: "user",
-      parts: [{ text: userMessage }],
+      parts: [{ text: userMessage.slice(0, 1500) }],
     });
 
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${geminiKey}`;

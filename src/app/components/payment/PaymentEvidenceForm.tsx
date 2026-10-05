@@ -77,11 +77,13 @@ export function PaymentEvidenceForm({
   initialBundleId,
   initialPrice = 499,
   initialReferralIdentifier,
+  winnerRedemptionId,
 }: {
   onClose: () => void;
   initialBundleId?: string;
   initialPrice?: number;
   initialReferralIdentifier?: string;
+  winnerRedemptionId?: string;
 }) {
   const navigate = useNavigate();
   const { user, appUser } = useAuth();
@@ -184,6 +186,7 @@ export function PaymentEvidenceForm({
         utr: form.utr.trim().toUpperCase(),
         referral_code: form.referralCode.trim() || undefined,
         referral_identifier: form.referralCode.trim() || undefined,
+        winner_redemption_id: winnerRedemptionId || undefined,
         submission_id,
         storage_path,
       });

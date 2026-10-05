@@ -491,10 +491,10 @@ BUDMS50:
 ₹50 OFF
 Final ₹849
 
-WINNER150:
+WINNER_ACCESS:
 
-₹150 OFF
-Final ₹749
+Top 3 Quiz Winner Special Price
+Final ₹299 (requires server-side verified redemption)
 
 No coupon:
 

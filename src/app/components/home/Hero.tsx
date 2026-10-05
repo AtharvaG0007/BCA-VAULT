@@ -234,7 +234,7 @@ export function Hero() {
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-gray-900">Introductory Offer</p>
-                  <p className="text-xs text-emerald-600 font-bold">₹499 (BUDMS400)</p>
+                  <p className="text-xs text-emerald-600 font-bold">₹349 (Launch Offer)</p>
                 </div>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-gray-400">
