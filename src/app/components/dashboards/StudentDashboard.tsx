@@ -781,7 +781,7 @@ export function StudentDashboard() {
                   <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end gap-3 shrink-0 bg-white/90 border border-indigo-100 rounded-2xl p-4 sm:p-5 shadow-xs w-full lg:w-auto min-w-0">
                     <div>
                       <span className="text-xs font-medium text-slate-500">Semester 1 BCA Bundle</span>
-                      <div className="text-2xl sm:text-3xl font-black text-slate-900">₹499</div>
+                      <div className="text-2xl sm:text-3xl font-black text-slate-900">₹349</div>
                     </div>
                     <button
                       onClick={() => navigate("/purchase")}
