@@ -24,23 +24,18 @@ export const GOOGLE_PAYMENT_FORM_URL =
 
 const UPI_ID = "gogawaleatharva997-1@oksbi";
 const UPI_NAME = "BCA Vault";
-const BASE_PRICE = 499;
+const BASE_PRICE = 349;
 
 const VALID_COUPONS: Record<string, { discount: number; finalPrice: number; description: string }> = {
   WINNER150: {
-    discount: 150,
-    finalPrice: 349,
-    description: "Special Winner / Discount Price — Final Price ₹349",
-  },
-  SPECIAL349: {
-    discount: 150,
-    finalPrice: 349,
-    description: "Special Discount Access — Final Price ₹349",
+    discount: 50,
+    finalPrice: 299,
+    description: "Top 3 Quiz Winner Price — Final Price ₹299",
   },
 };
 
 const instructions = [
-  "Pay ₹499 (or ₹349 with winner discount) using any UPI app or QR code.",
+  "Pay ₹299 (or ₹299 as a Top 3 winner) using any UPI app or QR code.",
   "Capture a screenshot showing the 12-digit UTR / UPI Transaction ID.",
   "Click 'Submit Payment Form' and upload your payment details.",
   "Create your BCA Vault account — your payment details will be auto-filled.",
@@ -100,7 +95,7 @@ export function PaymentPage() {
       setAppliedCoupon(raw);
       setCouponInput(raw);
     } else {
-      setCouponError("Invalid coupon code. Try BUDMS400 for ₹400 OFF.");
+      setCouponError("Invalid coupon code. Use WINNER150 only if you are a verified Top 3 quiz winner.");
     }
   };
 
@@ -174,7 +169,7 @@ export function PaymentPage() {
           <div className="flex items-start sm:items-center gap-2 font-medium min-w-0">
             <Timer className="h-4 w-4 text-amber-400 animate-pulse shrink-0 mt-0.5 sm:mt-0" />
             <span className="leading-snug">
-              BCA Sem 1: Standard price <strong className="text-emerald-300 font-bold">₹499</strong> · Code <strong className="text-amber-300 font-mono tracking-wider">WINNER150</strong> for <strong className="text-amber-300 font-bold">₹349</strong>!
+              BCA Sem 1: Regular price <strong className="text-emerald-300 font-bold">₹349</strong> · Top 3 Quiz Winners pay <strong className="text-amber-300 font-bold">₹299</strong> with code <strong className="text-amber-300 font-mono tracking-wider">WINNER150</strong>.
             </span>
           </div>
           <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto shrink-0 pt-1.5 sm:pt-0 border-t border-white/10 sm:border-t-0">
@@ -187,7 +182,7 @@ export function PaymentPage() {
                 onClick={() => handleApplyCoupon("WINNER150")}
                 className="rounded-lg bg-amber-400 px-3 py-1 text-xs font-bold text-slate-950 hover:bg-amber-300 transition shrink-0 cursor-pointer shadow-xs"
               >
-                Apply Winner Price
+                Apply Top 3 Winner Price
               </button>
             )}
           </div>
@@ -235,7 +230,7 @@ export function PaymentPage() {
                   type="text"
                   value={couponInput}
                   onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                  placeholder="e.g. BUDMS400"
+                  placeholder="e.g. WINNER150"
                   className="flex-1 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-mono font-bold uppercase text-slate-900 placeholder:font-sans placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none"
                 />
                 <button
