@@ -96,7 +96,7 @@ export function PopularBundles() {
                 {/* Quiz winner banner */}
                 <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 px-3.5 py-2 text-xs font-medium text-amber-900">
                   <Trophy className="h-4 w-4 text-amber-600 shrink-0" />
-                  <span>Top 3 Quiz Winners → <strong>₹349</strong> with code WINNER150</span>
+                  <span>Top 3 Quiz Winners → <strong>₹299</strong> with code WINNER150</span>
                 </div>
               </div>
 
@@ -121,7 +121,7 @@ export function PopularBundles() {
                     <span className="text-5xl font-black text-gray-900" style={{ fontFamily: "var(--font-mono)" }}>499</span>
                     <span className="text-sm font-bold text-gray-400 line-through">₹899</span>
                   </div>
-                  <p className="text-xs font-bold text-emerald-700">First-Batch Offer (BUDMS400)</p>
+                  <p className="text-xs font-bold text-emerald-700">First-Batch Regular Price</p>
                   <p className="text-[10px] text-gray-400 mt-0.5">One-time · Lifetime access</p>
                 </div>
 
