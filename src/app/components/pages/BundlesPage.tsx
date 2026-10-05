@@ -27,7 +27,7 @@ const EXCLUDES = [
 
 const HOW_IT_WORKS = [
   { icon: UserCheck,     step: "STEP 1", label: "Create Account",   desc: "Sign up in 30 seconds" },
-  { icon: ShoppingBag,   step: "STEP 2", label: "Purchase Bundle",  desc: "Semester 1 Bundle — ₹499" },
+  { icon: ShoppingBag,   step: "STEP 2", label: "Purchase Bundle",  desc: "Semester 1 Bundle — ₹349" },
   { icon: Clock,         step: "STEP 3", label: "Payment Reviewed", desc: "Admin reviews submission" },
   { icon: ShieldCheck,   step: "STEP 4", label: "Access Activated", desc: "Materials unlock automatically" },
   { icon: BookOpen,      step: "STEP 5", label: "Start Studying",   desc: "Study Notes & Repeated Topics" },

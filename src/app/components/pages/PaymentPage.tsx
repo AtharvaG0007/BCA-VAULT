@@ -60,6 +60,13 @@ export function PaymentPage() {
   // Marketing countdown timer: 3 minutes 50 seconds (230 seconds)
   const [secondsRemaining, setSecondsRemaining] = useState(230);
 
+  // Reset winner redemption state if the authenticated user changes or logs out
+  useEffect(() => {
+    setWinnerRedemptionId(null);
+    setWinnerCodeInput("");
+    setWinnerError(null);
+  }, [user?.id]);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setSecondsRemaining((prev) => (prev > 0 ? prev - 1 : 0));

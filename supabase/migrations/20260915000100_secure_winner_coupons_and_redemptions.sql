@@ -186,3 +186,42 @@ $$;
 
 -- Grant execution to authenticated users
 GRANT EXECUTE ON FUNCTION public.redeem_winner_coupon(TEXT) TO authenticated;
+
+-- 7. RPC: consume_winner_redemption
+-- Atomically transitions an active redemption to consumed, enforcing user ownership.
+CREATE OR REPLACE FUNCTION public.consume_winner_redemption(
+  p_redemption_id UUID,
+  p_user_id UUID,
+  p_submission_id TEXT
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
+DECLARE
+  v_updated RECORD;
+BEGIN
+  IF p_user_id IS NULL OR p_redemption_id IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Invalid redemption parameters.');
+  END IF;
+
+  UPDATE public.winner_redemptions
+  SET status = 'consumed',
+      consumed_at = now(),
+      used_in_submission_id = p_submission_id
+  WHERE id = p_redemption_id
+    AND user_id = p_user_id
+    AND status = 'active'
+  RETURNING id, coupon_id, target_price INTO v_updated;
+
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Redemption not found, already consumed, or unauthorized.');
+  END IF;
+
+  RETURN jsonb_build_object('success', true, 'redemption_id', v_updated.id);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.consume_winner_redemption(UUID, UUID, TEXT) TO authenticated, service_role;
+

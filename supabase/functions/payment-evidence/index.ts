@@ -220,6 +220,15 @@ Deno.serve(async (request: Request) => {
           );
         }
 
+        // Caller MUST be signed in to submit payment with a winner redemption
+        if (!effectiveUserId) {
+          return respond(
+            { success: false, error: "You must be signed in to submit payment with a winner redemption." },
+            401,
+            corsHeaders
+          );
+        }
+
         const { data: redemption, error: redErr } = await admin
           .from("winner_redemptions")
           .select("id, status, user_id, email")
@@ -234,6 +243,15 @@ Deno.serve(async (request: Request) => {
           );
         }
 
+        // Caller MUST strictly own the winner redemption
+        if (redemption.user_id !== effectiveUserId) {
+          return respond(
+            { success: false, error: "This winner redemption belongs to another student account." },
+            403,
+            corsHeaders
+          );
+        }
+
         if (redemption.status === "consumed") {
           return respond(
             { success: false, error: "This winner redemption has already been used for another payment." },
@@ -242,10 +260,10 @@ Deno.serve(async (request: Request) => {
           );
         }
 
-        if (effectiveUserId && redemption.user_id && redemption.user_id !== effectiveUserId) {
+        if (redemption.status !== "active") {
           return respond(
-            { success: false, error: "This winner redemption belongs to another account." },
-            403,
+            { success: false, error: "This winner redemption is no longer active." },
+            400,
             corsHeaders
           );
         }
@@ -300,6 +318,32 @@ Deno.serve(async (request: Request) => {
         resolvedReferrerUserId = refResult.referrer_user_id;
       }
 
+      // Consume winner redemption atomically BEFORE creating submission record
+      let consumedRedemptionId: string | null = null;
+      if (amount === 299 && winnerRedemptionId && effectiveUserId) {
+        const { data: consumedRow, error: consumeError } = await admin
+          .from("winner_redemptions")
+          .update({
+            status: "consumed",
+            consumed_at: new Date().toISOString(),
+            used_in_submission_id: submissionId,
+          })
+          .eq("id", winnerRedemptionId)
+          .eq("user_id", effectiveUserId)
+          .eq("status", "active")
+          .select("id")
+          .maybeSingle();
+
+        if (consumeError || !consumedRow) {
+          return respond(
+            { success: false, error: "This winner redemption could not be claimed or has already been used by another request." },
+            409,
+            corsHeaders
+          );
+        }
+        consumedRedemptionId = consumedRow.id;
+      }
+
       const { error: insertError } = await admin.from("payment_submissions").insert({
         reference_id: submissionId,
         user_id: effectiveUserId,
@@ -319,25 +363,26 @@ Deno.serve(async (request: Request) => {
         winner_redemption_id: amount === 299 ? winnerRedemptionId : null,
       });
 
-      if (insertError?.code === "23505") {
-        return respond({ success: false, error: "This UTR or payment reference has already been submitted." }, 409, corsHeaders);
-      }
-
       if (insertError) {
+        // Rollback consumed redemption if submission insert failed
+        if (consumedRedemptionId) {
+          await admin
+            .from("winner_redemptions")
+            .update({
+              status: "active",
+              consumed_at: null,
+              used_in_submission_id: null,
+            })
+            .eq("id", consumedRedemptionId)
+            .eq("used_in_submission_id", submissionId);
+        }
+
+        if (insertError?.code === "23505") {
+          return respond({ success: false, error: "This UTR or payment reference has already been submitted." }, 409, corsHeaders);
+        }
+
         console.error("Insert error:", insertError);
         throw insertError;
-      }
-
-      // If winner redemption used, mark it consumed
-      if (amount === 299 && winnerRedemptionId) {
-        await admin
-          .from("winner_redemptions")
-          .update({
-            status: "consumed",
-            consumed_at: new Date().toISOString(),
-            used_in_submission_id: submissionId,
-          })
-          .eq("id", winnerRedemptionId);
       }
 
       // If a valid referral identifier was supplied and we have an identified student, create pending referral
