@@ -35,139 +35,122 @@ export function Navbar() {
         {link.children && openDropdown === link.label && <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="absolute top-full left-0 mt-1 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50">{link.children.map((child) => <Link key={child.label} to={child.href} className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-[#1E40AF] transition-colors">{child.label}</Link>)}</motion.div>}
       </div>)}</nav>
 
-<<<<<<< HEAD
-          {/* Right Side Controls */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <button
-              onClick={() => navigate("/search")}
-              className="hidden sm:flex w-9 h-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-[#1E40AF] transition-colors"
-              title="Search notes"
-            >
-              <Search className="w-4 h-4" />
-            </button>
-
-            {isLoggedIn ? (
-              <>
-                {/* Desktop/Tablet: Dashboard CTA */}
-                <button
-                  onClick={() => navigate("/app/dashboard")}
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#1E40AF] rounded-xl text-white hover:bg-[#1E3A8A] transition text-xs font-bold shadow-xs"
-                >
-                  <LayoutDashboard className="w-3.5 h-3.5" />
-                  <span>Dashboard</span>
-                </button>
-
-                {/* User Dropdown / Avatar */}
-                <div className="relative">
-                  <button
-                    onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black hover:bg-[#1E40AF] transition shadow-xs cursor-pointer"
-                    title={studentName}
-                  >
-                    {avatarLetter}
-                  </button>
-                  <AnimatePresence>
-                    {userMenuOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 8 }}
-                        className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-1.5 z-50"
-                      >
-                        <div className="px-4 py-2.5 border-b border-gray-100">
-                          <p className="text-xs font-black text-gray-900 truncate">{studentName}</p>
-                          <p className="text-[11px] text-gray-500 truncate">{studentEmail}</p>
-                        </div>
-                        <Link
-                          to="/app/dashboard"
-                          className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-[#1E40AF] transition"
-                          onClick={() => setUserMenuOpen(false)}
-                        >
-                          <LayoutDashboard className="w-3.5 h-3.5" />
-                          <span>Student Dashboard</span>
-                        </Link>
-                        <Link
-                          to="/app/profile"
-                          className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-[#1E40AF] transition"
-                          onClick={() => setUserMenuOpen(false)}
-                        >
-                          <User className="w-3.5 h-3.5" />
-                          <span>My Profile</span>
-                        </Link>
-                        <Link
-                          to="/app/referral"
-                          className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-[#1E40AF] transition"
-                          onClick={() => setUserMenuOpen(false)}
-                        >
-                          <Gift className="w-3.5 h-3.5 text-indigo-600" />
-                          <span>Referral Program</span>
-                        </Link>
-                        <div className="border-t border-gray-100 mt-1 pt-1">
-                          <button
-                            onClick={handleLogout}
-                            className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 transition"
-                          >
-                            <LogOut className="w-3.5 h-3.5" />
-                            <span>Sign out</span>
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </>
-            ) : (
-              <>
-                {/* ── VISIBLE AUTH ACTIONS (DESKTOP & MOBILE) ── */}
-                {/* Mobile & Desktop visible: Login Button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="px-2 sm:px-3 text-xs font-bold text-gray-700 hover:text-[#1E40AF] hover:bg-blue-50 rounded-xl"
-                  onClick={() => navigate("/auth/login")}
-                >
-                  Login
-                </Button>
-
-                {/* Mobile & Desktop visible: Create Account Button */}
-                <Button
-                  size="sm"
-                  className="px-2 sm:px-3.5 text-xs font-bold bg-[#1E40AF] hover:bg-[#1E3A8A] text-white rounded-xl shadow-xs shrink-0"
-                  onClick={() => navigate("/auth/signup")}
-                >
-                  <span className="hidden sm:inline">Create Free Account</span>
-                  <span className="sm:hidden">Sign Up</span>
-                </Button>
-              </>
-            )}
-
-            {/* Mobile hamburger menu toggle */}
-            <button
-              className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl text-gray-700 hover:bg-gray-100 transition"
-              onClick={() => setMobileOpen(!mobileOpen)}
-              aria-label="Toggle Menu"
-            >
-              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-=======
+      {/* Right Side Controls */}
       <div className="flex items-center gap-1.5 sm:gap-2">
-        <button onClick={() => navigate("/search")} className="hidden sm:flex w-9 h-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-[#1E40AF] transition-colors" title="Search notes"><Search className="w-4 h-4" /></button>
-        {isLoggedIn ? <>
-          {/* One dashboard CTA only. The old tablet-specific CTA duplicated this button at 640–1023px. */}
-          <button onClick={() => navigate("/app/dashboard")} className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#1E40AF] rounded-xl text-white hover:bg-[#1E3A8A] transition text-xs font-bold shadow-xs"><LayoutDashboard className="w-3.5 h-3.5" /><span>Dashboard</span></button>
-          <div className="relative"><button onClick={() => setUserMenuOpen(!userMenuOpen)} className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black hover:bg-[#1E40AF] transition shadow-xs" title={studentName}>{avatarLetter}</button>
-            <AnimatePresence>{userMenuOpen && <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-1.5 z-50">
-              <div className="px-4 py-2.5 border-b border-gray-100"><p className="text-xs font-black text-gray-900 truncate">{studentName}</p><p className="text-[11px] text-gray-500 truncate">{studentEmail}</p></div>
-              <Link to="/app/dashboard" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-[#1E40AF]"><LayoutDashboard className="w-3.5 h-3.5" /><span>Student Dashboard</span></Link>
-              <Link to="/app/profile" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-[#1E40AF]"><User className="w-3.5 h-3.5" /><span>My Profile</span></Link>
-              <Link to="/app/notices" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-[#1E40AF]"><BellIcon /><span>Notice Board</span></Link>
-              <Link to="/app/referral" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-[#1E40AF]"><Gift className="w-3.5 h-3.5 text-indigo-600" /><span>Referral Program</span></Link>
-              <div className="border-t border-gray-100 mt-1 pt-1"><button onClick={handleLogout} className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50"><LogOut className="w-3.5 h-3.5" /><span>Sign out</span></button></div>
-            </motion.div>}</AnimatePresence>
->>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
-          </div>
-        </> : <><Button variant="ghost" size="sm" className="px-2 sm:px-3 text-xs font-bold text-gray-700 hover:text-[#1E40AF] rounded-xl" onClick={() => navigate("/auth/login")}>Login</Button><Button size="sm" className="px-2 sm:px-3.5 text-xs font-bold bg-[#1E40AF] hover:bg-[#1E3A8A] text-white rounded-xl shrink-0" onClick={() => navigate("/auth/signup")}><span className="hidden sm:inline">Create Free Account</span><span className="sm:hidden">Sign Up</span></Button></>}
-        <button className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl text-gray-700 hover:bg-gray-100" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle Menu">{mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}</button>
+        <button
+          onClick={() => navigate("/search")}
+          className="hidden sm:flex w-9 h-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-[#1E40AF] transition-colors"
+          title="Search notes"
+          aria-label="Search notes"
+        >
+          <Search className="w-4 h-4" />
+        </button>
+
+        {isLoggedIn ? (
+          <>
+            <button
+              onClick={() => navigate("/app/dashboard")}
+              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#1E40AF] rounded-xl text-white hover:bg-[#1E3A8A] transition text-xs font-bold shadow-xs"
+            >
+              <LayoutDashboard className="w-3.5 h-3.5" />
+              <span>Dashboard</span>
+            </button>
+
+            <div className="relative">
+              <button
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black hover:bg-[#1E40AF] transition shadow-xs cursor-pointer"
+                title={studentName}
+                aria-label="User profile menu"
+              >
+                {avatarLetter}
+              </button>
+              <AnimatePresence>
+                {userMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-1.5 z-50"
+                  >
+                    <div className="px-4 py-2.5 border-b border-gray-100">
+                      <p className="text-xs font-black text-gray-900 truncate">{studentName}</p>
+                      <p className="text-[11px] text-gray-500 truncate">{studentEmail}</p>
+                    </div>
+                    <Link
+                      to="/app/dashboard"
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-[#1E40AF] transition"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <LayoutDashboard className="w-3.5 h-3.5" />
+                      <span>Student Dashboard</span>
+                    </Link>
+                    <Link
+                      to="/app/profile"
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-[#1E40AF] transition"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <User className="w-3.5 h-3.5" />
+                      <span>My Profile</span>
+                    </Link>
+                    <Link
+                      to="/app/notices"
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-[#1E40AF] transition"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <BellIcon />
+                      <span>Notice Board</span>
+                    </Link>
+                    <Link
+                      to="/app/referral"
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-[#1E40AF] transition"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <Gift className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>Referral Program</span>
+                    </Link>
+                    <div className="border-t border-gray-100 mt-1 pt-1">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 transition"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>Sign out</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </>
+        ) : (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="px-2 sm:px-3 text-xs font-bold text-gray-700 hover:text-[#1E40AF] hover:bg-blue-50 rounded-xl"
+              onClick={() => navigate("/auth/login")}
+            >
+              Login
+            </Button>
+            <Button
+              size="sm"
+              className="px-2 sm:px-3.5 text-xs font-bold bg-[#1E40AF] hover:bg-[#1E3A8A] text-white rounded-xl shadow-xs shrink-0"
+              onClick={() => navigate("/auth/signup")}
+            >
+              <span className="hidden sm:inline">Create Free Account</span>
+              <span className="sm:hidden">Sign Up</span>
+            </Button>
+          </>
+        )}
+
+        <button
+          className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl text-gray-700 hover:bg-gray-100 transition"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Toggle Menu"
+        >
+          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
       </div>
     </div></div>
 

@@ -80,9 +80,9 @@ export function Footer() {
           {/* Link Columns */}
           {Object.entries(footerLinks).map(([section, links]) => (
             <div key={section}>
-              <h4 className="text-sm font-semibold text-white mb-4" style={{ fontFamily: 'var(--font-display)' }}>
+              <h3 className="text-sm font-semibold text-white mb-4" style={{ fontFamily: 'var(--font-display)' }}>
                 {section}
-              </h4>
+              </h3>
               <ul className="space-y-2.5">
                 {links.map((link) => (
                   <li key={link.label}>

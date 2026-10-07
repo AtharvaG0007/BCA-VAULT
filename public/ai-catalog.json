@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "BCA Vault",
+  "description": "EdTech marketplace and study resource platform for BCA semester notes and exam preparation.",
+  "url": "https://bcavault.in",
+  "version": "1.0.0",
+  "catalog": {
+    "organization": "BCA Vault",
+    "categories": ["Education", "Study Tools", "Computer Science"],
+    "resources": [
+      {
+        "name": "Semester 1 BCA Notes",
+        "url": "https://bcavault.in/notes",
+        "description": "Comprehensive theory notes for BCA Semester 1."
+      },
+      {
+        "name": "PYQ Question Analysis",
+        "url": "https://bcavault.in/pyq",
+        "description": "Analysis of repeated questions from university papers."
+      },
+      {
+        "name": "Study Bundles",
+        "url": "https://bcavault.in/bundles",
+        "description": "All-Access exam preparation bundles."
+      }
+    ]
+  }
+}

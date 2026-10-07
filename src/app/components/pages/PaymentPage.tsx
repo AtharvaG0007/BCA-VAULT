@@ -25,7 +25,6 @@ export const GOOGLE_PAYMENT_FORM_URL =
 
 const UPI_ID = "gogawaleatharva997-1@oksbi";
 const UPI_NAME = "BCA Vault";
-<<<<<<< HEAD
 
 /** Regular price — always enforced server-side */
 const REGULAR_PRICE = 349;
@@ -34,14 +33,6 @@ const WINNER_PRICE = 299;
 
 const instructions = [
   "Pay ₹349 (or ₹299 for eligible Top 3 Quiz Winners) using any UPI app or QR code.",
-=======
-const BASE_PRICE = 349;
-
-const TOP3_WINNER_PRICE = 299;
-
-const instructions = [
-  "Pay ₹349 (or ₹299 as a verified Top 3 winner) using any UPI app or QR code.",
->>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
   "Capture a screenshot showing the 12-digit UTR / UPI Transaction ID.",
   "Click 'Submit Payment Form' and upload your payment details.",
   "Create your BCA Vault account — your payment details will be auto-filled.",
@@ -51,13 +42,6 @@ const instructions = [
 export function PaymentPage() {
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
-<<<<<<< HEAD
-=======
-  const [couponInput, setCouponInput] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<"TOP3_WINNER" | null>(null);
-  const [winnerRedemptionId, setWinnerRedemptionId] = useState<string | null>(null);
-  const [couponError, setCouponError] = useState<string | null>(null);
->>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
 
   // Secure server-side winner redemption state
   const [winnerCodeInput, setWinnerCodeInput] = useState("");
@@ -96,15 +80,8 @@ export function PaymentPage() {
     return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   };
 
-<<<<<<< HEAD
   /** Server-authorized price — ₹299 only with valid redemption */
   const currentPrice = winnerRedemptionId ? WINNER_PRICE : REGULAR_PRICE;
-=======
-  const currentCouponInfo = appliedCoupon
-    ? { discount: BASE_PRICE - TOP3_WINNER_PRICE, finalPrice: TOP3_WINNER_PRICE, description: "Top 3 Winner Price — Final Price ₹299" }
-    : null;
-  const currentPrice = currentCouponInfo?.finalPrice ?? BASE_PRICE;
->>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
 
   const upiUrl = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(
     UPI_NAME
@@ -112,7 +89,6 @@ export function PaymentPage() {
     `BCA Vault Semester 1 Bundle`
   )}`;
 
-<<<<<<< HEAD
   /**
    * Redeem winner code via server-side RPC.
    * The coupon code is NEVER stored in the frontend — it is sent to the server
@@ -124,29 +100,25 @@ export function PaymentPage() {
 
     if (!raw) {
       setWinnerError("Please enter your winner code.");
-=======
-  const handleApplyCoupon = async (codeToApply?: string) => {
-    const raw = (codeToApply ?? couponInput).trim();
-    setCouponError(null);
-
-    if (!raw) {
-      setAppliedCoupon(null);
-      setWinnerRedemptionId(null);
->>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
       return;
     }
 
     if (!user) {
-<<<<<<< HEAD
       setWinnerError("Please sign in to redeem your winner code.");
       return;
     }
 
     setWinnerRedeeming(true);
     try {
-      const { data, error } = await supabase.rpc("redeem_winner_coupon", {
-        p_coupon_code: raw,
-      });
+      const rpcResult = await supabase.rpc("redeem_top3_winner_coupon", { p_code: raw });
+      let data = rpcResult.data;
+      let error = rpcResult.error;
+
+      if (error && (error.message?.includes("function") || error.code === "PGRST202")) {
+        const fallback = await supabase.rpc("redeem_winner_coupon", { p_coupon_code: raw });
+        data = fallback.data;
+        error = fallback.error;
+      }
 
       if (error) {
         setWinnerError(error.message || "Unable to verify winner code.");
@@ -165,30 +137,6 @@ export function PaymentPage() {
       setWinnerError(err?.message || "Unable to verify winner code. Please try again.");
     } finally {
       setWinnerRedeeming(false);
-=======
-      setCouponError("Please sign in before using the Top 3 winner offer.");
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase.rpc("redeem_top3_winner_coupon", { p_code: raw });
-      if (error) throw error;
-      if (!data?.success) {
-        setAppliedCoupon(null);
-        setWinnerRedemptionId(null);
-        setCouponError(data?.error || "Invalid or expired winner code.");
-        return;
-      }
-
-      setAppliedCoupon("TOP3_WINNER");
-      setWinnerRedemptionId(data.redemption_id);
-      setCouponInput("");
-      setCouponError(null);
-    } catch (err: any) {
-      setAppliedCoupon(null);
-      setWinnerRedemptionId(null);
-      setCouponError(err?.message || "Unable to verify the winner code. Please try again.");
->>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
     }
   };
 
@@ -262,11 +210,7 @@ export function PaymentPage() {
           <div className="flex items-start sm:items-center gap-2 font-medium min-w-0">
             <Timer className="h-4 w-4 text-amber-400 animate-pulse shrink-0 mt-0.5 sm:mt-0" />
             <span className="leading-snug">
-<<<<<<< HEAD
               BCA Sem 1: <strong className="text-emerald-300 font-bold">₹349</strong> · Top 3 Quiz Winners: <strong className="text-amber-300 font-bold">₹299</strong>
-=======
-              BCA Sem 1: Regular price <strong className="text-emerald-300 font-bold">₹349</strong> · Top 3 Quiz Winners can unlock the <strong className="text-amber-300 font-bold">₹299</strong> price with their private winner code.
->>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
             </span>
           </div>
           <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto shrink-0 pt-1.5 sm:pt-0 border-t border-white/10 sm:border-t-0">
@@ -274,14 +218,11 @@ export function PaymentPage() {
               <span>Offer timer:</span>
               <span className="text-white">{formatTimer(secondsRemaining)}</span>
             </div>
-<<<<<<< HEAD
-=======
-            {appliedCoupon && (
+            {winnerRedemptionId && (
               <span className="rounded-lg bg-emerald-400/20 px-3 py-1 text-xs font-bold text-emerald-200 shrink-0">
                 Winner offer unlocked
               </span>
             )}
->>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
           </div>
         </div>
       </div>
@@ -319,7 +260,6 @@ export function PaymentPage() {
 
             {/* Winner Code Redemption — Server-verified */}
             <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-<<<<<<< HEAD
               <div className="mb-2">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Top 3 Quiz Winner?
@@ -385,36 +325,6 @@ export function PaymentPage() {
                     </p>
                   </div>
                 </div>
-=======
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                Have a discount coupon?
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={couponInput}
-                  onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                  placeholder="Enter your private winner code"
-                  className="flex-1 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-mono font-bold uppercase text-slate-900 placeholder:font-sans placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => void handleApplyCoupon()}
-                  className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition"
-                >
-                  Apply
-                </button>
-              </div>
-              {couponError && (
-                <p className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-rose-600">
-                  <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {couponError}
-                </p>
-              )}
-              {appliedCoupon && (
-                <p className="mt-2 text-[11px] text-emerald-700 font-medium">
-                  ✓ {currentCouponInfo?.description}
-                </p>
->>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
               )}
             </div>
 
@@ -614,11 +524,7 @@ export function PaymentPage() {
                 onClose={() => setShowEvidenceModal(false)}
                 initialPrice={currentPrice}
                 initialReferralIdentifier={appliedReferral || undefined}
-<<<<<<< HEAD
                 winnerRedemptionId={winnerRedemptionId || undefined}
-=======
-                initialWinnerRedemptionId={winnerRedemptionId || undefined}
->>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
               />
             )}
           </div>

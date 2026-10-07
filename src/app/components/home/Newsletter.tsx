@@ -50,11 +50,7 @@ export function Newsletter() {
                 ₹299
               </p>
               <p className="text-xs text-slate-300 mt-1">
-<<<<<<< HEAD
                 Top 3 quiz performers unlock special access at ₹299 with verified winner access.
-=======
-                Top 3 quiz performers get special access at ₹299 with code WINNER150.
->>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
               </p>
             </div>
 
@@ -67,11 +63,7 @@ export function Newsletter() {
                 ₹349
               </p>
               <p className="text-xs text-slate-300 mt-1">
-<<<<<<< HEAD
                 Everyone else can access the first-batch student offer at ₹349, subject to eligibility.
-=======
-                Regular first-batch price is ₹349.
->>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
               </p>
             </div>
           </div>
