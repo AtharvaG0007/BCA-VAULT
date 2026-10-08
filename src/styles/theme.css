@@ -194,3 +194,31 @@
     line-height: 1.5;
   }
 }
+
+/* Quiz instant-feedback animations */
+@keyframes quiz-subtle-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+@keyframes quiz-subtle-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.015); }
+}
+
+.animate-subtle-shake {
+  animation: quiz-subtle-shake 0.35s ease-in-out;
+}
+
+.animate-subtle-pulse {
+  animation: quiz-subtle-pulse 0.25s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-subtle-shake,
+  .animate-subtle-pulse {
+    animation: none !important;
+  }
+}
+

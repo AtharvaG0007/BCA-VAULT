@@ -55,12 +55,15 @@ CREATE POLICY "Superadmin full access to notices"
 
 -- 5. Auto-update updated_at on modification
 CREATE OR REPLACE FUNCTION public.notices_set_updated_at()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
 BEGIN
   NEW.updated_at = now();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 CREATE TRIGGER notices_updated_at
   BEFORE UPDATE ON public.notices

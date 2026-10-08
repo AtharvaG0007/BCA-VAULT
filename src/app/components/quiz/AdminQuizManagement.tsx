@@ -68,6 +68,7 @@ export type Participant = {
   merit_tie: boolean;
   started_at: string;
   completed_at: string | null;
+  mode?: 'COMPETITION' | 'PRACTICE';
 };
 
 export type BankQuestion = {
@@ -493,7 +494,8 @@ export function AdminQuizManagement() {
     });
   }, [data?.participants]);
 
-  const top3 = candidates.slice(0, 3);
+  // Only official competition attempts contribute to official Top 3 rankings
+  const top3 = candidates.filter((p) => p.mode !== 'PRACTICE').slice(0, 3);
   const activeParticipants = candidates.filter((p) => p.status === 'ACTIVE');
   const completedParticipants = candidates.filter((p) => p.status !== 'ACTIVE');
 
@@ -1181,7 +1183,18 @@ export function AdminQuizManagement() {
                               </span>
                               <div>
                                 <strong className="text-white block text-sm">{p.full_name}</strong>
-                                <span className="text-[11px] text-slate-400">{p.email}</span>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <span className="text-[11px] text-slate-400">{p.email}</span>
+                                  <span
+                                    className={`inline-flex items-center rounded-full px-1.5 py-0.2 text-[9px] font-bold border ${
+                                      p.mode === 'PRACTICE'
+                                        ? 'bg-amber-950/80 text-amber-300 border-amber-800'
+                                        : 'bg-indigo-950/80 text-indigo-300 border-indigo-800'
+                                    }`}
+                                  >
+                                    {p.mode === 'PRACTICE' ? 'Practice' : 'Competition'}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </td>
@@ -1423,7 +1436,18 @@ export function AdminQuizManagement() {
                           </td>
                           <td className="p-3.5">
                             <strong className="text-white block">{p.full_name}</strong>
-                            <span className="text-[11px] text-slate-400">{p.email}</span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-[11px] text-slate-400">{p.email}</span>
+                              <span
+                                className={`inline-flex items-center rounded-full px-1.5 py-0.2 text-[9px] font-bold border ${
+                                  p.mode === 'PRACTICE'
+                                    ? 'bg-amber-950/80 text-amber-300 border-amber-800'
+                                    : 'bg-indigo-950/80 text-indigo-300 border-indigo-800'
+                                }`}
+                              >
+                                {p.mode === 'PRACTICE' ? 'Practice' : 'Competition'}
+                              </span>
+                            </div>
                           </td>
                           <td className="p-3.5 font-mono font-bold text-emerald-400">
                             {p.score} / {comp.question_count}
