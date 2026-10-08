@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
-// @ts-expect-error Vite ?url import for worker bundle
 import pdfjsWorker from "pdfjs-dist/legacy/build/pdf.worker.min.mjs?url";
 
 // Configure PDF.js worker once at module level

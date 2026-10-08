@@ -6,7 +6,9 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:quiz": "node scripts/test_quiz_database.mjs",
+    "typecheck:edge": "tsc -p supabase/functions/tsconfig.json --noEmit"
   },
   "dependencies": {
     "@popperjs/core": "2.11.8",
@@ -64,15 +66,21 @@
     "vaul": "1.1.2"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.3.14",
+    "@playwright/test": "1.56.0",
     "@tailwindcss/vite": "4.1.12",
     "@types/node": "^20.17.0",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vercel/node": "^5.10.2",
     "@vitejs/plugin-react": "4.7.0",
+    "eslint": "9.39.1",
+    "prettier": "3.6.2",
+    "supabase": "2.116.0",
     "tailwindcss": "4.1.12",
     "tsx": "^4.20.5",
     "typescript": "^5.7.2",
+    "typescript-eslint": "8.46.1",
     "vite": "6.3.5"
   },
   "pnpm": {

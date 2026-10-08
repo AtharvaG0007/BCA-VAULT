@@ -1,3 +1,4 @@
+import { QuizDiscovery } from "../quiz/QuizPage";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import {
@@ -38,7 +39,7 @@ import { StudentLearningView } from "../student/StudentLearningView";
 import { StudentProfileView } from "../student/StudentProfileView";
 import { StudentReferralView } from "../student/StudentReferralView";
 import { StudentNoticeBoard } from "../student/StudentNoticeBoard";
-import { Bell, Gift } from "lucide-react";
+import { Bell, Gift, Trophy } from "lucide-react";
 
 interface AccessItem {
   id: string;
@@ -528,6 +529,17 @@ export function StudentDashboard() {
               <Gift className="h-4 w-4 shrink-0 text-emerald-500" />
               <span>Referral Program</span>
             </button>
+
+            <button
+              onClick={() => navigate('/app/quiz')}
+              className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 hover:bg-blue-50 hover:text-[#1E40AF] transition text-left"
+            >
+              <Trophy className="h-4 w-4 shrink-0 text-amber-500" />
+              <span>Quiz Competition</span>
+              <span className="ml-auto text-[10px] font-extrabold bg-blue-100 text-[#1E40AF] px-1.5 py-0.5 rounded-full">
+                ₹299
+              </span>
+            </button>
           </nav>
         </div>
 
@@ -632,6 +644,16 @@ export function StudentDashboard() {
               <span>Referral Program</span>
             </button>
             <button
+              onClick={() => { setMobileMenuOpen(false); navigate('/app/quiz'); }}
+              className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-[#1E40AF] transition text-left"
+            >
+              <Trophy className="h-4 w-4 text-amber-500" />
+              <span>Quiz Competition</span>
+              <span className="ml-auto text-[10px] font-extrabold bg-blue-100 text-[#1E40AF] px-1.5 py-0.5 rounded-full">
+                ₹299
+              </span>
+            </button>
+            <button
               onClick={() => void logout()}
               className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 transition"
             >
@@ -687,6 +709,7 @@ export function StudentDashboard() {
               </button>
             </header>
 
+            <QuizDiscovery />
             {message && (
               <div
                 role="alert"

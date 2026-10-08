@@ -1,3 +1,4 @@
+import { quizCall } from "@/lib/supabase/quizService";
 import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import {
@@ -44,7 +45,7 @@ export function PaymentPage() {
   const [copied, setCopied] = useState(false);
 
   // Secure server-side winner redemption state
-  const [winnerCodeInput, setWinnerCodeInput] = useState("");
+
   const [winnerRedemptionId, setWinnerRedemptionId] = useState<string | null>(null);
   const [winnerRedeeming, setWinnerRedeeming] = useState(false);
   const [winnerError, setWinnerError] = useState<string | null>(null);
@@ -63,7 +64,7 @@ export function PaymentPage() {
   // Reset winner redemption state if the authenticated user changes or logs out
   useEffect(() => {
     setWinnerRedemptionId(null);
-    setWinnerCodeInput("");
+
     setWinnerError(null);
   }, [user?.id]);
 
@@ -89,56 +90,23 @@ export function PaymentPage() {
     `BCA Vault Semester 1 Bundle`
   )}`;
 
-  /**
-   * Redeem winner code via server-side RPC.
-   * The coupon code is NEVER stored in the frontend — it is sent to the server
-   * for hashed verification, redemption counting, and one-per-user enforcement.
-   */
-  const handleRedeemWinnerCode = async () => {
-    const raw = winnerCodeInput.trim();
+  const handleClaimWinner = async () => {
     setWinnerError(null);
-
-    if (!raw) {
-      setWinnerError("Please enter your winner code.");
-      return;
-    }
-
-    if (!user) {
-      setWinnerError("Please sign in to redeem your winner code.");
-      return;
-    }
-
+    if (!user) { setWinnerError("Sign in with your winning account to check eligibility."); return; }
     setWinnerRedeeming(true);
     try {
-      const rpcResult = await supabase.rpc("redeem_top3_winner_coupon", { p_code: raw });
-      let data = rpcResult.data;
-      let error = rpcResult.error;
-
-      if (error && (error.message?.includes("function") || error.code === "PGRST202")) {
-        const fallback = await supabase.rpc("redeem_winner_coupon", { p_coupon_code: raw });
-        data = fallback.data;
-        error = fallback.error;
-      }
-
-      if (error) {
-        setWinnerError(error.message || "Unable to verify winner code.");
-        return;
-      }
-
-      if (!data || !data.success) {
-        setWinnerError(data?.error || "Invalid or expired winner code.");
-        return;
-      }
-
+      const data = await quizCall<{redemption_id:string}>('claim');
       setWinnerRedemptionId(data.redemption_id);
-      setWinnerCodeInput("");
-      setWinnerError(null);
-    } catch (err: any) {
-      setWinnerError(err?.message || "Unable to verify winner code. Please try again.");
-    } finally {
-      setWinnerRedeeming(false);
-    }
+    } catch (error) { setWinnerError(error instanceof Error ? error.message : "Unable to check reward eligibility."); }
+    finally { setWinnerRedeeming(false); }
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("quizReward") === "1" && user && !winnerRedemptionId && !winnerRedeeming) {
+      void handleClaimWinner();
+    }
+  }, [user, winnerRedemptionId, winnerRedeeming]);
 
   const handleApplyReferral = async () => {
     const raw = referralInput.trim();
@@ -258,74 +226,11 @@ export function PaymentPage() {
               )}
             </div>
 
-            {/* Winner Code Redemption — Server-verified */}
-            <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="mb-2">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  Top 3 Quiz Winner?
-                </label>
-                <p className="mt-0.5 text-[11px] text-slate-500 leading-normal">
-                  If you're a Top 3 quiz winner, enter your private winner code to unlock ₹299 pricing. Requires sign-in.
-                </p>
-              </div>
-
-              {!winnerRedemptionId ? (
-                <div>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={winnerCodeInput}
-                      onChange={(e) => {
-                        setWinnerCodeInput(e.target.value);
-                        if (winnerError) setWinnerError(null);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          void handleRedeemWinnerCode();
-                        }
-                      }}
-                      placeholder="Enter your private winner code"
-                      disabled={winnerRedeeming}
-                      className="flex-1 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-mono font-bold uppercase text-slate-900 placeholder:font-sans placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none disabled:bg-slate-100"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => void handleRedeemWinnerCode()}
-                      disabled={winnerRedeeming}
-                      className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition disabled:bg-slate-400 shrink-0 inline-flex items-center gap-1.5"
-                    >
-                      {winnerRedeeming ? (
-                        <>
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                          <span>Verifying…</span>
-                        </>
-                      ) : (
-                        "Redeem"
-                      )}
-                    </button>
-                  </div>
-
-                  {winnerError && (
-                    <p className="mt-2 flex items-start gap-1 text-[11px] font-semibold text-rose-600">
-                      <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                      <span>{winnerError}</span>
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1 text-xs font-bold text-emerald-800">
-                      <Check className="h-3.5 w-3.5 text-emerald-600" />
-                      <span>✓ Winner discount verified</span>
-                    </div>
-                    <p className="mt-0.5 text-[11px] font-medium text-emerald-700">
-                      Price: <strong className="font-semibold text-slate-900">₹299</strong> (saved ₹50)
-                    </p>
-                  </div>
-                </div>
-              )}
+            <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+              <h3 className="flex items-center gap-2 font-bold text-amber-900"><Trophy className="h-4 w-4" /> Top 3 Quiz Winner Offer</h3>
+              <p className="mt-2 text-sm text-amber-900">After official results are published, verified winners can unlock ₹299 using their winning account.</p>
+              {winnerRedemptionId ? <p className="mt-3 text-sm font-semibold text-emerald-800">Winner offer verified · ₹299</p> : <button type="button" disabled={winnerRedeeming} onClick={() => void handleClaimWinner()} className="mt-3 min-h-11 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{winnerRedeeming ? "Checking…" : "Check My Winner Offer"}</button>}
+              {winnerError && <p role="alert" className="mt-3 text-sm text-red-800">{winnerError}</p>}
             </div>
 
             {/* Referral Identifier Section (Separate from Discount Coupon) */}

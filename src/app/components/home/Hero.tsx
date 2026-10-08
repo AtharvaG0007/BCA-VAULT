@@ -137,7 +137,7 @@ export function Hero() {
                 <span className="text-sm text-gray-500">Manual verification</span>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Right: Floating Cards */}
           <motion.div

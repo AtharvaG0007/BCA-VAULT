@@ -17,6 +17,7 @@ import { AdminSystemDeletionNav } from "./components/admin/AdminSystemDeletionNa
 import { StudentAdminNotice } from "./components/student/StudentAdminNotice";
 import { Toaster } from "./components/ui/sonner";
 
+const QuizPage = lazy(() => import("./components/quiz/QuizPage").then(m => ({default:m.QuizPage})));
 const HomePage = lazy(() => import("./components/pages/HomePage").then((m) => ({ default: m.HomePage })));
 const NotesPage = lazy(() => import("./components/pages/NotesPage").then((m) => ({ default: m.NotesPage })));
 const PYQPage = lazy(() => import("./components/pages/PYQPage").then((m) => ({ default: m.PYQPage })));
@@ -58,6 +59,7 @@ function AppLayout() {
   const location = useLocation();
   const { hasAccepted } = useLegal();
   const hideNav = noNavRoutes.some((p) => location.pathname.startsWith(p));
+  const isQuizRoute = location.pathname.startsWith("/app/quiz");
   const isStudentRoute = location.pathname.startsWith("/app");
   const isPurchaseRoute = location.pathname.startsWith("/purchase");
   const isAdminRoute = location.pathname.startsWith("/admin") || location.pathname.startsWith("/admin-root");
@@ -69,7 +71,7 @@ function AppLayout() {
       {!hideNav && <Navbar />}
       <div className="flex-1 w-full min-w-0">
         {isAdminRoute && <AdminSystemDeletionNav />}
-        {isStudentRoute && <StudentAdminNotice />}
+        {isStudentRoute && !isQuizRoute && <StudentAdminNotice />}
         <Suspense fallback={<StudentShellSkeleton />}>
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
@@ -105,6 +107,8 @@ function AppLayout() {
               <Route path="/admin-root/:subpage" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/superadmin" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/superadmin/*" element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="/app/quiz" element={<QuizPage />} />
+              <Route path="/app/quiz/:competitionId" element={<QuizPage />} />
               <Route path="/app/dashboard" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
               <Route path="/app/notices" element={<ProtectedRoute allowedRoles={["member"]}><StudentNoticeBoardPage /></ProtectedRoute>} />
               <Route path="/app/*" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
@@ -119,7 +123,7 @@ function AppLayout() {
         </Suspense>
       </div>
       {!hideNav && <Footer />}
-      {!isAdminRoute && <WhatsAppFloatingButton />}
+      {!isAdminRoute && !isQuizRoute && <WhatsAppFloatingButton />}
       {!isAdminRoute && !isStudentRoute && <><PublicSupportChat />{!isPurchaseRoute && <ReferralFloatingPromo />}</>}
       <Toaster />
     </div>

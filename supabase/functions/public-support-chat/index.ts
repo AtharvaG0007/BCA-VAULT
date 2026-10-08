@@ -78,21 +78,12 @@ ABOUT BCA VAULT:
 - Website: https://bcavault.in
 
 BUNDLE & PRICING:
-<<<<<<< HEAD
 - BCA Vault offers the Semester 1 Bundle (Theory Notes + Most Repeated Topics).
 - Standard launch price: ₹349 (regular price ₹499).
-- Top 3 Quiz Winners: eligible for special ₹299 pricing unlocked via private winner code on the purchase page.
-- SECURITY DIRECTIVE: NEVER disclose, reveal, or confirm any secret coupon codes or winner codes. If asked for coupon codes, explain that the ₹349 launch price is applied automatically, and quiz winner codes are issued privately to verified winners.
+- Top 3 Quiz Winners: eligible for account-bound special pricing after official result publication.
+- SECURITY DIRECTIVE: NEVER disclose, reveal, or confirm any secret coupon codes or winner codes. If asked for coupon codes, explain that the ₹349 launch price is applied automatically, and quiz rewards are verified against the signed-in winning account.
 - Bundle includes: Semester 1 theory notes, most repeated topics, exam preparation material.
 - One-time purchase, semester access.
-=======
-- BCA Vault offers an All-Access Bundle containing complete semester-wise notes for BCA.
-- Original price: ₹899
-- Regular price: ₹349
-- Top 3 Quiz Winner price: ₹299 with coupon WINNER150
-- Bundle includes: All semester notes, PYQs, important questions, exam preparation material.
-- One-time purchase, lifetime access.
->>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
 
 HOW TO PURCHASE:
 1. Visit the Pricing or Bundles page on bcavault.in.
@@ -203,19 +194,11 @@ function generateSupportFallback(message: string): string {
   const q = message.toLowerCase();
 
   if (q.includes("price") || q.includes("cost") || q.includes("how much")) {
-<<<<<<< HEAD
     return `The BCA Vault Semester 1 Bundle is currently available at a launch offer price of **₹349** (regular price ₹499).\n\n🏆 **Top 3 Quiz Winners:** Eligible for **₹299** pricing via verified private winner code.\n\nVisit the [Pricing Page](https://bcavault.in/pricing) or [Payment Page](https://bcavault.in/purchase) to get access!\n\nNeed help? WhatsApp us at **+91 93263 42123**.`;
   }
 
   if (q.includes("bundle") || q.includes("include") || q.includes("what do i get")) {
     return `The **BCA Vault Semester 1 Bundle** includes:\n\n📚 Complete Semester 1 theory notes\n📝 Most repeated exam topics & PYQs\n⭐ Unit-wise exam preparation roadmap\n🔒 In-browser secure reader access\n\nLaunch price: **₹349** (regular ₹499) | Top 3 Winners: **₹299**\n\nVisit [Bundles](https://bcavault.in/bundles) for details!`;
-=======
-    return `The BCA Vault Semester 1 Bundle is **₹349** at the regular price.\n\n🎉 **Top 3 Quiz Winners:** Use coupon **WINNER150** to pay only **₹299**.\n\nVisit the [Pricing Page](https://bcavault.in/pricing) to purchase!\n\nNeed help? WhatsApp us at **+91 93263 42123**.`;
-  }
-
-  if (q.includes("bundle") || q.includes("include") || q.includes("what do i get")) {
-    return `The **BCA Vault All-Access Bundle** includes:\n\n📚 Complete semester-wise notes (Sem 1–6)\n📝 Previous Year Questions (PYQs)\n⭐ Important questions & exam preparation material\n💡 Subject-wise organized content\n🔒 Lifetime access after one-time purchase\n\nRegular price: **₹349** | Top 3 Quiz Winner price with WINNER150: **₹299**\n\nVisit [Bundles](https://bcavault.in/bundles) for details!`;
->>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
   }
 
   if (q.includes("pay") || q.includes("upi") || q.includes("payment")) {
@@ -231,11 +214,7 @@ function generateSupportFallback(message: string): string {
   }
 
   if (q.includes("coupon") || q.includes("discount") || q.includes("offer")) {
-<<<<<<< HEAD
     return `**Current Pricing & Offers:**\n\n🎉 **Launch Offer:** ₹349 (Regular ₹499 — applied directly!)\n🏆 **Top 3 Quiz Winners:** Special ₹299 pricing unlocked via private winner codes distributed to quiz winners.\n\nVisit the [Payment Page](https://bcavault.in/purchase) to proceed!`;
-=======
-    return `**Active Coupon Codes:**\n\n🏷️ **WINNER150** — Top 3 Quiz Winner price (Final price: ₹299)\n🏷️ Regular price — **₹349**\n\nApply the coupon during checkout on the [Payment Page](https://bcavault.in/purchase)!`;
->>>>>>> e36d8cdb47a82807b009a28638d1435b110353f3
   }
 
   if (q.includes("refund")) {

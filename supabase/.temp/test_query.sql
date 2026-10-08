@@ -1,0 +1,1 @@
+BEGIN; SET LOCAL enable_seqscan = off; EXPLAIN (BUFFERS, COSTS) SELECT id, referred_user_id FROM public.referrals WHERE referrer_user_id = '00000000-0000-0000-0000-000000000000' AND status = 'successful'; COMMIT;

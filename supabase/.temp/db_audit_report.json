@@ -1,0 +1,2583 @@
+{
+  "columns": [
+    {
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "table_name": "BCA users"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "BCA users"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "access_permissions"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "access_permissions"
+    },
+    {
+      "column_name": "bundle_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "access_permissions"
+    },
+    {
+      "column_name": "status",
+      "data_type": "USER-DEFINED",
+      "is_nullable": "NO",
+      "table_name": "access_permissions"
+    },
+    {
+      "column_name": "granted_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "access_permissions"
+    },
+    {
+      "column_name": "granted_by",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "access_permissions"
+    },
+    {
+      "column_name": "expires_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "access_permissions"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "access_permissions"
+    },
+    {
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "table_name": "activity_logs"
+    },
+    {
+      "column_name": "actor_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "activity_logs"
+    },
+    {
+      "column_name": "action",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "activity_logs"
+    },
+    {
+      "column_name": "target_type",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "activity_logs"
+    },
+    {
+      "column_name": "target_id",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "activity_logs"
+    },
+    {
+      "column_name": "metadata",
+      "data_type": "jsonb",
+      "is_nullable": "NO",
+      "table_name": "activity_logs"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "activity_logs"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "admin_notices"
+    },
+    {
+      "column_name": "title",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "admin_notices"
+    },
+    {
+      "column_name": "message",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "admin_notices"
+    },
+    {
+      "column_name": "type",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "admin_notices"
+    },
+    {
+      "column_name": "priority",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "admin_notices"
+    },
+    {
+      "column_name": "published",
+      "data_type": "boolean",
+      "is_nullable": "NO",
+      "table_name": "admin_notices"
+    },
+    {
+      "column_name": "published_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "admin_notices"
+    },
+    {
+      "column_name": "created_by",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "admin_notices"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "admin_notices"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "admin_notices"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "admin_profiles"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "admin_profiles"
+    },
+    {
+      "column_name": "email",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "admin_profiles"
+    },
+    {
+      "column_name": "role",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "admin_profiles"
+    },
+    {
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "admin_profiles"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "admin_profiles"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "bundles"
+    },
+    {
+      "column_name": "title",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "bundles"
+    },
+    {
+      "column_name": "description",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "bundles"
+    },
+    {
+      "column_name": "price",
+      "data_type": "numeric",
+      "is_nullable": "NO",
+      "table_name": "bundles"
+    },
+    {
+      "column_name": "published",
+      "data_type": "boolean",
+      "is_nullable": "NO",
+      "table_name": "bundles"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "bundles"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "bundles"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "coupon_campaigns"
+    },
+    {
+      "column_name": "max_redemptions",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "table_name": "coupon_campaigns"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "coupon_campaigns"
+    },
+    {
+      "column_name": "is_active",
+      "data_type": "boolean",
+      "is_nullable": "NO",
+      "table_name": "coupon_campaigns"
+    },
+    {
+      "column_name": "code_hash",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "coupon_campaigns"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "coupon_redemptions"
+    },
+    {
+      "column_name": "campaign_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "coupon_redemptions"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "coupon_redemptions"
+    },
+    {
+      "column_name": "redeemed_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "coupon_redemptions"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "email_delivery_log"
+    },
+    {
+      "column_name": "outbox_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "email_delivery_log"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "email_delivery_log"
+    },
+    {
+      "column_name": "recipient_email",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "email_delivery_log"
+    },
+    {
+      "column_name": "event_type",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "email_delivery_log"
+    },
+    {
+      "column_name": "provider",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "email_delivery_log"
+    },
+    {
+      "column_name": "provider_message_id",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "email_delivery_log"
+    },
+    {
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "email_delivery_log"
+    },
+    {
+      "column_name": "sent_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "email_delivery_log"
+    },
+    {
+      "column_name": "failed_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "email_delivery_log"
+    },
+    {
+      "column_name": "error_message",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "email_delivery_log"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "email_delivery_log"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "event_key",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "event_type",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "recipient_user_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "recipient_email",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "sender_name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "sender_email",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "payload",
+      "data_type": "jsonb",
+      "is_nullable": "NO",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "attempt_count",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "available_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "locked_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "sent_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "failed_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "last_error",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "provider_message_id",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "subject",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "html_body",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "text_body",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "generated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "generated_by",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "approved_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "approved_by",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "email_outbox"
+    },
+    {
+      "column_name": "key",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "kv_store_6704fe8f"
+    },
+    {
+      "column_name": "value",
+      "data_type": "jsonb",
+      "is_nullable": "NO",
+      "table_name": "kv_store_6704fe8f"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "legal_acceptances"
+    },
+    {
+      "column_name": "terms_version",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "legal_acceptances"
+    },
+    {
+      "column_name": "privacy_version",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "legal_acceptances"
+    },
+    {
+      "column_name": "accepted_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "legal_acceptances"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "notes"
+    },
+    {
+      "column_name": "bundle_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "notes"
+    },
+    {
+      "column_name": "title",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "notes"
+    },
+    {
+      "column_name": "subject",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "notes"
+    },
+    {
+      "column_name": "semester",
+      "data_type": "smallint",
+      "is_nullable": "YES",
+      "table_name": "notes"
+    },
+    {
+      "column_name": "description",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "notes"
+    },
+    {
+      "column_name": "storage_bucket",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "notes"
+    },
+    {
+      "column_name": "storage_path",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "notes"
+    },
+    {
+      "column_name": "published",
+      "data_type": "boolean",
+      "is_nullable": "NO",
+      "table_name": "notes"
+    },
+    {
+      "column_name": "created_by",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "notes"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "notes"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "notes"
+    },
+    {
+      "column_name": "subject_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "notes"
+    },
+    {
+      "column_name": "unit_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "notes"
+    },
+    {
+      "column_name": "topic_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "notes"
+    },
+    {
+      "column_name": "priority",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "notes"
+    },
+    {
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "notes"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "reference_id",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "full_name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "email",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "phone",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "course",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "semester",
+      "data_type": "smallint",
+      "is_nullable": "NO",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "amount",
+      "data_type": "numeric",
+      "is_nullable": "NO",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "utr",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "screenshot_bucket",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "screenshot_path",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "status",
+      "data_type": "USER-DEFINED",
+      "is_nullable": "NO",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "admin_notes",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "verified_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "verified_by",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "bundle_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "referral_code",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "referral_identifier",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "coupon_redemption_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "payment_submissions"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "profiles"
+    },
+    {
+      "column_name": "email",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "profiles"
+    },
+    {
+      "column_name": "full_name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "profiles"
+    },
+    {
+      "column_name": "phone",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "profiles"
+    },
+    {
+      "column_name": "course",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "profiles"
+    },
+    {
+      "column_name": "semester",
+      "data_type": "smallint",
+      "is_nullable": "YES",
+      "table_name": "profiles"
+    },
+    {
+      "column_name": "status",
+      "data_type": "USER-DEFINED",
+      "is_nullable": "NO",
+      "table_name": "profiles"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "profiles"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "profiles"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempt_questions"
+    },
+    {
+      "column_name": "attempt_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempt_questions"
+    },
+    {
+      "column_name": "question_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempt_questions"
+    },
+    {
+      "column_name": "position",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempt_questions"
+    },
+    {
+      "column_name": "question_text",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempt_questions"
+    },
+    {
+      "column_name": "subject",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempt_questions"
+    },
+    {
+      "column_name": "difficulty",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempt_questions"
+    },
+    {
+      "column_name": "options",
+      "data_type": "jsonb",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempt_questions"
+    },
+    {
+      "column_name": "correct_option",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempt_questions"
+    },
+    {
+      "column_name": "marks",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempt_questions"
+    },
+    {
+      "column_name": "started_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "quiz_attempt_questions"
+    },
+    {
+      "column_name": "deadline",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "quiz_attempt_questions"
+    },
+    {
+      "column_name": "submitted_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "quiz_attempt_questions"
+    },
+    {
+      "column_name": "selected_option",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "quiz_attempt_questions"
+    },
+    {
+      "column_name": "state",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempt_questions"
+    },
+    {
+      "column_name": "earned_marks",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempt_questions"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempts"
+    },
+    {
+      "column_name": "competition_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempts"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempts"
+    },
+    {
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempts"
+    },
+    {
+      "column_name": "started_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempts"
+    },
+    {
+      "column_name": "deadline",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempts"
+    },
+    {
+      "column_name": "completed_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "quiz_attempts"
+    },
+    {
+      "column_name": "current_position",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempts"
+    },
+    {
+      "column_name": "score",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempts"
+    },
+    {
+      "column_name": "completion_ms",
+      "data_type": "bigint",
+      "is_nullable": "YES",
+      "table_name": "quiz_attempts"
+    },
+    {
+      "column_name": "risk_score",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempts"
+    },
+    {
+      "column_name": "review_status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "quiz_attempts"
+    },
+    {
+      "column_name": "review_reason",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "quiz_attempts"
+    },
+    {
+      "column_name": "reviewed_by",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "quiz_attempts"
+    },
+    {
+      "column_name": "reviewed_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "quiz_attempts"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "quiz_competitions"
+    },
+    {
+      "column_name": "title",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "quiz_competitions"
+    },
+    {
+      "column_name": "description",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "quiz_competitions"
+    },
+    {
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "quiz_competitions"
+    },
+    {
+      "column_name": "start_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "quiz_competitions"
+    },
+    {
+      "column_name": "end_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "quiz_competitions"
+    },
+    {
+      "column_name": "question_count",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "table_name": "quiz_competitions"
+    },
+    {
+      "column_name": "seconds_per_question",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "table_name": "quiz_competitions"
+    },
+    {
+      "column_name": "max_attempts",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "table_name": "quiz_competitions"
+    },
+    {
+      "column_name": "blueprint",
+      "data_type": "jsonb",
+      "is_nullable": "NO",
+      "table_name": "quiz_competitions"
+    },
+    {
+      "column_name": "scoring_rules",
+      "data_type": "jsonb",
+      "is_nullable": "NO",
+      "table_name": "quiz_competitions"
+    },
+    {
+      "column_name": "tie_break_rules",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "quiz_competitions"
+    },
+    {
+      "column_name": "risk_weights",
+      "data_type": "jsonb",
+      "is_nullable": "NO",
+      "table_name": "quiz_competitions"
+    },
+    {
+      "column_name": "campaign_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "quiz_competitions"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "quiz_competitions"
+    },
+    {
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "table_name": "quiz_events"
+    },
+    {
+      "column_name": "attempt_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "quiz_events"
+    },
+    {
+      "column_name": "event_type",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "quiz_events"
+    },
+    {
+      "column_name": "source",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "quiz_events"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "quiz_events"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "quiz_questions"
+    },
+    {
+      "column_name": "competition_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "quiz_questions"
+    },
+    {
+      "column_name": "subject",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "quiz_questions"
+    },
+    {
+      "column_name": "difficulty",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "quiz_questions"
+    },
+    {
+      "column_name": "question_text",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "quiz_questions"
+    },
+    {
+      "column_name": "options",
+      "data_type": "jsonb",
+      "is_nullable": "NO",
+      "table_name": "quiz_questions"
+    },
+    {
+      "column_name": "correct_index",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "table_name": "quiz_questions"
+    },
+    {
+      "column_name": "marks",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "table_name": "quiz_questions"
+    },
+    {
+      "column_name": "active",
+      "data_type": "boolean",
+      "is_nullable": "NO",
+      "table_name": "quiz_questions"
+    },
+    {
+      "column_name": "usage_count",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "table_name": "quiz_questions"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "quiz_questions"
+    },
+    {
+      "column_name": "competition_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "quiz_winners"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "quiz_winners"
+    },
+    {
+      "column_name": "attempt_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "quiz_winners"
+    },
+    {
+      "column_name": "rank",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "table_name": "quiz_winners"
+    },
+    {
+      "column_name": "approved_by",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "quiz_winners"
+    },
+    {
+      "column_name": "approved_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "quiz_winners"
+    },
+    {
+      "column_name": "redemption_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "quiz_winners"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "referral_codes"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "referral_codes"
+    },
+    {
+      "column_name": "code",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "referral_codes"
+    },
+    {
+      "column_name": "is_active",
+      "data_type": "boolean",
+      "is_nullable": "NO",
+      "table_name": "referral_codes"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "referral_codes"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "referral_codes"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "referral_rewards"
+    },
+    {
+      "column_name": "referral_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "referral_rewards"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "referral_rewards"
+    },
+    {
+      "column_name": "reward_type",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "referral_rewards"
+    },
+    {
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "referral_rewards"
+    },
+    {
+      "column_name": "unlocked_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "referral_rewards"
+    },
+    {
+      "column_name": "claimed_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "referral_rewards"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "referral_rewards"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "referrals"
+    },
+    {
+      "column_name": "referrer_user_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "referrals"
+    },
+    {
+      "column_name": "referred_user_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "referrals"
+    },
+    {
+      "column_name": "referral_code_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "table_name": "referrals"
+    },
+    {
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "referrals"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "referrals"
+    },
+    {
+      "column_name": "successful_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "table_name": "referrals"
+    },
+    {
+      "column_name": "referral_identifier",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "referrals"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "subjects"
+    },
+    {
+      "column_name": "code",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "subjects"
+    },
+    {
+      "column_name": "title",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "subjects"
+    },
+    {
+      "column_name": "short_title",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "table_name": "subjects"
+    },
+    {
+      "column_name": "semester",
+      "data_type": "smallint",
+      "is_nullable": "NO",
+      "table_name": "subjects"
+    },
+    {
+      "column_name": "course_type",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "subjects"
+    },
+    {
+      "column_name": "description",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "subjects"
+    },
+    {
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "subjects"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "subjects"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "subjects"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "topics"
+    },
+    {
+      "column_name": "subject_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "topics"
+    },
+    {
+      "column_name": "unit_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "topics"
+    },
+    {
+      "column_name": "title",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "topics"
+    },
+    {
+      "column_name": "description",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "topics"
+    },
+    {
+      "column_name": "priority",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "topics"
+    },
+    {
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "topics"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "topics"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "topics"
+    },
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "units"
+    },
+    {
+      "column_name": "subject_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "table_name": "units"
+    },
+    {
+      "column_name": "unit_number",
+      "data_type": "smallint",
+      "is_nullable": "NO",
+      "table_name": "units"
+    },
+    {
+      "column_name": "title",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "units"
+    },
+    {
+      "column_name": "description",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "units"
+    },
+    {
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "table_name": "units"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "units"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "table_name": "units"
+    }
+  ],
+  "indexes": [
+    {
+      "indexdef": "CREATE UNIQUE INDEX \"BCA users_pkey\" ON public.\"BCA users\" USING btree (id)",
+      "indexname": "BCA users_pkey",
+      "tablename": "BCA users"
+    },
+    {
+      "indexdef": "CREATE INDEX access_permissions_bundle_id_idx ON public.access_permissions USING btree (bundle_id)",
+      "indexname": "access_permissions_bundle_id_idx",
+      "tablename": "access_permissions"
+    },
+    {
+      "indexdef": "CREATE INDEX access_permissions_granted_by_idx ON public.access_permissions USING btree (granted_by)",
+      "indexname": "access_permissions_granted_by_idx",
+      "tablename": "access_permissions"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX access_permissions_pkey ON public.access_permissions USING btree (id)",
+      "indexname": "access_permissions_pkey",
+      "tablename": "access_permissions"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX access_permissions_user_id_bundle_id_key ON public.access_permissions USING btree (user_id, bundle_id)",
+      "indexname": "access_permissions_user_id_bundle_id_key",
+      "tablename": "access_permissions"
+    },
+    {
+      "indexdef": "CREATE INDEX access_permissions_user_status_idx ON public.access_permissions USING btree (user_id, status)",
+      "indexname": "access_permissions_user_status_idx",
+      "tablename": "access_permissions"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_access_permissions_active_lookup ON public.access_permissions USING btree (user_id, bundle_id, expires_at) WHERE (status = 'active'::access_status)",
+      "indexname": "idx_access_permissions_active_lookup",
+      "tablename": "access_permissions"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_access_permissions_granted_at_desc ON public.access_permissions USING btree (granted_at DESC)",
+      "indexname": "idx_access_permissions_granted_at_desc",
+      "tablename": "access_permissions"
+    },
+    {
+      "indexdef": "CREATE INDEX activity_logs_actor_created_at_idx ON public.activity_logs USING btree (actor_id, created_at DESC)",
+      "indexname": "activity_logs_actor_created_at_idx",
+      "tablename": "activity_logs"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX activity_logs_pkey ON public.activity_logs USING btree (id)",
+      "indexname": "activity_logs_pkey",
+      "tablename": "activity_logs"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_activity_logs_action_created_at ON public.activity_logs USING btree (action, created_at DESC)",
+      "indexname": "idx_activity_logs_action_created_at",
+      "tablename": "activity_logs"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_activity_logs_created_at_desc ON public.activity_logs USING btree (created_at DESC)",
+      "indexname": "idx_activity_logs_created_at_desc",
+      "tablename": "activity_logs"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_activity_logs_target ON public.activity_logs USING btree (target_type, target_id)",
+      "indexname": "idx_activity_logs_target",
+      "tablename": "activity_logs"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX admin_notices_pkey ON public.admin_notices USING btree (id)",
+      "indexname": "admin_notices_pkey",
+      "tablename": "admin_notices"
+    },
+    {
+      "indexdef": "CREATE INDEX admin_notices_published_idx ON public.admin_notices USING btree (published, published_at DESC, created_at DESC)",
+      "indexname": "admin_notices_published_idx",
+      "tablename": "admin_notices"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_admin_notices_created_at_desc ON public.admin_notices USING btree (created_at DESC)",
+      "indexname": "idx_admin_notices_created_at_desc",
+      "tablename": "admin_notices"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_admin_notices_created_by ON public.admin_notices USING btree (created_by) WHERE (created_by IS NOT NULL)",
+      "indexname": "idx_admin_notices_created_by",
+      "tablename": "admin_notices"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX admin_profiles_pkey ON public.admin_profiles USING btree (id)",
+      "indexname": "admin_profiles_pkey",
+      "tablename": "admin_profiles"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX admin_profiles_user_id_key ON public.admin_profiles USING btree (user_id)",
+      "indexname": "admin_profiles_user_id_key",
+      "tablename": "admin_profiles"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_admin_profiles_auth_lookup ON public.admin_profiles USING btree (user_id, role, status)",
+      "indexname": "idx_admin_profiles_auth_lookup",
+      "tablename": "admin_profiles"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX bundles_pkey ON public.bundles USING btree (id)",
+      "indexname": "bundles_pkey",
+      "tablename": "bundles"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_bundles_created_at_desc ON public.bundles USING btree (created_at DESC)",
+      "indexname": "idx_bundles_created_at_desc",
+      "tablename": "bundles"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_bundles_published_created_at ON public.bundles USING btree (created_at DESC) WHERE (published = true)",
+      "indexname": "idx_bundles_published_created_at",
+      "tablename": "bundles"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX coupon_campaigns_code_hash_unique ON public.coupon_campaigns USING btree (code_hash)",
+      "indexname": "coupon_campaigns_code_hash_unique",
+      "tablename": "coupon_campaigns"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX coupon_campaigns_pkey ON public.coupon_campaigns USING btree (id)",
+      "indexname": "coupon_campaigns_pkey",
+      "tablename": "coupon_campaigns"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_coupon_campaigns_active ON public.coupon_campaigns USING btree (is_active) WHERE (is_active = true)",
+      "indexname": "idx_coupon_campaigns_active",
+      "tablename": "coupon_campaigns"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX coupon_redemptions_campaign_id_user_id_key ON public.coupon_redemptions USING btree (campaign_id, user_id)",
+      "indexname": "coupon_redemptions_campaign_id_user_id_key",
+      "tablename": "coupon_redemptions"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX coupon_redemptions_pkey ON public.coupon_redemptions USING btree (id)",
+      "indexname": "coupon_redemptions_pkey",
+      "tablename": "coupon_redemptions"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_coupon_redemptions_user_id ON public.coupon_redemptions USING btree (user_id)",
+      "indexname": "idx_coupon_redemptions_user_id",
+      "tablename": "coupon_redemptions"
+    },
+    {
+      "indexdef": "CREATE INDEX email_delivery_log_outbox_idx ON public.email_delivery_log USING btree (outbox_id, created_at DESC)",
+      "indexname": "email_delivery_log_outbox_idx",
+      "tablename": "email_delivery_log"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX email_delivery_log_pkey ON public.email_delivery_log USING btree (id)",
+      "indexname": "email_delivery_log_pkey",
+      "tablename": "email_delivery_log"
+    },
+    {
+      "indexdef": "CREATE INDEX email_delivery_log_user_idx ON public.email_delivery_log USING btree (user_id, created_at DESC)",
+      "indexname": "email_delivery_log_user_idx",
+      "tablename": "email_delivery_log"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_email_delivery_log_recipient ON public.email_delivery_log USING btree (recipient_email, created_at DESC)",
+      "indexname": "idx_email_delivery_log_recipient",
+      "tablename": "email_delivery_log"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX email_outbox_event_key_key ON public.email_outbox USING btree (event_key)",
+      "indexname": "email_outbox_event_key_key",
+      "tablename": "email_outbox"
+    },
+    {
+      "indexdef": "CREATE INDEX email_outbox_manual_status_idx ON public.email_outbox USING btree (status, created_at DESC)",
+      "indexname": "email_outbox_manual_status_idx",
+      "tablename": "email_outbox"
+    },
+    {
+      "indexdef": "CREATE INDEX email_outbox_pending_idx ON public.email_outbox USING btree (status, available_at, created_at)",
+      "indexname": "email_outbox_pending_idx",
+      "tablename": "email_outbox"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX email_outbox_pkey ON public.email_outbox USING btree (id)",
+      "indexname": "email_outbox_pkey",
+      "tablename": "email_outbox"
+    },
+    {
+      "indexdef": "CREATE INDEX email_outbox_user_idx ON public.email_outbox USING btree (recipient_user_id, created_at DESC)",
+      "indexname": "email_outbox_user_idx",
+      "tablename": "email_outbox"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_email_outbox_approved_by ON public.email_outbox USING btree (approved_by) WHERE (approved_by IS NOT NULL)",
+      "indexname": "idx_email_outbox_approved_by",
+      "tablename": "email_outbox"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_email_outbox_generated_by ON public.email_outbox USING btree (generated_by) WHERE (generated_by IS NOT NULL)",
+      "indexname": "idx_email_outbox_generated_by",
+      "tablename": "email_outbox"
+    },
+    {
+      "indexdef": "CREATE INDEX kv_store_6704fe8f_key_idx ON public.kv_store_6704fe8f USING btree (key text_pattern_ops)",
+      "indexname": "kv_store_6704fe8f_key_idx",
+      "tablename": "kv_store_6704fe8f"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX kv_store_6704fe8f_pkey ON public.kv_store_6704fe8f USING btree (key)",
+      "indexname": "kv_store_6704fe8f_pkey",
+      "tablename": "kv_store_6704fe8f"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_legal_acceptances_accepted_at ON public.legal_acceptances USING btree (accepted_at DESC)",
+      "indexname": "idx_legal_acceptances_accepted_at",
+      "tablename": "legal_acceptances"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX legal_acceptances_pkey ON public.legal_acceptances USING btree (user_id)",
+      "indexname": "legal_acceptances_pkey",
+      "tablename": "legal_acceptances"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_notes_bundle ON public.notes USING btree (bundle_id)",
+      "indexname": "idx_notes_bundle",
+      "tablename": "notes"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_notes_bundle_semester ON public.notes USING btree (bundle_id, semester, published)",
+      "indexname": "idx_notes_bundle_semester",
+      "tablename": "notes"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_notes_created_at_desc ON public.notes USING btree (created_at DESC)",
+      "indexname": "idx_notes_created_at_desc",
+      "tablename": "notes"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_notes_published ON public.notes USING btree (published)",
+      "indexname": "idx_notes_published",
+      "tablename": "notes"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_notes_subject ON public.notes USING btree (subject_id)",
+      "indexname": "idx_notes_subject",
+      "tablename": "notes"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_notes_title_trgm ON public.notes USING gin (title gin_trgm_ops)",
+      "indexname": "idx_notes_title_trgm",
+      "tablename": "notes"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_notes_topic ON public.notes USING btree (topic_id)",
+      "indexname": "idx_notes_topic",
+      "tablename": "notes"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_notes_unit ON public.notes USING btree (unit_id)",
+      "indexname": "idx_notes_unit",
+      "tablename": "notes"
+    },
+    {
+      "indexdef": "CREATE INDEX notes_bundle_published_idx ON public.notes USING btree (bundle_id, published)",
+      "indexname": "notes_bundle_published_idx",
+      "tablename": "notes"
+    },
+    {
+      "indexdef": "CREATE INDEX notes_created_by_idx ON public.notes USING btree (created_by)",
+      "indexname": "notes_created_by_idx",
+      "tablename": "notes"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX notes_pkey ON public.notes USING btree (id)",
+      "indexname": "notes_pkey",
+      "tablename": "notes"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX notes_storage_path_key ON public.notes USING btree (storage_path)",
+      "indexname": "notes_storage_path_key",
+      "tablename": "notes"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_payment_submissions_bundle_id ON public.payment_submissions USING btree (bundle_id)",
+      "indexname": "idx_payment_submissions_bundle_id",
+      "tablename": "payment_submissions"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_payment_submissions_created_at_desc ON public.payment_submissions USING btree (created_at DESC)",
+      "indexname": "idx_payment_submissions_created_at_desc",
+      "tablename": "payment_submissions"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_payment_submissions_name_trgm ON public.payment_submissions USING gin (full_name gin_trgm_ops)",
+      "indexname": "idx_payment_submissions_name_trgm",
+      "tablename": "payment_submissions"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_payment_submissions_pending ON public.payment_submissions USING btree (created_at DESC) WHERE (status = 'pending'::payment_status)",
+      "indexname": "idx_payment_submissions_pending",
+      "tablename": "payment_submissions"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_payment_submissions_referral_identifier ON public.payment_submissions USING btree (referral_identifier) WHERE (referral_identifier IS NOT NULL)",
+      "indexname": "idx_payment_submissions_referral_identifier",
+      "tablename": "payment_submissions"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_payment_submissions_user_created_at ON public.payment_submissions USING btree (user_id, created_at DESC)",
+      "indexname": "idx_payment_submissions_user_created_at",
+      "tablename": "payment_submissions"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX payment_submissions_coupon_redemption_unique ON public.payment_submissions USING btree (coupon_redemption_id) WHERE (coupon_redemption_id IS NOT NULL)",
+      "indexname": "payment_submissions_coupon_redemption_unique",
+      "tablename": "payment_submissions"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX payment_submissions_pkey ON public.payment_submissions USING btree (id)",
+      "indexname": "payment_submissions_pkey",
+      "tablename": "payment_submissions"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX payment_submissions_reference_id_key ON public.payment_submissions USING btree (reference_id)",
+      "indexname": "payment_submissions_reference_id_key",
+      "tablename": "payment_submissions"
+    },
+    {
+      "indexdef": "CREATE INDEX payment_submissions_status_created_at_idx ON public.payment_submissions USING btree (status, created_at DESC)",
+      "indexname": "payment_submissions_status_created_at_idx",
+      "tablename": "payment_submissions"
+    },
+    {
+      "indexdef": "CREATE INDEX payment_submissions_user_id_idx ON public.payment_submissions USING btree (user_id)",
+      "indexname": "payment_submissions_user_id_idx",
+      "tablename": "payment_submissions"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX payment_submissions_utr_key ON public.payment_submissions USING btree (utr)",
+      "indexname": "payment_submissions_utr_key",
+      "tablename": "payment_submissions"
+    },
+    {
+      "indexdef": "CREATE INDEX payment_submissions_verified_by_idx ON public.payment_submissions USING btree (verified_by)",
+      "indexname": "payment_submissions_verified_by_idx",
+      "tablename": "payment_submissions"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_profiles_created_at_desc ON public.profiles USING btree (created_at DESC)",
+      "indexname": "idx_profiles_created_at_desc",
+      "tablename": "profiles"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_profiles_email_trgm ON public.profiles USING gin (email gin_trgm_ops)",
+      "indexname": "idx_profiles_email_trgm",
+      "tablename": "profiles"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_profiles_name_trgm ON public.profiles USING gin (full_name gin_trgm_ops)",
+      "indexname": "idx_profiles_name_trgm",
+      "tablename": "profiles"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_profiles_phone ON public.profiles USING btree (phone) WHERE (phone IS NOT NULL)",
+      "indexname": "idx_profiles_phone",
+      "tablename": "profiles"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_profiles_status ON public.profiles USING btree (status)",
+      "indexname": "idx_profiles_status",
+      "tablename": "profiles"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX profiles_email_key ON public.profiles USING btree (email)",
+      "indexname": "profiles_email_key",
+      "tablename": "profiles"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX profiles_pkey ON public.profiles USING btree (user_id)",
+      "indexname": "profiles_pkey",
+      "tablename": "profiles"
+    },
+    {
+      "indexdef": "CREATE INDEX quiz_assignment_question ON public.quiz_attempt_questions USING btree (question_id)",
+      "indexname": "quiz_assignment_question",
+      "tablename": "quiz_attempt_questions"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX quiz_attempt_questions_attempt_id_position_key ON public.quiz_attempt_questions USING btree (attempt_id, \"position\")",
+      "indexname": "quiz_attempt_questions_attempt_id_position_key",
+      "tablename": "quiz_attempt_questions"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX quiz_attempt_questions_attempt_id_question_id_key ON public.quiz_attempt_questions USING btree (attempt_id, question_id)",
+      "indexname": "quiz_attempt_questions_attempt_id_question_id_key",
+      "tablename": "quiz_attempt_questions"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX quiz_attempt_questions_pkey ON public.quiz_attempt_questions USING btree (id)",
+      "indexname": "quiz_attempt_questions_pkey",
+      "tablename": "quiz_attempt_questions"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_quiz_attempts_leaderboard ON public.quiz_attempts USING btree (competition_id, score DESC, completion_ms) WHERE (status = ANY (ARRAY['submitted'::text, 'evaluated'::text]))",
+      "indexname": "idx_quiz_attempts_leaderboard",
+      "tablename": "quiz_attempts"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_quiz_attempts_reviewed_by ON public.quiz_attempts USING btree (reviewed_by) WHERE (reviewed_by IS NOT NULL)",
+      "indexname": "idx_quiz_attempts_reviewed_by",
+      "tablename": "quiz_attempts"
+    },
+    {
+      "indexdef": "CREATE INDEX quiz_attempt_monitor ON public.quiz_attempts USING btree (competition_id, status)",
+      "indexname": "quiz_attempt_monitor",
+      "tablename": "quiz_attempts"
+    },
+    {
+      "indexdef": "CREATE INDEX quiz_attempt_user ON public.quiz_attempts USING btree (user_id)",
+      "indexname": "quiz_attempt_user",
+      "tablename": "quiz_attempts"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX quiz_attempts_competition_id_user_id_key ON public.quiz_attempts USING btree (competition_id, user_id)",
+      "indexname": "quiz_attempts_competition_id_user_id_key",
+      "tablename": "quiz_attempts"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX quiz_attempts_pkey ON public.quiz_attempts USING btree (id)",
+      "indexname": "quiz_attempts_pkey",
+      "tablename": "quiz_attempts"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_quiz_competitions_created_at_desc ON public.quiz_competitions USING btree (created_at DESC)",
+      "indexname": "idx_quiz_competitions_created_at_desc",
+      "tablename": "quiz_competitions"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_quiz_competitions_status_dates ON public.quiz_competitions USING btree (status, start_at, end_at)",
+      "indexname": "idx_quiz_competitions_status_dates",
+      "tablename": "quiz_competitions"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX quiz_competitions_campaign_id_key ON public.quiz_competitions USING btree (campaign_id)",
+      "indexname": "quiz_competitions_campaign_id_key",
+      "tablename": "quiz_competitions"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX quiz_competitions_pkey ON public.quiz_competitions USING btree (id)",
+      "indexname": "quiz_competitions_pkey",
+      "tablename": "quiz_competitions"
+    },
+    {
+      "indexdef": "CREATE INDEX quiz_event_timeline ON public.quiz_events USING btree (attempt_id, id)",
+      "indexname": "quiz_event_timeline",
+      "tablename": "quiz_events"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX quiz_events_pkey ON public.quiz_events USING btree (id)",
+      "indexname": "quiz_events_pkey",
+      "tablename": "quiz_events"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_quiz_questions_competition_created ON public.quiz_questions USING btree (competition_id, created_at)",
+      "indexname": "idx_quiz_questions_competition_created",
+      "tablename": "quiz_questions"
+    },
+    {
+      "indexdef": "CREATE INDEX quiz_question_pool ON public.quiz_questions USING btree (competition_id, subject, difficulty, marks, usage_count) WHERE active",
+      "indexname": "quiz_question_pool",
+      "tablename": "quiz_questions"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX quiz_questions_pkey ON public.quiz_questions USING btree (id)",
+      "indexname": "quiz_questions_pkey",
+      "tablename": "quiz_questions"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_quiz_winners_approved_by ON public.quiz_winners USING btree (approved_by) WHERE (approved_by IS NOT NULL)",
+      "indexname": "idx_quiz_winners_approved_by",
+      "tablename": "quiz_winners"
+    },
+    {
+      "indexdef": "CREATE INDEX quiz_winner_user ON public.quiz_winners USING btree (user_id)",
+      "indexname": "quiz_winner_user",
+      "tablename": "quiz_winners"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX quiz_winners_attempt_id_key ON public.quiz_winners USING btree (attempt_id)",
+      "indexname": "quiz_winners_attempt_id_key",
+      "tablename": "quiz_winners"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX quiz_winners_competition_id_rank_key ON public.quiz_winners USING btree (competition_id, rank)",
+      "indexname": "quiz_winners_competition_id_rank_key",
+      "tablename": "quiz_winners"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX quiz_winners_pkey ON public.quiz_winners USING btree (competition_id, user_id)",
+      "indexname": "quiz_winners_pkey",
+      "tablename": "quiz_winners"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX quiz_winners_redemption_id_key ON public.quiz_winners USING btree (redemption_id)",
+      "indexname": "quiz_winners_redemption_id_key",
+      "tablename": "quiz_winners"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_referral_codes_code ON public.referral_codes USING btree (code)",
+      "indexname": "idx_referral_codes_code",
+      "tablename": "referral_codes"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_referral_codes_user_id ON public.referral_codes USING btree (user_id)",
+      "indexname": "idx_referral_codes_user_id",
+      "tablename": "referral_codes"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX referral_codes_code_key ON public.referral_codes USING btree (code)",
+      "indexname": "referral_codes_code_key",
+      "tablename": "referral_codes"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX referral_codes_pkey ON public.referral_codes USING btree (id)",
+      "indexname": "referral_codes_pkey",
+      "tablename": "referral_codes"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX referral_codes_user_id_key ON public.referral_codes USING btree (user_id)",
+      "indexname": "referral_codes_user_id_key",
+      "tablename": "referral_codes"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_referral_rewards_status ON public.referral_rewards USING btree (status)",
+      "indexname": "idx_referral_rewards_status",
+      "tablename": "referral_rewards"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_referral_rewards_unlocked_at_desc ON public.referral_rewards USING btree (unlocked_at DESC)",
+      "indexname": "idx_referral_rewards_unlocked_at_desc",
+      "tablename": "referral_rewards"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_referral_rewards_user ON public.referral_rewards USING btree (user_id)",
+      "indexname": "idx_referral_rewards_user",
+      "tablename": "referral_rewards"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_referral_rewards_user_status ON public.referral_rewards USING btree (user_id, status)",
+      "indexname": "idx_referral_rewards_user_status",
+      "tablename": "referral_rewards"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX referral_rewards_pkey ON public.referral_rewards USING btree (id)",
+      "indexname": "referral_rewards_pkey",
+      "tablename": "referral_rewards"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX referral_rewards_referral_id_key ON public.referral_rewards USING btree (referral_id)",
+      "indexname": "referral_rewards_referral_id_key",
+      "tablename": "referral_rewards"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_referrals_code_id ON public.referrals USING btree (referral_code_id)",
+      "indexname": "idx_referrals_code_id",
+      "tablename": "referrals"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_referrals_created_at_desc ON public.referrals USING btree (created_at DESC)",
+      "indexname": "idx_referrals_created_at_desc",
+      "tablename": "referrals"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_referrals_referral_identifier ON public.referrals USING btree (referral_identifier) WHERE (referral_identifier IS NOT NULL)",
+      "indexname": "idx_referrals_referral_identifier",
+      "tablename": "referrals"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_referrals_referred ON public.referrals USING btree (referred_user_id)",
+      "indexname": "idx_referrals_referred",
+      "tablename": "referrals"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_referrals_referrer ON public.referrals USING btree (referrer_user_id)",
+      "indexname": "idx_referrals_referrer",
+      "tablename": "referrals"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_referrals_referrer_status ON public.referrals USING btree (referrer_user_id, status)",
+      "indexname": "idx_referrals_referrer_status",
+      "tablename": "referrals"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_referrals_status ON public.referrals USING btree (status)",
+      "indexname": "idx_referrals_status",
+      "tablename": "referrals"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX referrals_one_active_referral_per_user ON public.referrals USING btree (referred_user_id) WHERE (status = ANY (ARRAY['pending'::text, 'successful'::text]))",
+      "indexname": "referrals_one_active_referral_per_user",
+      "tablename": "referrals"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX referrals_pkey ON public.referrals USING btree (id)",
+      "indexname": "referrals_pkey",
+      "tablename": "referrals"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX uq_referrals_referred_user ON public.referrals USING btree (referred_user_id)",
+      "indexname": "uq_referrals_referred_user",
+      "tablename": "referrals"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_subjects_created_at_desc ON public.subjects USING btree (created_at DESC)",
+      "indexname": "idx_subjects_created_at_desc",
+      "tablename": "subjects"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_subjects_semester ON public.subjects USING btree (semester)",
+      "indexname": "idx_subjects_semester",
+      "tablename": "subjects"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_subjects_status ON public.subjects USING btree (status)",
+      "indexname": "idx_subjects_status",
+      "tablename": "subjects"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX subjects_code_semester_unique ON public.subjects USING btree (code, semester)",
+      "indexname": "subjects_code_semester_unique",
+      "tablename": "subjects"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX subjects_pkey ON public.subjects USING btree (id)",
+      "indexname": "subjects_pkey",
+      "tablename": "subjects"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_topics_subject ON public.topics USING btree (subject_id)",
+      "indexname": "idx_topics_subject",
+      "tablename": "topics"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_topics_unit ON public.topics USING btree (unit_id)",
+      "indexname": "idx_topics_unit",
+      "tablename": "topics"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_topics_unit_priority ON public.topics USING btree (unit_id, priority)",
+      "indexname": "idx_topics_unit_priority",
+      "tablename": "topics"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX topics_pkey ON public.topics USING btree (id)",
+      "indexname": "topics_pkey",
+      "tablename": "topics"
+    },
+    {
+      "indexdef": "CREATE INDEX idx_units_subject ON public.units USING btree (subject_id)",
+      "indexname": "idx_units_subject",
+      "tablename": "units"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX units_pkey ON public.units USING btree (id)",
+      "indexname": "units_pkey",
+      "tablename": "units"
+    },
+    {
+      "indexdef": "CREATE UNIQUE INDEX units_subject_unit_unique ON public.units USING btree (subject_id, unit_number)",
+      "indexname": "units_subject_unit_unique",
+      "tablename": "units"
+    }
+  ],
+  "missingFks": [],
+  "policies": [
+    {
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "policyname": "access_select_own",
+      "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+      "roles": "{authenticated}",
+      "tablename": "access_permissions",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "policyname": "superadmin_access_manage",
+      "qual": "( SELECT is_active_admin() AS is_active_admin)",
+      "roles": "{authenticated}",
+      "tablename": "access_permissions",
+      "with_check": "( SELECT is_active_admin() AS is_active_admin)"
+    },
+    {
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "policyname": "superadmin_activity_logs_manage",
+      "qual": "( SELECT is_active_admin() AS is_active_admin)",
+      "roles": "{authenticated}",
+      "tablename": "activity_logs",
+      "with_check": "( SELECT is_active_admin() AS is_active_admin)"
+    },
+    {
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "policyname": "students_read_published_admin_notices",
+      "qual": "(published = true)",
+      "roles": "{authenticated}",
+      "tablename": "admin_notices",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "policyname": "superadmins_manage_admin_notices",
+      "qual": "(EXISTS ( SELECT 1\n   FROM admin_profiles ap\n  WHERE ((ap.user_id = auth.uid()) AND (ap.role = 'superadmin'::text) AND (ap.status = 'active'::text))))",
+      "roles": "{authenticated}",
+      "tablename": "admin_notices",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM admin_profiles ap\n  WHERE ((ap.user_id = auth.uid()) AND (ap.role = 'superadmin'::text) AND (ap.status = 'active'::text))))"
+    },
+    {
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "policyname": "Admins can read own profile",
+      "qual": "(auth.uid() = user_id)",
+      "roles": "{authenticated}",
+      "tablename": "admin_profiles",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "policyname": "published_bundles_are_readable",
+      "qual": "(published OR ( SELECT is_active_admin() AS is_active_admin))",
+      "roles": "{anon,authenticated}",
+      "tablename": "bundles",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "policyname": "superadmin_bundles_manage",
+      "qual": "( SELECT is_active_admin() AS is_active_admin)",
+      "roles": "{authenticated}",
+      "tablename": "bundles",
+      "with_check": "( SELECT is_active_admin() AS is_active_admin)"
+    },
+    {
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "policyname": "email_delivery_log_deny_all",
+      "qual": "false",
+      "roles": "{anon,authenticated}",
+      "tablename": "email_delivery_log",
+      "with_check": "false"
+    },
+    {
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "policyname": "email_outbox_deny_all",
+      "qual": "false",
+      "roles": "{anon,authenticated}",
+      "tablename": "email_outbox",
+      "with_check": "false"
+    },
+    {
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "policyname": "legal_acceptance_own",
+      "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+      "roles": "{authenticated}",
+      "tablename": "legal_acceptances",
+      "with_check": "(( SELECT auth.uid() AS uid) = user_id)"
+    },
+    {
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "policyname": "superadmin_legal_acceptances_read",
+      "qual": "( SELECT is_active_admin() AS is_active_admin)",
+      "roles": "{authenticated}",
+      "tablename": "legal_acceptances",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "policyname": "notes_select_with_active_access",
+      "qual": "(published AND (EXISTS ( SELECT 1\n   FROM (access_permissions ap\n     JOIN profiles p ON ((p.user_id = ap.user_id)))\n  WHERE ((ap.user_id = ( SELECT auth.uid() AS uid)) AND (ap.bundle_id = notes.bundle_id) AND (ap.status = 'active'::access_status) AND (p.status = 'active'::account_status) AND ((ap.expires_at IS NULL) OR (ap.expires_at > now()))))))",
+      "roles": "{authenticated}",
+      "tablename": "notes",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "policyname": "superadmin_notes_manage",
+      "qual": "is_active_admin()",
+      "roles": "{authenticated}",
+      "tablename": "notes",
+      "with_check": "is_active_admin()"
+    },
+    {
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "policyname": "payment_select_own",
+      "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+      "roles": "{authenticated}",
+      "tablename": "payment_submissions",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "policyname": "superadmin_payments_manage",
+      "qual": "( SELECT is_active_admin() AS is_active_admin)",
+      "roles": "{authenticated}",
+      "tablename": "payment_submissions",
+      "with_check": "( SELECT is_active_admin() AS is_active_admin)"
+    },
+    {
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "policyname": "profiles_select_own",
+      "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+      "roles": "{authenticated}",
+      "tablename": "profiles",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "permissive": "PERMISSIVE",
+      "policyname": "profiles_update_own_safe_fields",
+      "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+      "roles": "{authenticated}",
+      "tablename": "profiles",
+      "with_check": "(( SELECT auth.uid() AS uid) = user_id)"
+    },
+    {
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "policyname": "superadmin_profiles_manage",
+      "qual": "( SELECT is_active_admin() AS is_active_admin)",
+      "roles": "{authenticated}",
+      "tablename": "profiles",
+      "with_check": "( SELECT is_active_admin() AS is_active_admin)"
+    },
+    {
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "policyname": "admins_read_referral_codes",
+      "qual": "is_active_admin()",
+      "roles": "{authenticated}",
+      "tablename": "referral_codes",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "policyname": "users_read_own_referral_code",
+      "qual": "(user_id = auth.uid())",
+      "roles": "{authenticated}",
+      "tablename": "referral_codes",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "policyname": "admins_read_referral_rewards",
+      "qual": "is_active_admin()",
+      "roles": "{authenticated}",
+      "tablename": "referral_rewards",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "policyname": "users_read_own_referral_rewards",
+      "qual": "(user_id = ( SELECT auth.uid() AS uid))",
+      "roles": "{authenticated}",
+      "tablename": "referral_rewards",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "policyname": "admins_read_referrals",
+      "qual": "is_active_admin()",
+      "roles": "{authenticated}",
+      "tablename": "referrals",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "permissive": "PERMISSIVE",
+      "policyname": "users_read_own_referrals",
+      "qual": "((referrer_user_id = ( SELECT auth.uid() AS uid)) OR (referred_user_id = ( SELECT auth.uid() AS uid)))",
+      "roles": "{authenticated}",
+      "tablename": "referrals",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "policyname": "superadmin_subjects_manage",
+      "qual": "is_active_admin()",
+      "roles": "{authenticated}",
+      "tablename": "subjects",
+      "with_check": "is_active_admin()"
+    },
+    {
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "policyname": "superadmin_topics_manage",
+      "qual": "is_active_admin()",
+      "roles": "{authenticated}",
+      "tablename": "topics",
+      "with_check": "is_active_admin()"
+    },
+    {
+      "cmd": "ALL",
+      "permissive": "PERMISSIVE",
+      "policyname": "superadmin_units_manage",
+      "qual": "is_active_admin()",
+      "roles": "{authenticated}",
+      "tablename": "units",
+      "with_check": "is_active_admin()"
+    }
+  ],
+  "counts": [
+    {
+      "approximate_row_count": 172,
+      "table_name": "activity_logs"
+    },
+    {
+      "approximate_row_count": 28,
+      "table_name": "quiz_questions"
+    },
+    {
+      "approximate_row_count": 16,
+      "table_name": "quiz_events"
+    },
+    {
+      "approximate_row_count": 16,
+      "table_name": "notes"
+    },
+    {
+      "approximate_row_count": 9,
+      "table_name": "email_delivery_log"
+    },
+    {
+      "approximate_row_count": 9,
+      "table_name": "subjects"
+    },
+    {
+      "approximate_row_count": 9,
+      "table_name": "email_outbox"
+    },
+    {
+      "approximate_row_count": 7,
+      "table_name": "profiles"
+    },
+    {
+      "approximate_row_count": 7,
+      "table_name": "quiz_attempt_questions"
+    },
+    {
+      "approximate_row_count": 6,
+      "table_name": "kv_store_6704fe8f"
+    },
+    {
+      "approximate_row_count": 4,
+      "table_name": "access_permissions"
+    },
+    {
+      "approximate_row_count": 2,
+      "table_name": "admin_notices"
+    },
+    {
+      "approximate_row_count": 2,
+      "table_name": "bundles"
+    },
+    {
+      "approximate_row_count": 2,
+      "table_name": "payment_submissions"
+    },
+    {
+      "approximate_row_count": 1,
+      "table_name": "coupon_campaigns"
+    },
+    {
+      "approximate_row_count": 1,
+      "table_name": "admin_profiles"
+    },
+    {
+      "approximate_row_count": 1,
+      "table_name": "quiz_attempts"
+    },
+    {
+      "approximate_row_count": 1,
+      "table_name": "quiz_competitions"
+    },
+    {
+      "approximate_row_count": 0,
+      "table_name": "quiz_winners"
+    },
+    {
+      "approximate_row_count": 0,
+      "table_name": "legal_acceptances"
+    },
+    {
+      "approximate_row_count": 0,
+      "table_name": "units"
+    },
+    {
+      "approximate_row_count": 0,
+      "table_name": "topics"
+    },
+    {
+      "approximate_row_count": 0,
+      "table_name": "referral_codes"
+    },
+    {
+      "approximate_row_count": 0,
+      "table_name": "referrals"
+    },
+    {
+      "approximate_row_count": 0,
+      "table_name": "referral_rewards"
+    },
+    {
+      "approximate_row_count": 0,
+      "table_name": "coupon_redemptions"
+    },
+    {
+      "approximate_row_count": 0,
+      "table_name": "BCA users"
+    }
+  ]
+}
