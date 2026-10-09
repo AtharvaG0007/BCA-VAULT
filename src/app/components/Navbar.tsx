@@ -146,7 +146,7 @@ export function Navbar() {
         )}
 
         <button
-          className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl text-gray-700 hover:bg-gray-100 transition"
+          className="lg:hidden w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-gray-700 hover:bg-gray-100 transition"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle Menu"
         >
@@ -171,7 +171,7 @@ export function Navbar() {
 }
 
 function MobileLink({ to, icon, label, close }: { to: string; icon: React.ReactNode; label: string; close: () => void }) {
-  return <Link to={to} onClick={close} className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-gray-700 rounded-xl hover:bg-blue-50 hover:text-[#1E40AF] transition"><span className="text-slate-400">{icon}</span><span>{label}</span></Link>;
+  return <Link to={to} onClick={close} className="flex min-h-[44px] items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-gray-700 rounded-xl hover:bg-blue-50 hover:text-[#1E40AF] transition"><span className="text-slate-400">{icon}</span><span>{label}</span></Link>;
 }
 
 function BellIcon() { return <span className="inline-flex h-3.5 w-3.5 items-center justify-center text-[11px]" aria-hidden="true">🔔</span>; }

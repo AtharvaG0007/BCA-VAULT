@@ -59,6 +59,7 @@ function AppLayout() {
   const location = useLocation();
   const { hasAccepted } = useLegal();
   const hideNav = noNavRoutes.some((p) => location.pathname.startsWith(p));
+  const isAuthRoute = location.pathname.startsWith("/auth");
   const isQuizRoute = location.pathname.startsWith("/app/quiz");
   const isStudentRoute = location.pathname.startsWith("/app");
   const isPurchaseRoute = location.pathname.startsWith("/purchase");
@@ -124,7 +125,7 @@ function AppLayout() {
       </div>
       {!hideNav && <Footer />}
       {!isAdminRoute && !isQuizRoute && <WhatsAppFloatingButton />}
-      {!isAdminRoute && !isStudentRoute && <><PublicSupportChat />{!isPurchaseRoute && <ReferralFloatingPromo />}</>}
+      {!isAdminRoute && !isStudentRoute && !isAuthRoute && <><PublicSupportChat />{!isPurchaseRoute && <ReferralFloatingPromo />}</>}
       <Toaster />
     </div>
   );

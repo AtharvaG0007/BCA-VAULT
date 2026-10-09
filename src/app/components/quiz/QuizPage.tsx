@@ -457,29 +457,29 @@ function QuizContent() {
 
           {/* Mode Switcher Tabs */}
           {!active && (
-            <div className="inline-flex rounded-xl bg-slate-200/80 p-1 border border-slate-300/80 shadow-2xs">
+            <div className="flex flex-col sm:inline-flex sm:flex-row rounded-xl bg-slate-200/80 p-1 border border-slate-300/80 shadow-2xs w-full sm:w-auto gap-1 sm:gap-0">
               <button
                 type="button"
                 onClick={() => setMode('PRACTICE')}
-                className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-bold transition ${
+                className={`flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-xs font-bold transition min-h-[40px] ${
                   activeMode === 'PRACTICE'
                     ? 'bg-white text-[#1E40AF] shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                <Sparkles className="h-3.5 w-3.5 text-amber-500 shrink-0" />
                 <span>Practice Mode (Instant Feedback)</span>
               </button>
               <button
                 type="button"
                 onClick={() => setMode('COMPETITION')}
-                className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-bold transition ${
+                className={`flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-xs font-bold transition min-h-[40px] ${
                   activeMode === 'COMPETITION'
                     ? 'bg-white text-[#1E40AF] shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <Trophy className="h-3.5 w-3.5 text-amber-600" />
+                <Trophy className="h-3.5 w-3.5 text-amber-600 shrink-0" />
                 <span>Official Competition</span>
               </button>
             </div>
@@ -741,7 +741,7 @@ function QuizContent() {
                             onClick={() => handleCompetitionAnswer(question.id, option.id)}
                             className={`flex w-full items-center justify-between gap-4 rounded-xl border p-4 min-h-16 text-left transition focus-visible:outline-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed ${cardStyle}`}
                           >
-                            <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                               <span
                                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${
                                   isSelected ? 'bg-[#1E40AF] text-white' : 'bg-slate-100 text-slate-700'
@@ -749,7 +749,7 @@ function QuizContent() {
                               >
                                 {String.fromCharCode(65 + i)}
                               </span>
-                              <span className="text-sm sm:text-base leading-snug">{option.text}</span>
+                              <span className="text-sm sm:text-base leading-snug break-words">{option.text}</span>
                             </div>
 
                             {isSelected && (
@@ -1310,7 +1310,7 @@ function PracticeQuizView({
               aria-checked={isSelected}
               role="radio"
             >
-              <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                 <span
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-sm font-bold ${
                     isSelected && isCorrectAnswer
@@ -1324,7 +1324,7 @@ function PracticeQuizView({
                 >
                   {String.fromCharCode(65 + idx)}
                 </span>
-                <span className="text-sm sm:text-base leading-snug">{optText}</span>
+                <span className="text-sm sm:text-base leading-snug break-words">{optText}</span>
               </div>
 
               {badge}

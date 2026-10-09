@@ -218,7 +218,7 @@ export function StudentReferralView({
               <button
                 type="button"
                 onClick={handleCopy}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-3 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 transition"
+                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-3 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 transition"
               >
                 {copied ? <CheckCircle2 className="h-4 w-4 text-emerald-300" /> : <Copy className="h-4 w-4" />}
                 {copied ? "Copied ✓" : "Copy Identifier"}
@@ -337,7 +337,7 @@ export function StudentReferralView({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-5 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
           <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between">
             <div>
               <span className="text-[10px] font-black uppercase text-indigo-600 tracking-wider">Step 1</span>
@@ -428,6 +428,7 @@ export function StudentReferralView({
 
       {/* ── Reward Section (Semester 1 Most Repeated Questions) ────────────────── */}
       <section
+        id="referral-rewards"
         className={`rounded-3xl border p-6 sm:p-8 transition-all ${
           isRewardUnlocked
             ? "border-amber-300 bg-gradient-to-br from-amber-50/60 via-white to-amber-50/30 shadow-md"
@@ -509,7 +510,7 @@ export function StudentReferralView({
                     <button
                       onClick={() => onOpenNote(note)}
                       disabled={openingId === note.id}
-                      className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 px-3 py-2 text-xs font-extrabold transition shadow-xs disabled:bg-slate-200 cursor-pointer"
+                      className="w-full inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 px-3 py-2.5 text-xs font-extrabold transition shadow-xs disabled:bg-slate-200 cursor-pointer"
                     >
                       {openingId === note.id ? (
                         <>
@@ -565,8 +566,8 @@ export function StudentReferralView({
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          <div className="overflow-x-auto touch-scroll">
+            <table className="w-full min-w-[500px] text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-100 text-slate-400 uppercase tracking-wider font-semibold text-[10px]">
                   <th className="pb-3 pl-2">Referral Entry</th>

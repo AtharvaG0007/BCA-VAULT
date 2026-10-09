@@ -18,6 +18,7 @@ import {
   Loader2,
   LogOut,
   Mail,
+  Menu,
   MoreVertical,
   Package,
   Plus,
@@ -387,7 +388,7 @@ function AdminNoticeBoard() {
       {!loading && notices.length > 0 && (
         <div className="rounded-2xl border border-slate-800 bg-slate-950 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-xs">
+            <table className="w-full min-w-[640px] text-xs">
               <thead>
                 <tr className="border-b border-slate-800 text-left">
                   <th className="px-4 py-3 text-slate-400 font-bold">Title</th>
@@ -487,6 +488,25 @@ export function SuperAdminDashboard() {
   const [modal, setModal] = useState<any>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionMenuStudentId, setActionMenuStudentId] = useState<string | null>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileNavOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [mobileNavOpen]);
 
   useEffect(() => {
     if (!actionMenuStudentId) return;
@@ -750,7 +770,131 @@ export function SuperAdminDashboard() {
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col lg:flex-row">
       {/* Sidebar */}
-      <aside className="w-full lg:w-64 bg-slate-950 border-b lg:border-b-0 lg:border-r border-slate-800 p-5 flex flex-col justify-between shrink-0">
+      {/* Mobile Top Header */}
+      <header className="lg:hidden sticky top-0 z-40 bg-slate-950 border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setMobileNavOpen(true)}
+            className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-200 hover:text-white transition cursor-pointer"
+            aria-label="Open Admin Navigation Menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="grid h-8 w-8 place-items-center rounded-lg bg-indigo-600 text-white font-black text-xs shadow-md shadow-indigo-600/30">
+              BV
+            </div>
+            <div>
+              <p className="font-black text-xs tracking-tight text-white leading-none">BCA VAULT</p>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-indigo-400 mt-0.5">Admin</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-slate-800 px-2.5 py-1 text-[11px] font-bold text-indigo-300 border border-slate-700">
+            {currentTabObj.label}
+          </span>
+          <button
+            onClick={() => void loadData()}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:text-white transition"
+            title="Refresh"
+            aria-label="Refresh data"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+          </button>
+        </div>
+      </header>
+
+      {/* Mobile Drawer Overlay and Drawer */}
+      {mobileNavOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          <div
+            className="fixed inset-0 bg-black/70 backdrop-blur-xs transition-opacity"
+            onClick={() => setMobileNavOpen(false)}
+            aria-hidden="true"
+          />
+          <aside
+            role="dialog"
+            aria-modal="true"
+            aria-label="Admin Navigation Drawer"
+            className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-slate-950 border-r border-slate-800 p-5 flex flex-col justify-between overflow-y-auto shadow-2xl z-50"
+          >
+            <div>
+              <div className="flex items-center justify-between pb-4 border-b border-slate-800/80 mb-5">
+                <div className="flex items-center gap-2.5">
+                  <div className="grid h-8 w-8 place-items-center rounded-xl bg-indigo-600 text-white font-black text-xs shadow-md shadow-indigo-600/30">
+                    BV
+                  </div>
+                  <div>
+                    <h2 className="font-black text-sm tracking-tight text-white">BCA VAULT</h2>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-indigo-400">Super Admin</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileNavOpen(false)}
+                  className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-slate-900 transition"
+                  aria-label="Close Navigation Drawer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <nav className="space-y-4">
+                {["DASHBOARD", "STUDENTS", "PAYMENTS", "REFERRALS", "NOTICES", "CONTENT", "SYSTEM"].map((groupName) => {
+                  const groupPages = PAGES.filter((p) => p.group === groupName);
+                  if (!groupPages.length) return null;
+                  return (
+                    <div key={groupName} className="space-y-1">
+                      <p className="px-3.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                        {groupName}
+                      </p>
+                      {groupPages.map((page) => {
+                        const Icon = page.icon;
+                        const isActive = activeTab === page.key;
+                        return (
+                          <Link
+                            key={page.key}
+                            to={`/admin/${page.key}`}
+                            onClick={() => setMobileNavOpen(false)}
+                            className={`flex min-h-[44px] items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition ${
+                              isActive
+                                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
+                                : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                            }`}
+                          >
+                            <Icon className="h-4 w-4 shrink-0" />
+                            <span>{page.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </nav>
+            </div>
+
+            <div className="mt-8 pt-4 border-t border-slate-800/80 px-2">
+              <div className="mb-3">
+                <p className="text-[11px] font-semibold text-slate-400 truncate">{appUser?.email}</p>
+                <p className="text-[10px] text-emerald-400 font-bold">● Active Session</p>
+              </div>
+              <button
+                onClick={() => { setMobileNavOpen(false); void logout(); }}
+                className="flex min-h-[44px] items-center gap-2 w-full px-3 py-2.5 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 transition"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* Desktop Persistent Sidebar */}
+      <aside className="hidden lg:flex lg:w-64 bg-slate-950 border-r border-slate-800 p-5 flex-col justify-between shrink-0">
         <div>
           <div className="flex items-center gap-3 px-2 py-3 border-b border-slate-800/80 mb-6">
             <div className="grid h-9 w-9 place-items-center rounded-xl bg-indigo-600 text-white font-black shadow-lg shadow-indigo-600/30">
@@ -903,7 +1047,7 @@ export function SuperAdminDashboard() {
                     <p className="py-8 text-center text-xs text-slate-500">No payment submissions recorded yet.</p>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs">
+                      <table className="w-full min-w-[640px] text-left text-xs">
                         <thead>
                           <tr className="border-b border-slate-800 text-slate-400 font-semibold">
                             <th className="pb-3">Student</th>
@@ -984,7 +1128,7 @@ export function SuperAdminDashboard() {
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs">
+                      <table className="w-full min-w-[640px] text-left text-xs">
                         <thead>
                           <tr className="border-b border-slate-800 text-slate-400 font-semibold">
                             <th className="pb-3">Student Name</th>
@@ -1138,7 +1282,7 @@ export function SuperAdminDashboard() {
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs">
+                      <table className="w-full min-w-[640px] text-left text-xs">
                         <thead>
                           <tr className="border-b border-slate-800 text-slate-400 font-semibold">
                             <th className="pb-3">Referrer</th>
@@ -1203,7 +1347,7 @@ export function SuperAdminDashboard() {
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs">
+                      <table className="w-full min-w-[640px] text-left text-xs">
                         <thead>
                           <tr className="border-b border-slate-800 text-slate-400 font-semibold">
                             <th className="pb-3">Student</th>
@@ -1290,7 +1434,7 @@ export function SuperAdminDashboard() {
                     <div className="py-12 text-center text-xs text-slate-500">No registered students found.</div>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs">
+                      <table className="w-full min-w-[640px] text-left text-xs">
                         <thead>
                           <tr className="border-b border-slate-800 text-slate-400 font-semibold tracking-wide">
                             <th className="pb-3 pr-4">STUDENT</th>
@@ -1512,7 +1656,7 @@ export function SuperAdminDashboard() {
                     <div className="py-12 text-center text-xs text-slate-500">No active access records found.</div>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs">
+                      <table className="w-full min-w-[640px] text-left text-xs">
                         <thead>
                           <tr className="border-b border-slate-800 text-slate-400 font-semibold">
                             <th className="pb-3">Student Name</th>
@@ -1579,7 +1723,7 @@ export function SuperAdminDashboard() {
                     <div className="py-12 text-center text-xs text-slate-500">No notes found in Supabase.</div>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs">
+                      <table className="w-full min-w-[640px] text-left text-xs">
                         <thead>
                           <tr className="border-b border-slate-800 text-slate-400 font-semibold">
                             <th className="pb-3">Title</th>
@@ -1690,7 +1834,7 @@ export function SuperAdminDashboard() {
                   <div className="py-12 text-center text-xs text-slate-500">No activity logs recorded.</div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
+                    <table className="w-full min-w-[640px] text-left text-xs">
                       <thead>
                         <tr className="border-b border-slate-800 text-slate-400 font-semibold">
                           <th className="pb-3">Action</th>

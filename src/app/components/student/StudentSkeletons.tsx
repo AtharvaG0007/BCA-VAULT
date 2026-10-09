@@ -66,7 +66,7 @@ export function StudentDashboardSkeleton() {
           <StudentSkeleton className="h-7 w-44 rounded-xl bg-amber-100/70" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
@@ -123,7 +123,7 @@ export function StudentDashboardSkeleton() {
         </div>
 
         {/* 6 Notes Cards Skeleton */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 pt-2">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 pt-2">
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
@@ -268,9 +268,9 @@ export function StudentShellSkeleton({ pathname = "" }: { pathname?: string }) {
   const isReferral = pathname.includes("referral");
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col lg:flex-row w-full max-w-full overflow-x-hidden">
       {/* Desktop Navigation Sidebar Skeleton */}
-      <aside className="hidden md:flex w-64 bg-white border-r border-slate-200 p-6 flex-col justify-between shrink-0 shadow-2xs">
+      <aside className="hidden lg:flex w-64 bg-white border-r border-slate-200 p-6 flex-col justify-between shrink-0 shadow-2xs">
         <div>
           {/* Brand Header */}
           <div className="flex items-center gap-3 pb-6 border-b border-slate-100 mb-6">
@@ -322,7 +322,7 @@ export function StudentShellSkeleton({ pathname = "" }: { pathname?: string }) {
       </aside>
 
       {/* Mobile Navigation Header */}
-      <div className="md:hidden border-b border-slate-200 bg-white sticky top-0 z-30 px-4 py-3 shadow-2xs">
+      <div className="lg:hidden border-b border-slate-200 bg-white sticky top-0 z-30 px-4 py-3 shadow-2xs">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="grid h-8 w-8 place-items-center rounded-xl bg-indigo-600 text-white font-black text-xs">

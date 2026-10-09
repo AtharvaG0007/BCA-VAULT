@@ -39,7 +39,7 @@ import { StudentLearningView } from "../student/StudentLearningView";
 import { StudentProfileView } from "../student/StudentProfileView";
 import { StudentReferralView } from "../student/StudentReferralView";
 import { StudentNoticeBoard } from "../student/StudentNoticeBoard";
-import { Bell, Gift, Trophy } from "lucide-react";
+import { Bell, Gift, Trophy, Award } from "lucide-react";
 
 interface AccessItem {
   id: string;
@@ -318,6 +318,28 @@ export function StudentDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Prevent background scroll when mobile drawer is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalStyle;
+      };
+    }
+  }, [mobileMenuOpen]);
+
+  // Close drawer on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mobileMenuOpen]);
+
   const [access, setAccess] = useState<AccessItem[]>([]);
   const [latestPayment, setLatestPayment] = useState<PaymentRecord | null>(null);
   const [notes, setNotes] = useState<NoteItem[]>([]);
@@ -347,6 +369,7 @@ export function StudentDashboard() {
     else if (pathSegment === "notices") setActiveTab("notices");
     else if (pathSegment === "referral") setActiveTab("referral");
     else setActiveTab("dashboard");
+    setMobileMenuOpen(false);
   }, [location.pathname]);
 
   const switchTab = (tab: TabType) => {
@@ -449,9 +472,9 @@ export function StudentDashboard() {
   const isNoPurchase = !hasActiveBundle && !isPaymentPending;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col md:flex-row">
-      {/* ── Desktop Navigation Sidebar ──────────────────────────────── */}
-      <aside className="hidden md:flex w-64 bg-white border-r border-slate-200 p-6 flex-col justify-between shrink-0 shadow-2xs">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col lg:flex-row w-full max-w-full overflow-x-hidden">
+      {/* ── Desktop Navigation Sidebar (lg and up) ──────────────────── */}
+      <aside className="hidden lg:flex w-64 bg-white border-r border-slate-200 p-6 flex-col justify-between shrink-0 shadow-2xs">
         <div>
           {/* Brand Header */}
           <div className="flex items-center gap-3 pb-6 border-b border-slate-100 mb-6">
@@ -469,7 +492,10 @@ export function StudentDashboard() {
           </div>
 
           {/* Navigation Links */}
-          <nav className="space-y-1.5">
+          <nav className="space-y-1">
+            <div className="px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+              Core Hub
+            </div>
             <button
               onClick={() => switchTab("dashboard")}
               className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold transition text-left ${
@@ -483,6 +509,74 @@ export function StudentDashboard() {
             </button>
 
             <button
+              onClick={() => {
+                switchTab("dashboard");
+                setTimeout(() => {
+                  document.getElementById("study-materials")?.scrollIntoView({ behavior: "smooth" });
+                }, 100);
+              }}
+              className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition text-left"
+            >
+              <BookOpen className="h-4 w-4 shrink-0 text-indigo-600" />
+              <span>Study Materials & Notes</span>
+            </button>
+
+            <button
+              onClick={() => {
+                switchTab("dashboard");
+                setTimeout(() => {
+                  document.getElementById("exam-roadmaps")?.scrollIntoView({ behavior: "smooth" });
+                }, 100);
+              }}
+              className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition text-left"
+            >
+              <Compass className="h-4 w-4 shrink-0 text-emerald-600" />
+              <span>Exam Roadmaps</span>
+            </button>
+
+            <button
+              onClick={() => {
+                switchTab("dashboard");
+                setNoteCategory("repeated");
+                setTimeout(() => {
+                  document.getElementById("study-materials")?.scrollIntoView({ behavior: "smooth" });
+                }, 100);
+              }}
+              className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition text-left"
+            >
+              <Flame className="h-4 w-4 shrink-0 text-amber-500" />
+              <span>Most Repeated Topics</span>
+            </button>
+
+            <button
+              onClick={() => {
+                switchTab("dashboard");
+                setTimeout(() => {
+                  document.getElementById("exam-answer-guide")?.scrollIntoView({ behavior: "smooth" });
+                }, 100);
+              }}
+              className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition text-left"
+            >
+              <PenLine className="h-4 w-4 shrink-0 text-indigo-600" />
+              <span>Answer Writing Guide</span>
+            </button>
+
+            <div className="pt-2 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+              Practice & Challenges
+            </div>
+
+            <button
+              onClick={() => navigate('/app/quiz')}
+              className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 hover:bg-blue-50 hover:text-[#1E40AF] transition text-left"
+            >
+              <Trophy className="h-4 w-4 shrink-0 text-amber-500" />
+              <span>Quiz Competition</span>
+              <span className="ml-auto text-[10px] font-extrabold bg-blue-100 text-[#1E40AF] px-1.5 py-0.5 rounded-full">
+                ₹299
+              </span>
+            </button>
+
+            <button
               onClick={() => switchTab("ai")}
               className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold transition text-left ${
                 activeTab === "ai"
@@ -492,19 +586,14 @@ export function StudentDashboard() {
             >
               <Sparkles className="h-4 w-4 shrink-0 text-amber-500" />
               <span>AI Learning Assistant</span>
+              <span className="ml-auto text-[9px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-md">
+                Beta
+              </span>
             </button>
 
-            <button
-              onClick={() => switchTab("profile")}
-              className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold transition text-left ${
-                activeTab === "profile"
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              }`}
-            >
-              <User className="h-4 w-4 shrink-0" />
-              <span>My Profile</span>
-            </button>
+            <div className="pt-2 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+              Community & Rewards
+            </div>
 
             <button
               onClick={() => switchTab("notices")}
@@ -531,14 +620,32 @@ export function StudentDashboard() {
             </button>
 
             <button
-              onClick={() => navigate('/app/quiz')}
-              className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 hover:bg-blue-50 hover:text-[#1E40AF] transition text-left"
+              onClick={() => {
+                switchTab("referral");
+                setTimeout(() => {
+                  document.getElementById("referral-rewards")?.scrollIntoView({ behavior: "smooth" });
+                }, 100);
+              }}
+              className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition text-left"
             >
-              <Trophy className="h-4 w-4 shrink-0 text-amber-500" />
-              <span>Quiz Competition</span>
-              <span className="ml-auto text-[10px] font-extrabold bg-blue-100 text-[#1E40AF] px-1.5 py-0.5 rounded-full">
-                ₹299
-              </span>
+              <Award className="h-4 w-4 shrink-0 text-purple-500" />
+              <span>Bonus Questions</span>
+            </button>
+
+            <div className="pt-2 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+              Account
+            </div>
+
+            <button
+              onClick={() => switchTab("profile")}
+              className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold transition text-left ${
+                activeTab === "profile"
+                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+              }`}
+            >
+              <User className="h-4 w-4 shrink-0" />
+              <span>My Profile</span>
             </button>
           </nav>
         </div>
@@ -547,11 +654,11 @@ export function StudentDashboard() {
         <div className="pt-6 border-t border-slate-100">
           <div className="mb-3 px-2">
             <p className="text-xs font-bold text-slate-800 truncate">{studentName}</p>
-            <p className="text-[11px] text-slate-400">Semester {studentSemester}</p>
+            <p className="text-[11px] text-slate-400">Semester {studentSemester} · BCA</p>
           </div>
           <button
             onClick={() => void logout()}
-            className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition"
+            className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition cursor-pointer"
           >
             <LogOut className="h-4 w-4" />
             <span>Sign Out</span>
@@ -559,110 +666,299 @@ export function StudentDashboard() {
         </div>
       </aside>
 
-      {/* ── Mobile Navigation Header ────────────────────────────────── */}
-      <div className="md:hidden border-b border-slate-200 bg-white sticky top-0 z-30 px-4 py-3 shadow-2xs">
+      {/* ── Mobile Navigation Header (Compact, Accessible, < lg) ─────── */}
+      <header className="lg:hidden border-b border-slate-200 bg-white/95 backdrop-blur-md sticky top-0 z-30 px-3.5 sm:px-4 py-2.5 shadow-2xs">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="grid h-8 w-8 place-items-center rounded-xl bg-indigo-600 text-white font-black text-xs">
-              BV
-            </div>
-            <div>
-              <span className="font-black text-xs text-slate-900">BCA VAULT</span>
-              <span className="block text-[10px] text-indigo-600 font-bold uppercase tracking-wider">
-                Student Portal
-              </span>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="h-10 w-10 min-w-[40px] flex items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 active:bg-slate-100 transition focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+              aria-label="Open navigation menu"
+              aria-expanded={mobileMenuOpen}
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="grid h-8 w-8 place-items-center rounded-xl bg-indigo-600 text-white font-black text-xs shadow-xs shrink-0">
+                BV
+              </div>
+              <div className="leading-tight min-w-0">
+                <span className="font-black text-xs sm:text-sm text-slate-900 tracking-tight block truncate">
+                  BCA VAULT
+                </span>
+                <span className="block text-[9px] sm:text-[10px] text-indigo-600 font-bold uppercase tracking-wider">
+                  Student Portal
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="rounded-xl border border-slate-200 p-2 text-slate-600 hover:bg-slate-50"
-              aria-label="Toggle menu"
+              onClick={() => switchTab("notices")}
+              className={`h-10 w-10 flex items-center justify-center rounded-xl border transition relative cursor-pointer ${
+                activeTab === "notices"
+                  ? "bg-indigo-50 border-indigo-200 text-indigo-700"
+                  : "border-slate-200 text-slate-600 hover:bg-slate-50"
+              }`}
+              aria-label="Notice Board"
+              title="Notice Board"
             >
-              {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              <Bell className="h-4 w-4" />
+              <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-indigo-600" />
+            </button>
+
+            <button
+              onClick={() => switchTab("profile")}
+              className={`h-10 w-10 flex items-center justify-center rounded-xl font-black text-xs shadow-xs transition cursor-pointer ${
+                activeTab === "profile"
+                  ? "bg-indigo-600 text-white ring-2 ring-indigo-400"
+                  : "bg-slate-900 text-white hover:bg-slate-800"
+              }`}
+              aria-label="My Profile"
+              title={studentName}
+            >
+              {studentName[0]?.toUpperCase() || "S"}
             </button>
           </div>
         </div>
+      </header>
 
-        {/* Mobile Dropdown Menu */}
-        {mobileMenuOpen && (
-          <nav className="mt-3 pt-3 border-t border-slate-100 space-y-1">
-            <button
-              onClick={() => switchTab("dashboard")}
-              className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-xs font-bold transition text-left ${
-                activeTab === "dashboard"
-                  ? "bg-indigo-600 text-white"
-                  : "text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              <LayoutDashboard className="h-4 w-4" />
-              <span>Dashboard</span>
-            </button>
-            <button
-              onClick={() => switchTab("ai")}
-              className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-xs font-bold transition text-left ${
-                activeTab === "ai"
-                  ? "bg-indigo-600 text-white"
-                  : "text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              <Sparkles className="h-4 w-4 text-amber-500" />
-              <span>AI Learning Assistant</span>
-            </button>
-            <button
-              onClick={() => switchTab("profile")}
-              className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-xs font-bold transition text-left ${
-                activeTab === "profile"
-                  ? "bg-indigo-600 text-white"
-                  : "text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              <User className="h-4 w-4" />
-              <span>My Profile</span>
-            </button>
-            <button
-              onClick={() => switchTab("notices")}
-              className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-xs font-bold transition text-left ${
-                activeTab === "notices"
-                  ? "bg-indigo-600 text-white"
-                  : "text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              <Bell className="h-4 w-4 text-amber-500" />
-              <span>Notice Board</span>
-            </button>
-            <button
-              onClick={() => switchTab("referral")}
-              className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-xs font-bold transition text-left ${
-                activeTab === "referral"
-                  ? "bg-indigo-600 text-white"
-                  : "text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              <Gift className="h-4 w-4 text-emerald-500" />
-              <span>Referral Program</span>
-            </button>
-            <button
-              onClick={() => { setMobileMenuOpen(false); navigate('/app/quiz'); }}
-              className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-[#1E40AF] transition text-left"
-            >
-              <Trophy className="h-4 w-4 text-amber-500" />
-              <span>Quiz Competition</span>
-              <span className="ml-auto text-[10px] font-extrabold bg-blue-100 text-[#1E40AF] px-1.5 py-0.5 rounded-full">
-                ₹299
+      {/* ── Mobile Navigation Drawer Backdrop & Slide-out Panel ──────── */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-50 lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation drawer"
+        >
+          {/* Subtle backdrop overlay */}
+          <div
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity duration-200"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+
+          {/* Slide-out drawer panel */}
+          <div className="fixed inset-y-0 left-0 w-[min(310px,85vw)] bg-white shadow-2xl flex flex-col z-50 animate-in slide-in-from-left duration-200">
+            {/* Drawer Header */}
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="grid h-9 w-9 place-items-center rounded-xl bg-indigo-600 text-white font-black text-xs shadow-xs">
+                  BV
+                </div>
+                <div>
+                  <span className="font-black text-sm text-slate-900 tracking-tight">
+                    BCA VAULT
+                  </span>
+                  <span className="block text-[10px] text-indigo-600 font-bold uppercase tracking-wider">
+                    Student Portal
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="h-10 w-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                aria-label="Close navigation menu"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Student Profile Card */}
+            <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
+              <div className="min-w-0 pr-2">
+                <p className="text-xs font-bold text-slate-900 truncate">{studentName}</p>
+                <p className="text-[11px] text-slate-500 font-medium">Semester {studentSemester} · BCA</p>
+              </div>
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                  hasActiveBundle ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                }`}
+              >
+                {hasActiveBundle ? "● Active" : "○ Inactive"}
               </span>
-            </button>
-            <button
-              onClick={() => void logout()}
-              className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 transition"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Sign Out</span>
-            </button>
-          </nav>
-        )}
-      </div>
+            </div>
+
+            {/* Drawer Nav Items */}
+            <nav className="flex-1 overflow-y-auto p-3 space-y-1 touch-scroll">
+              <div className="px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                Core Hub
+              </div>
+
+              <button
+                onClick={() => switchTab("dashboard")}
+                className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-left min-h-[44px] cursor-pointer ${
+                  activeTab === "dashboard"
+                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
+                    : "text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <LayoutDashboard className="h-4 w-4 shrink-0" />
+                <span>Dashboard</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  switchTab("dashboard");
+                  setTimeout(() => {
+                    document.getElementById("study-materials")?.scrollIntoView({ behavior: "smooth" });
+                  }, 120);
+                }}
+                className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 transition text-left min-h-[44px] cursor-pointer"
+              >
+                <BookOpen className="h-4 w-4 shrink-0 text-indigo-600" />
+                <span>Study Materials & Notes</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  switchTab("dashboard");
+                  setTimeout(() => {
+                    document.getElementById("exam-roadmaps")?.scrollIntoView({ behavior: "smooth" });
+                  }, 120);
+                }}
+                className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 transition text-left min-h-[44px] cursor-pointer"
+              >
+                <Compass className="h-4 w-4 shrink-0 text-emerald-600" />
+                <span>Exam Roadmaps</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  switchTab("dashboard");
+                  setNoteCategory("repeated");
+                  setTimeout(() => {
+                    document.getElementById("study-materials")?.scrollIntoView({ behavior: "smooth" });
+                  }, 120);
+                }}
+                className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 transition text-left min-h-[44px] cursor-pointer"
+              >
+                <Flame className="h-4 w-4 shrink-0 text-amber-500" />
+                <span>Most Repeated Topics</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  switchTab("dashboard");
+                  setTimeout(() => {
+                    document.getElementById("exam-answer-guide")?.scrollIntoView({ behavior: "smooth" });
+                  }, 120);
+                }}
+                className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 transition text-left min-h-[44px] cursor-pointer"
+              >
+                <PenLine className="h-4 w-4 shrink-0 text-indigo-600" />
+                <span>Answer Writing Guide</span>
+              </button>
+
+              <div className="pt-2 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                Practice & Challenges
+              </div>
+
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  navigate("/app/quiz");
+                }}
+                className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-[#1E40AF] transition text-left min-h-[44px] cursor-pointer"
+              >
+                <Trophy className="h-4 w-4 shrink-0 text-amber-500" />
+                <span>Quiz Competition</span>
+                <span className="ml-auto text-[10px] font-extrabold bg-blue-100 text-[#1E40AF] px-1.5 py-0.5 rounded-full">
+                  ₹299
+                </span>
+              </button>
+
+              <button
+                onClick={() => switchTab("ai")}
+                className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-left min-h-[44px] cursor-pointer ${
+                  activeTab === "ai"
+                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
+                    : "text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <Sparkles className="h-4 w-4 shrink-0 text-amber-500" />
+                <span>AI Learning Assistant</span>
+                <span className="ml-auto text-[9px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-md">
+                  Beta
+                </span>
+              </button>
+
+              <div className="pt-2 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                Community & Updates
+              </div>
+
+              <button
+                onClick={() => switchTab("notices")}
+                className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-left min-h-[44px] cursor-pointer ${
+                  activeTab === "notices"
+                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
+                    : "text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <Bell className="h-4 w-4 shrink-0 text-amber-500" />
+                <span>Notice Board</span>
+              </button>
+
+              <button
+                onClick={() => switchTab("referral")}
+                className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-left min-h-[44px] cursor-pointer ${
+                  activeTab === "referral"
+                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
+                    : "text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <Gift className="h-4 w-4 shrink-0 text-emerald-500" />
+                <span>Referral Program</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  switchTab("referral");
+                  setTimeout(() => {
+                    document.getElementById("referral-rewards")?.scrollIntoView({ behavior: "smooth" });
+                  }, 120);
+                }}
+                className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 transition text-left min-h-[44px] cursor-pointer"
+              >
+                <Award className="h-4 w-4 shrink-0 text-purple-500" />
+                <span>Bonus Questions (Rewards)</span>
+              </button>
+
+              <div className="pt-2 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                Account
+              </div>
+
+              <button
+                onClick={() => switchTab("profile")}
+                className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-left min-h-[44px] cursor-pointer ${
+                  activeTab === "profile"
+                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
+                    : "text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <User className="h-4 w-4 shrink-0" />
+                <span>My Profile</span>
+              </button>
+            </nav>
+
+            {/* Drawer Footer */}
+            <div className="p-3 border-t border-slate-100">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  void logout();
+                }}
+                className="flex items-center justify-center gap-2.5 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 transition min-h-[44px] cursor-pointer"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Main View Container ─────────────────────────────────────── */}
       <main className="flex-1 min-w-0 bg-slate-50 flex flex-col">
@@ -1148,7 +1444,7 @@ export function StudentDashboard() {
                     </div>
 
                     {loading ? (
-                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 pt-2">
+                      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 pt-2">
                         {Array.from({ length: 6 }).map((_, i) => (
                           <div
                             key={i}
@@ -1181,7 +1477,7 @@ export function StudentDashboard() {
                         </p>
                       </div>
                     ) : (
-                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                         {filteredNotes.map((note) => {
                           const isTopic = isMostRepeatedTopic(note);
                           return (
@@ -1240,7 +1536,7 @@ export function StudentDashboard() {
                                   <button
                                     onClick={() => void openNote(note)}
                                     disabled={openingId === note.id}
-                                    className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white transition cursor-pointer ${
+                                    className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white transition cursor-pointer min-h-[44px] ${
                                       isTopic
                                         ? "bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold"
                                         : "bg-indigo-600 hover:bg-indigo-700"
@@ -1349,7 +1645,7 @@ export function StudentDashboard() {
                     </div>
 
                     {/* 3 Roadmap Cards Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {loading && !notes.some(isExamRoadmap) ? (
                         Array.from({ length: 3 }).map((_, i) => (
                           <div
@@ -1592,7 +1888,7 @@ export function StudentDashboard() {
                     </div>
 
                     {/* 3 Subject Cards Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {loading && mostRepeatedTopicNotes.length === 0 ? (
                         Array.from({ length: 3 }).map((_, i) => (
                           <div
@@ -1649,7 +1945,7 @@ export function StudentDashboard() {
                                 <button
                                   onClick={() => void openNote(note)}
                                   disabled={openingId === note.id}
-                                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 px-4 py-2.5 text-xs font-black transition shadow-xs disabled:bg-slate-200 uppercase tracking-wider cursor-pointer"
+                                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 px-4 py-2.5 text-xs font-black transition shadow-xs disabled:bg-slate-200 uppercase tracking-wider cursor-pointer min-h-[44px]"
                                 >
                                   {openingId === note.id ? (
                                     <>
