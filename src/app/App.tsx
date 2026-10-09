@@ -17,26 +17,51 @@ import { AdminSystemDeletionNav } from "./components/admin/AdminSystemDeletionNa
 
 import { Toaster } from "./components/ui/sonner";
 
-const QuizPage = lazy(() => import("./components/quiz/QuizPage").then(m => ({default:m.QuizPage})));
-const HomePage = lazy(() => import("./components/pages/HomePage").then((m) => ({ default: m.HomePage })));
-const NotesPage = lazy(() => import("./components/pages/NotesPage").then((m) => ({ default: m.NotesPage })));
-const PYQPage = lazy(() => import("./components/pages/PYQPage").then((m) => ({ default: m.PYQPage })));
-const BundlesPage = lazy(() => import("./components/pages/BundlesPage").then((m) => ({ default: m.BundlesPage })));
-const PricingPage = lazy(() => import("./components/pages/PricingPage").then((m) => ({ default: m.PricingPage })));
-const ReferralPage = lazy(() => import("./components/pages/ReferralPage").then((m) => ({ default: m.ReferralPage })));
-const LoginPage = lazy(() => import("./components/pages/LoginPage").then((m) => ({ default: m.LoginPage })));
-const SuperAdminDashboard = lazy(() => import("./components/dashboards/SuperAdminDashboard").then((m) => ({ default: m.SuperAdminDashboard })));
-const AdminUserDeletionPage = lazy(() => import("./components/pages/AdminUserDeletionPage").then((m) => ({ default: m.AdminUserDeletionPage })));
-const AdminNoticeBoardPage = lazy(() => import("./components/pages/AdminNoticeBoardPage").then((m) => ({ default: m.AdminNoticeBoardPage })));
-const StudentNoticeBoardPage = lazy(() => import("./components/pages/StudentNoticeBoardPage").then((m) => ({ default: m.StudentNoticeBoardPage })));
-const StudentDashboard = lazy(() => import("./components/dashboards/StudentDashboard").then((m) => ({ default: m.StudentDashboard })));
-const TermsPage = lazy(() => import("./components/pages/TermsPage").then((m) => ({ default: m.TermsPage })));
-const PrivacyPage = lazy(() => import("./components/pages/PrivacyPage").then((m) => ({ default: m.PrivacyPage })));
-const LegalConsentPage = lazy(() => import("./components/pages/LegalConsentPage").then((m) => ({ default: m.LegalConsentPage })));
-const SuccessPage = lazy(() => import("./components/pages/SuccessPage").then((m) => ({ default: m.SuccessPage })));
-const PaymentPage = lazy(() => import("./components/pages/PaymentPage").then((m) => ({ default: m.PaymentPage })));
-const AdminLoginPage = lazy(() => import("./components/pages/AdminLoginPage").then((m) => ({ default: m.AdminLoginPage })));
-const AdminEmailPage = lazy(() => import("./components/pages/AdminEmailPage").then((m) => ({ default: m.AdminEmailPage })));
+function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ default: T }>) {
+  return lazy(async () => {
+    try {
+      return await factory();
+    } catch (err: any) {
+      const msg = String(err?.message || "");
+      if (
+        msg.includes("Failed to fetch dynamically imported module") ||
+        msg.includes("Importing a module script failed") ||
+        msg.includes("error loading dynamically imported module") ||
+        msg.includes("Expected a JavaScript-or-Wasm module script")
+      ) {
+        const key = "bca_lazy_chunk_reload";
+        const last = sessionStorage.getItem(key);
+        const now = Date.now();
+        if (!last || now - parseInt(last, 10) > 10000) {
+          sessionStorage.setItem(key, now.toString());
+          window.location.reload();
+        }
+      }
+      throw err;
+    }
+  });
+}
+
+const QuizPage = safeLazy(() => import("./components/quiz/QuizPage").then(m => ({default:m.QuizPage})));
+const HomePage = safeLazy(() => import("./components/pages/HomePage").then((m) => ({ default: m.HomePage })));
+const NotesPage = safeLazy(() => import("./components/pages/NotesPage").then((m) => ({ default: m.NotesPage })));
+const PYQPage = safeLazy(() => import("./components/pages/PYQPage").then((m) => ({ default: m.PYQPage })));
+const BundlesPage = safeLazy(() => import("./components/pages/BundlesPage").then((m) => ({ default: m.BundlesPage })));
+const PricingPage = safeLazy(() => import("./components/pages/PricingPage").then((m) => ({ default: m.PricingPage })));
+const ReferralPage = safeLazy(() => import("./components/pages/ReferralPage").then((m) => ({ default: m.ReferralPage })));
+const LoginPage = safeLazy(() => import("./components/pages/LoginPage").then((m) => ({ default: m.LoginPage })));
+const SuperAdminDashboard = safeLazy(() => import("./components/dashboards/SuperAdminDashboard").then((m) => ({ default: m.SuperAdminDashboard })));
+const AdminUserDeletionPage = safeLazy(() => import("./components/pages/AdminUserDeletionPage").then((m) => ({ default: m.AdminUserDeletionPage })));
+const AdminNoticeBoardPage = safeLazy(() => import("./components/pages/AdminNoticeBoardPage").then((m) => ({ default: m.AdminNoticeBoardPage })));
+const StudentNoticeBoardPage = safeLazy(() => import("./components/pages/StudentNoticeBoardPage").then((m) => ({ default: m.StudentNoticeBoardPage })));
+const StudentDashboard = safeLazy(() => import("./components/dashboards/StudentDashboard").then((m) => ({ default: m.StudentDashboard })));
+const TermsPage = safeLazy(() => import("./components/pages/TermsPage").then((m) => ({ default: m.TermsPage })));
+const PrivacyPage = safeLazy(() => import("./components/pages/PrivacyPage").then((m) => ({ default: m.PrivacyPage })));
+const LegalConsentPage = safeLazy(() => import("./components/pages/LegalConsentPage").then((m) => ({ default: m.LegalConsentPage })));
+const SuccessPage = safeLazy(() => import("./components/pages/SuccessPage").then((m) => ({ default: m.SuccessPage })));
+const PaymentPage = safeLazy(() => import("./components/pages/PaymentPage").then((m) => ({ default: m.PaymentPage })));
+const AdminLoginPage = safeLazy(() => import("./components/pages/AdminLoginPage").then((m) => ({ default: m.AdminLoginPage })));
+const AdminEmailPage = safeLazy(() => import("./components/pages/AdminEmailPage").then((m) => ({ default: m.AdminEmailPage })));
 
 function PageWrapper({ children }: { children: React.ReactNode }) {
   return <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }} className="w-full max-w-full min-w-0">{children}</motion.div>;
