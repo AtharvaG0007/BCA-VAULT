@@ -345,6 +345,7 @@ export function StudentDashboard() {
   const [notes, setNotes] = useState<NoteItem[]>([]);
   const [noteCategory, setNoteCategory] = useState<"all" | "repeated" | "theory">("all");
   const [noteSearch, setNoteSearch] = useState("");
+  const [noticeCount, setNoticeCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [openingId, setOpeningId] = useState<string | null>(null);
   const [activeViewer, setActiveViewer] = useState<{
@@ -403,10 +404,11 @@ export function StudentDashboard() {
             .maybeSingle()
         : Promise.resolve({ data: null, error: null });
 
-      const [accessRes, notesRes, paymentRes] = await Promise.all([
+      const [accessRes, notesRes, paymentRes, noticeRes] = await Promise.all([
         accessPromise,
         notesPromise,
         paymentPromise,
+        supabase.from("admin_notices").select("id", { count: "exact", head: true }).eq("published", true),
       ]);
 
       if (accessRes.error) {
@@ -423,6 +425,9 @@ export function StudentDashboard() {
 
       if (paymentRes && !paymentRes.error && paymentRes.data) {
         setLatestPayment(paymentRes.data as PaymentRecord);
+      }
+      if (typeof noticeRes?.count === "number") {
+        setNoticeCount(noticeRes.count);
       }
     } catch (err) {
       console.error("Dashboard load error:", err);
@@ -605,6 +610,11 @@ export function StudentDashboard() {
             >
               <Bell className="h-4 w-4 shrink-0 text-amber-500" />
               <span>Notice Board</span>
+              {noticeCount > 0 && (
+                <span className="ml-auto rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-black text-amber-800">
+                  {noticeCount}
+                </span>
+              )}
             </button>
 
             <button
@@ -899,6 +909,11 @@ export function StudentDashboard() {
               >
                 <Bell className="h-4 w-4 shrink-0 text-amber-500" />
                 <span>Notice Board</span>
+                {noticeCount > 0 && (
+                  <span className="ml-auto rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-black text-amber-800">
+                    {noticeCount}
+                  </span>
+                )}
               </button>
 
               <button

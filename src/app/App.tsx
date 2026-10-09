@@ -14,7 +14,7 @@ import { WhatsAppFloatingButton } from "./components/support/WhatsAppFloatingBut
 import { ReferralFloatingPromo } from "./components/marketing/ReferralFloatingPromo";
 import { StudentShellSkeleton } from "./components/student/StudentSkeletons";
 import { AdminSystemDeletionNav } from "./components/admin/AdminSystemDeletionNav";
-import { StudentAdminNotice } from "./components/student/StudentAdminNotice";
+
 import { Toaster } from "./components/ui/sonner";
 
 const QuizPage = lazy(() => import("./components/quiz/QuizPage").then(m => ({default:m.QuizPage})));
@@ -72,7 +72,7 @@ function AppLayout() {
       {!hideNav && <Navbar />}
       <div className="flex-1 w-full min-w-0">
         {isAdminRoute && <AdminSystemDeletionNav />}
-        {isStudentRoute && !isQuizRoute && <StudentAdminNotice />}
+
         <Suspense fallback={<StudentShellSkeleton />}>
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
