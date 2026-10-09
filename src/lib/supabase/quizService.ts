@@ -1,5 +1,5 @@
-﻿import { supabase, adminSupabase } from '@/lib/supabase/client';
-export interface Competition { id: string; title: string; description: string; status: string; start_at: string | null; end_at: string | null; question_count: number; seconds_per_question: number; participants?: number; active?: number; blueprint?: BlueprintSlot[]; risk_weights?: Record<string, number> }
+import { supabase, adminSupabase } from '@/lib/supabase/client';
+export interface Competition { id: string; title: string; description: string; status: string; start_at: string | null; end_at: string | null; question_count: number; seconds_per_question: number; participants?: number; active?: number; blueprint?: BlueprintSlot[]; risk_weights?: Record<string, number>; deleted_at?: string | null; created_at?: string }
 export interface BlueprintSlot { subject: string; difficulty: string; marks: number }
 export interface QuizQuestion { id: string; position: number; question_text: string; options: {id: string; text: string}[]; started_at: string; deadline: string }
 export interface Attempt { id: string; status: string; current_position: number; started_at: string; deadline: string; completed_at: string | null }

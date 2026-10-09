@@ -47,6 +47,7 @@ import {
 } from '../ui/alert-dialog';
 import { quizCall, type Competition, type BlueprintSlot } from '@/lib/supabase/quizService';
 import { toast } from 'sonner';
+import { useAdminAuth } from '../auth/AdminAuthContext';
 
 export type Participant = {
   id: string;
@@ -158,6 +159,45 @@ export function AdminQuizManagement() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [seedingPool, setSeedingPool] = useState(false);
+
+  // Authorized Admin check (Chunks 2 & 6)
+  const adminAuth = useAdminAuth();
+  const isAuthorizedAdmin = !!adminAuth?.user;
+
+  // Delete Quiz modal & processing states (Chunks 2 & 3)
+  const [quizToDelete, setQuizToDelete] = useState<Competition | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showAllQuizzesModal, setShowAllQuizzesModal] = useState(false);
+
+  const handleDeleteQuiz = async () => {
+    if (!quizToDelete) return;
+    setIsDeleting(true);
+    try {
+      await quizCall('admin_delete', { competition_id: quizToDelete.id }, true);
+      toast.success(`Quiz "${quizToDelete.title}" deleted successfully.`);
+
+      const res = await quizCall<{ competitions: Competition[] }>('admin_list', {}, true);
+      const updated = res.competitions || [];
+      setCompetitions(updated);
+
+      if (selectedId === quizToDelete.id) {
+        if (updated.length > 0) {
+          setSelectedId(updated[0].id);
+        } else {
+          setSelectedId('');
+          setData(null);
+        }
+      } else if (selectedId) {
+        await loadDetail(true);
+      }
+      setQuizToDelete(null);
+      setTab('overview');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to delete quiz.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Confirmation dialog state
   const [confirmModal, setConfirmModal] = useState<{
@@ -517,18 +557,30 @@ export function AdminQuizManagement() {
 
         <div className="flex items-center gap-2.5">
           {competitions.length > 0 && (
-            <select
-              aria-label="Select Competition"
-              value={selectedId}
-              onChange={(e) => setSelectedId(e.target.value)}
-              className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-200 focus:border-indigo-500 focus:outline-none min-h-10"
-            >
-              {competitions.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title} ({c.status})
-                </option>
-              ))}
-            </select>
+            <>
+              <select
+                aria-label="Select Competition"
+                value={selectedId}
+                onChange={(e) => setSelectedId(e.target.value)}
+                className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-200 focus:border-indigo-500 focus:outline-none min-h-10"
+              >
+                {competitions.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.title} ({c.status})
+                  </option>
+                ))}
+              </select>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAllQuizzesModal(true)}
+                className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 min-h-10 text-xs font-semibold"
+              >
+                <FileText className="h-3.5 w-3.5 mr-1.5 text-indigo-400" />
+                All Quizzes ({competitions.length})
+              </Button>
+            </>
           )}
 
           <Button
@@ -782,6 +834,20 @@ export function AdminQuizManagement() {
                     className="bg-blue-600 hover:bg-blue-500 text-white min-h-12 px-6 rounded-xl font-bold text-sm"
                   >
                     <Trophy className="h-4 w-4 mr-2" /> View Final Winners & Leaderboard
+                  </Button>
+                )}
+
+                {/* AUTHORIZED ADMIN: DELETE QUIZ (CHUNKS 2 & 6) */}
+                {isAuthorizedAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setQuizToDelete(comp)}
+                    disabled={busy || isDeleting}
+                    className="border-rose-900/60 bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 hover:text-white min-h-10 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-rose-400" />
+                    <span>Delete Quiz</span>
                   </Button>
                 )}
               </div>
@@ -1515,6 +1581,32 @@ export function AdminQuizManagement() {
                   <p className="mt-1 font-semibold text-white">{comp.seconds_per_question} seconds</p>
                 </div>
               </div>
+
+              {/* DANGER ZONE: DELETE QUIZ (CHUNKS 2, 5 & 6) */}
+              {isAuthorizedAdmin && (
+                <div className="rounded-2xl border border-rose-900/60 bg-rose-950/20 p-5 sm:p-6 space-y-3">
+                  <div className="flex items-center gap-2 text-rose-400">
+                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                    <h4 className="text-sm font-bold text-rose-300">Danger Zone</h4>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Deleting this quiz will immediately revoke student access and remove it from active listings and the student dashboard. Historical attempt scores, winner records, and audit logs remain securely archived in the database.
+                  </p>
+                  <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-t border-rose-900/40">
+                    <div className="text-xs text-slate-400">
+                      Target: <strong className="text-white">{comp.title}</strong>
+                    </div>
+                    <Button
+                      onClick={() => setQuizToDelete(comp)}
+                      disabled={busy || isDeleting}
+                      className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs min-h-10 px-4 rounded-xl shadow-lg shadow-rose-950/50 flex items-center gap-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span>Delete This Quiz</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </>
@@ -1561,6 +1653,98 @@ export function AdminQuizManagement() {
         />
       )}
 
+      {/* ── ALL QUIZZES MODAL (CHUNK 2) ─────────────────────────────────── */}
+      {showAllQuizzesModal && (
+        <AllQuizzesModal
+          competitions={competitions}
+          selectedId={selectedId}
+          onSelect={(id) => {
+            setSelectedId(id);
+            setShowAllQuizzesModal(false);
+          }}
+          onDelete={(c) => {
+            setShowAllQuizzesModal(false);
+            setQuizToDelete(c);
+          }}
+          onClose={() => setShowAllQuizzesModal(false)}
+          isAuthorizedAdmin={isAuthorizedAdmin}
+          isDeleting={isDeleting}
+        />
+      )}
+
+      {/* ── DELETE QUIZ CONFIRMATION DIALOG (CHUNK 3) ────────────────────────── */}
+      {quizToDelete && (
+        <AlertDialog
+          open={!!quizToDelete}
+          onOpenChange={(open) => {
+            if (!open && !isDeleting) setQuizToDelete(null);
+          }}
+        >
+          <AlertDialogContent className="border-rose-900/60 bg-slate-900 text-slate-100 rounded-3xl max-w-md shadow-2xl p-6">
+            <AlertDialogHeader>
+              <div className="flex items-center gap-2.5 text-rose-400 mb-1">
+                <div className="grid h-9 w-9 place-items-center rounded-xl bg-rose-950/80 border border-rose-800/80">
+                  <Trash2 className="h-5 w-5 text-rose-400" />
+                </div>
+                <AlertDialogTitle className="text-xl font-black text-white">Delete this quiz?</AlertDialogTitle>
+              </div>
+              <AlertDialogDescription className="text-slate-300 text-xs leading-relaxed mt-2">
+                You are about to delete <strong className="text-white font-bold underline decoration-rose-500/50">{quizToDelete.title}</strong>. This quiz will no longer be visible or accessible to students. This action cannot be undone if permanent deletion is used.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <div className="my-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-3.5 space-y-2 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Quiz Title:</span>
+                <span className="font-bold text-white truncate max-w-[220px]">{quizToDelete.title}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Status:</span>
+                <span className="font-mono text-indigo-400 font-bold">{quizToDelete.status}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Questions:</span>
+                <span className="text-slate-200">{quizToDelete.question_count} questions</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Identifier:</span>
+                <span className="font-mono text-[11px] text-slate-500">{quizToDelete.id.slice(0, 8)}</span>
+              </div>
+            </div>
+
+            <AlertDialogFooter className="flex-row justify-end gap-2.5 pt-2">
+              <AlertDialogCancel
+                disabled={isDeleting}
+                onClick={() => setQuizToDelete(null)}
+                className="border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold rounded-xl min-h-10"
+              >
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                disabled={isDeleting}
+                onClick={(e) => {
+                  e.preventDefault();
+                  void handleDeleteQuiz();
+                }}
+                className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl min-h-10 px-4 shadow-lg shadow-rose-950/50 flex items-center gap-1.5"
+              >
+                {isDeleting ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    <span>Deleting…</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Delete Quiz</span>
+                  </>
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
       {/* ── CONFIRMATION MODAL ─────────────────────────────────────────────── */}
       <AlertDialog
         open={confirmModal.isOpen}
@@ -1599,6 +1783,126 @@ export function AdminQuizManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUB-COMPONENT: ALL QUIZZES MANAGEMENT MODAL (CHUNK 2)
+// ─────────────────────────────────────────────────────────────────────────────
+function AllQuizzesModal({
+  competitions,
+  selectedId,
+  onSelect,
+  onDelete,
+  onClose,
+  isAuthorizedAdmin,
+  isDeleting
+}: {
+  competitions: Competition[];
+  selectedId: string;
+  onSelect: (id: string) => void;
+  onDelete: (comp: Competition) => void;
+  onClose: () => void;
+  isAuthorizedAdmin: boolean;
+  isDeleting: boolean;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-2xl max-h-[85vh] flex flex-col rounded-3xl border border-slate-800 bg-slate-900 text-slate-100 shadow-2xl overflow-hidden">
+        <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
+          <div className="flex items-center gap-2">
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-indigo-600/30 text-indigo-400 border border-indigo-500/30">
+              <Trophy className="h-4 w-4" />
+            </span>
+            <div>
+              <h2 className="text-base font-bold text-white">All Quizzes</h2>
+              <p className="text-xs text-slate-400">
+                {competitions.length} quiz competition{competitions.length === 1 ? '' : 's'} in vault
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close All Quizzes"
+            className="rounded-lg p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 transition"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6 space-y-3">
+          {competitions.length === 0 ? (
+            <div className="text-center py-10 space-y-2">
+              <p className="text-sm font-semibold text-white">No active quizzes found.</p>
+              <p className="text-xs text-slate-400">Create a quiz to get started.</p>
+            </div>
+          ) : (
+            competitions.map((c) => {
+              const isCurrent = c.id === selectedId;
+              return (
+                <div
+                  key={c.id}
+                  className={`rounded-2xl border p-4 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                    isCurrent
+                      ? 'border-indigo-500/60 bg-indigo-950/20 shadow-md'
+                      : 'border-slate-800 bg-slate-950/60 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="font-bold text-sm text-white truncate max-w-sm">{c.title}</h4>
+                      <span className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide border bg-slate-800 text-slate-300 border-slate-700">
+                        {c.status}
+                      </span>
+                      {isCurrent && (
+                        <span className="rounded-full px-2 py-0.5 text-[10px] font-bold bg-indigo-600/30 text-indigo-300 border border-indigo-500/40">
+                          Active Selection
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400 pt-0.5">
+                      <span>{c.question_count} questions</span>
+                      <span>•</span>
+                      <span>{c.seconds_per_question}s / question</span>
+                      <span>•</span>
+                      <span className="font-mono text-[11px] text-slate-500">ID: {c.id.slice(0, 8)}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800/80">
+                    {!isCurrent && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          onSelect(c.id);
+                          onClose();
+                        }}
+                        className="border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 text-xs font-semibold h-8 px-3 rounded-xl"
+                      >
+                        Select
+                      </Button>
+                    )}
+                    {isAuthorizedAdmin && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onDelete(c)}
+                        disabled={isDeleting}
+                        className="border-rose-900/60 bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 hover:text-white text-xs font-bold h-8 px-3 rounded-xl flex items-center gap-1.5 transition-colors"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-rose-400" />
+                        <span>Delete Quiz</span>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
     </div>
   );
 }

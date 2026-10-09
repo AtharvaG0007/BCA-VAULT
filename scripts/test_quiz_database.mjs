@@ -22,6 +22,7 @@ await db.exec(`
  insert into public.admin_profiles values('${admin}','superadmin','active');
 `);
 await db.exec(fs.readFileSync('supabase/migrations/20261008150239_secure_quiz_competitions.sql','utf8').replace(/^\uFEFF/,''));
+await db.exec(fs.readFileSync('supabase/migrations/20261009120000_secure_quiz_deletion.sql','utf8').replace(/^\uFEFF/,''));
 const cid=(await db.query('select id from quiz_competitions')).rows[0].id;
 async function api(user,action,payload={}) {
  await db.exec('reset role'); await db.query("select set_config('request.jwt.claim.sub',$1,false)",[user??'']); await db.exec('set role authenticated');
@@ -100,5 +101,62 @@ try {
  test('published results immutable',!(await api(admin,'admin_review',{attempt_id:a.attempt.id,status:'REJECTED',reason:'Cannot change published result'})).success);
  await db.exec('delete from quiz_private.rate_limits');let limited=false;for(let i=0;i<61;i++){const r=await api(bob,'detail');if(r.code==='RATE_LIMITED')limited=true;}
  test('identity based rate limiting',limited);
+
+ // === SECURE QUIZ DELETION TESTS (Chunk 1-6) ===
+ // 1. Student cannot delete quiz
+ test('student cannot delete quiz',!(await api(alice,'admin_delete')).success);
+ test('unauthorized anon cannot delete quiz',!(await api(null,'admin_delete')).success);
+
+ // 2. Admin can create a second quiz (testing isolation)
+ const created=await api(admin,'admin_create',{title:'Draft Practice Quiz'});
+ test('admin can create draft quiz',created.success&&created.competition_id);
+ const cid2=created.competition_id;
+
+ // 3. Admin can permanently delete a quiz with zero attempts
+ const permDel=await api(admin,'admin_delete',{competition_id:cid2,hard_delete:true});
+ test('zero-attempt quiz can be permanently deleted',permDel.success);
+ test('permanently deleted quiz removed from database',(await db.query('select count(*)::int n from quiz_competitions where id=$1',[cid2])).rows[0].n===0);
+
+ // 4. Existing quiz cid remains unaffected
+ test('first quiz remains unaffected',(await db.query('select count(*)::int n from quiz_competitions where id=$1',[cid])).rows[0].n===1);
+
+ // 5. Admin cannot hard_delete a quiz with attempts (historical protection)
+ const blockedHardDel=await api(admin,'admin_delete',{competition_id:cid,hard_delete:true});
+ test('quiz with recorded student attempts blocks permanent delete',!blockedHardDel.success&&blockedHardDel.error.includes('student attempts'));
+
+ // 6. Admin can safely soft_delete the quiz
+ const softDel=await api(admin,'admin_delete',{competition_id:cid});
+ test('admin can delete quiz via soft delete',softDel.success);
+
+ // 7. Repeated deletion request handled safely
+ const repeatDel=await api(admin,'admin_delete',{competition_id:cid});
+ test('repeated delete handled safely',!repeatDel.success&&repeatDel.error==='Quiz is already deleted.');
+
+ // 8. Deleted quiz disappears from student-facing list
+ const studentList=await api(alice,'list');
+ test('deleted quiz disappears from student list',studentList.success&&!studentList.competitions.some(c=>c.id===cid));
+
+ // 9. Deleted quiz disappears from admin_list by default
+ const adminList=await api(admin,'admin_list');
+ test('deleted quiz excluded from default admin list',adminList.success&&!adminList.competitions.some(c=>c.id===cid));
+
+ // 10. Student direct access via URL denied
+ test('student direct detail on deleted quiz denied',!(await api(alice,'detail',{competition_id:cid})).success);
+ test('student direct start on deleted quiz denied',!(await api(alice,'start',{competition_id:cid})).success);
+ test('student direct answer on deleted quiz denied',!(await api(alice,'answer',{competition_id:cid,question_id:crypto.randomUUID(),option_id:crypto.randomUUID()})).success);
+ test('student direct claim on deleted quiz denied',!(await api(alice,'claim',{competition_id:cid})).success);
+
+ // 11. Historical records remain fully intact in database
+ const attemptsCount=(await db.query('select count(*)::int n from quiz_attempts where competition_id=$1',[cid])).rows[0].n;
+ test('historical attempts preserved in database',attemptsCount>=2);
+ const questionsCount=(await db.query('select count(*)::int n from quiz_questions where competition_id=$1',[cid])).rows[0].n;
+ test('historical questions preserved in database',questionsCount===84);
+ const winnersCount=(await db.query('select count(*)::int n from quiz_winners where competition_id=$1',[cid])).rows[0].n;
+ test('historical winners preserved in database',winnersCount>0);
+
+ // 12. Audit log recorded
+ const auditLogs=(await db.query("select count(*)::int n from activity_logs where target_type='quiz' and action='QUIZ_DELETED' and target_id=$1",[cid])).rows[0].n;
+ test('audit log created for deletion',auditLogs>=1);
+
  console.log(`\n${passed} database security checks passed (isolated PGlite Postgres).`);
 } finally {await db.close();}

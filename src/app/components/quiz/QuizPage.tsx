@@ -13,7 +13,8 @@ import {
   BookOpen,
   Lock,
   ChevronRight,
-  GraduationCap
+  GraduationCap,
+  AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { Button } from '../ui/button';
@@ -121,10 +122,14 @@ export function QuizDiscovery() {
 
   const compId = competition?.id;
   let ctaText = 'Take the Quiz';
-  let ctaLink = compId ? `/app/quiz/${compId}` : '/app/quiz';
+  let ctaLink = compId ? `/app/quiz/${compId}` : '/app/quiz?mode=practice';
   let ctaVariant: 'default' | 'outline' = 'default';
 
-  if (detail) {
+  if (!competition) {
+    ctaText = 'Start Practice Mode';
+    ctaLink = '/app/quiz?mode=practice';
+    ctaVariant = 'default';
+  } else if (detail) {
     if (detail.winner) {
       ctaText = 'Claim ₹299 Offer';
       ctaLink = '/purchase?quizReward=1';
@@ -175,10 +180,12 @@ export function QuizDiscovery() {
             )}
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Test your Semester 1 knowledge.
+            {competition ? 'Test your Semester 1 knowledge.' : 'Practice your Semester 1 knowledge.'}
           </h2>
           <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-            Practice with instant feedback to learn, or take the official timed challenge. Top 3 verified winners unlock the exclusive ₹299 bundle offer.
+            {competition
+              ? 'Practice with instant feedback to learn, or take the official timed challenge. Top 3 verified winners unlock the exclusive ₹299 bundle offer.'
+              : 'Prepare and master Semester 1 concepts with instant answer feedback. New official competitions will be announced soon!'}
           </p>
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-1">
             <span className="rounded-xl border border-slate-200 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs">
@@ -489,7 +496,7 @@ function QuizContent() {
           </p>
         )}
 
-        {error && (
+        {error && (!competitionId || state) && (
           <div
             role="alert"
             className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-red-900 flex items-center justify-between"
@@ -534,6 +541,29 @@ function QuizContent() {
             )}
 
             {competitionId && !state && !error && <p role="status">Loading competition…</p>}
+
+            {/* DELETED OR UNAVAILABLE QUIZ FALLBACK CARD (CHUNK 4 & 7) */}
+            {competitionId && !state && error && (
+              <div className="rounded-3xl border border-slate-200 bg-white p-8 sm:p-12 text-center max-w-lg mx-auto shadow-sm my-8">
+                <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 mb-4">
+                  <AlertCircle className="h-8 w-8" />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900">Quiz Unavailable</h2>
+                <p className="mt-2 text-sm text-slate-600 leading-relaxed">
+                  This quiz competition is no longer available or has been removed. You can practice with semester questions or check back for upcoming competitions.
+                </p>
+                <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <Button asChild className="bg-[#1E40AF] hover:bg-blue-800 text-white font-bold w-full sm:w-auto min-h-11 px-5">
+                    <Link to="/app/quiz?mode=practice">
+                      <Sparkles className="h-4 w-4 mr-1.5 text-amber-400" /> Start Practice Mode
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="border-slate-300 text-slate-700 w-full sm:w-auto min-h-11 px-5">
+                    <Link to="/app/quiz">View Quizzes</Link>
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {c && state && (
               <>
