@@ -19,6 +19,7 @@ import {
 import { useAuth } from '../auth/AuthContext';
 import { Button } from '../ui/button';
 import { quizCall, quizCta, type Competition, type QuizState } from '@/lib/supabase/quizService';
+import { PublishedQuizResults } from './PublishedQuizResults';
 import {
   SEMESTER_1_QUESTION_BANK,
   type QuestionDefinition
@@ -567,6 +568,7 @@ function QuizContent() {
 
             {c && state && (
               <>
+                {c.status === 'RESULTS_PUBLISHED' && <PublishedQuizResults competitionId={c.id} />}
                 {!active && (
                   <div className="mb-6">
                     <span className="rounded-full bg-blue-100 text-blue-900 px-3 py-1 text-xs font-bold">
