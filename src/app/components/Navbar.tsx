@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { BookOpen, Menu, X, Search, ChevronDown, User, LogOut, LayoutDashboard, Gift, Home, FileText, Package, Trophy } from "lucide-react";
@@ -18,12 +18,28 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { user, appUser, logout } = useAuth();
   const isLoggedIn = Boolean(user);
   const studentName = appUser?.name?.trim() || (user?.user_metadata?.full_name as string | undefined)?.trim() || user?.email?.split("@")[0]?.trim() || "Student";
   const studentEmail = user?.email || "";
   const avatarLetter = (studentName[0] || "S").toUpperCase();
+
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [userMenuOpen]);
 
   const handleLogout = async () => { setUserMenuOpen(false); setMobileOpen(false); await logout(); navigate("/"); };
 
@@ -39,10 +55,10 @@ export function Navbar() {
       {/* Right Side Controls */}
       <div className="flex items-center gap-1.5 sm:gap-2">
         <button
-          onClick={() => navigate("/search")}
+          onClick={() => navigate("/notes")}
           className="hidden sm:flex w-9 h-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-[#1E40AF] transition-colors"
-          title="Search notes"
-          aria-label="Search notes"
+          title="Explore syllabus & notes"
+          aria-label="Explore syllabus & notes"
         >
           <Search className="w-4 h-4" />
         </button>
@@ -57,7 +73,7 @@ export function Navbar() {
               <span>Dashboard</span>
             </button>
 
-            <div className="relative">
+            <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black hover:bg-[#1E40AF] transition shadow-xs cursor-pointer"

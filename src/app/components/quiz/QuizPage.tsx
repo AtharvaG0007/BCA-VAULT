@@ -294,7 +294,7 @@ function QuizContent() {
       if (
         !competitionId ||
         requestInFlight.current ||
-        (action === 'current' && performance.now() - lastRequestAt.current < 1000)
+        (action === 'current' && performance.now() - lastRequestAt.current < 2000)
       )
         return;
       lastRequestAt.current = performance.now();
@@ -314,7 +314,8 @@ function QuizContent() {
               (performance.now() - sent)
           );
           countdown.current = { at: performance.now(), ms };
-          setRemaining(Math.ceil(ms / 1000));
+          const nextSec = Math.ceil(ms / 1000);
+          setRemaining((prev) => (prev !== nextSec ? nextSec : prev));
         }
         // If question changed, reset locked option
         if (next.current_question?.id !== state?.current_question?.id) {
@@ -356,9 +357,11 @@ function QuizContent() {
 
   useEffect(() => {
     if (!competitionId) return;
+    // Active quiz sync relaxed from aggressive 2000ms to 10000ms. Answering or expiration auto-triggers refresh.
+    const pollInterval = active ? 10000 : 15000;
     const timer = setInterval(() => {
-      if (!document.hidden && navigator.onLine) void refresh();
-    }, active ? 2000 : 15000);
+      if (!document.hidden && navigator.onLine && !requestInFlight.current) void refresh();
+    }, pollInterval);
     return () => clearInterval(timer);
   }, [active, competitionId, refresh]);
 
@@ -366,9 +369,11 @@ function QuizContent() {
     if (!active) return;
     const id = setInterval(() => {
       const ms = countdown.current.ms - (performance.now() - countdown.current.at);
-      setRemaining(Math.max(0, Math.ceil(ms / 1000)));
-      if (ms <= 0 && navigator.onLine) void refresh();
-    }, 150);
+      const nextSec = Math.max(0, Math.ceil(ms / 1000));
+      // Only trigger a React state re-render when the whole-second digit actually changes
+      setRemaining((prev) => (prev !== nextSec ? nextSec : prev));
+      if (ms <= 0 && navigator.onLine && !requestInFlight.current) void refresh();
+    }, 300);
     return () => clearInterval(id);
   }, [active, refresh]);
 

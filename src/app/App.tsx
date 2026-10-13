@@ -14,30 +14,42 @@ import { WhatsAppFloatingButton } from "./components/support/WhatsAppFloatingBut
 import { ReferralFloatingPromo } from "./components/marketing/ReferralFloatingPromo";
 import { StudentShellSkeleton } from "./components/student/StudentSkeletons";
 import { AdminSystemDeletionNav } from "./components/admin/AdminSystemDeletionNav";
+import { Toaster } from "./components/ui/sonner";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
-import { Toaster } from "./components/ui/sonner";
-
-function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ default: T }>) {
+function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ default: T }>, retries = 2) {
   return lazy(async () => {
-    try {
-      return await factory();
-    } catch (err: any) {
-      const msg = String(err?.message || "");
-      if (
-        msg.includes("Failed to fetch dynamically imported module") ||
-        msg.includes("Importing a module script failed") ||
-        msg.includes("error loading dynamically imported module") ||
-        msg.includes("Expected a JavaScript-or-Wasm module script")
-      ) {
-        const key = "bca_lazy_chunk_reload";
-        const last = sessionStorage.getItem(key);
-        const now = Date.now();
-        if (!last || now - parseInt(last, 10) > 10000) {
-          sessionStorage.setItem(key, now.toString());
-          window.location.reload();
+    let attempt = 0;
+    while (true) {
+      try {
+        return await factory();
+      } catch (err: any) {
+        attempt++;
+        const msg = String(err?.message || "");
+        const isChunkError =
+          msg.includes("Failed to fetch dynamically imported module") ||
+          msg.includes("Importing a module script failed") ||
+          msg.includes("error loading dynamically imported module") ||
+          msg.includes("Expected a JavaScript-or-Wasm module script");
+
+        if (isChunkError && attempt <= retries) {
+          // Backoff before retrying the dynamic import
+          await new Promise((resolve) => setTimeout(resolve, attempt * 600));
+          continue;
         }
+
+        if (isChunkError) {
+          const key = "bca_lazy_chunk_reload";
+          const last = sessionStorage.getItem(key);
+          const now = Date.now();
+          // Only reload as a last resort if retries failed and no recent reload occurred
+          if (!last || now - parseInt(last, 10) > 30000) {
+            sessionStorage.setItem(key, now.toString());
+            window.location.reload();
+          }
+        }
+        throw err;
       }
-      throw err;
     }
   });
 }
@@ -128,13 +140,13 @@ function AppLayout() {
               <Route path="/admin/notices" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminNoticeBoardPage /></AdminProtectedRoute>} />
               <Route path="/admin/:subpage" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/admin-root" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
-              <Route path="/admin-root/email" element={<AdminEmailPage />} />
+              <Route path="/admin-root/email" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminEmailPage /></AdminProtectedRoute>} />
               <Route path="/admin-root/dashboard" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/admin-root/:subpage" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/superadmin" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/superadmin/*" element={<Navigate to="/admin/dashboard" replace />} />
-              <Route path="/app/quiz" element={<QuizPage />} />
-              <Route path="/app/quiz/:competitionId" element={<QuizPage />} />
+              <Route path="/app/quiz" element={<ProtectedRoute allowedRoles={["member"]}><QuizPage /></ProtectedRoute>} />
+              <Route path="/app/quiz/:competitionId" element={<ProtectedRoute allowedRoles={["member"]}><QuizPage /></ProtectedRoute>} />
               <Route path="/app/dashboard" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
               <Route path="/app/notices" element={<ProtectedRoute allowedRoles={["member"]}><StudentNoticeBoardPage /></ProtectedRoute>} />
               <Route path="/app/*" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
@@ -157,5 +169,9 @@ function AppLayout() {
 }
 
 export default function App() {
-  return <BrowserRouter><AuthProvider><AdminAuthProvider><LegalProvider><AppLayout /></LegalProvider></AdminAuthProvider></AuthProvider></BrowserRouter>;
+  return (
+    <ErrorBoundary>
+      <BrowserRouter><AuthProvider><AdminAuthProvider><LegalProvider><AppLayout /></LegalProvider></AdminAuthProvider></AuthProvider></BrowserRouter>
+    </ErrorBoundary>
+  );
 }

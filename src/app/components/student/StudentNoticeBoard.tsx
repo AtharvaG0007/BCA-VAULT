@@ -16,7 +16,8 @@ interface Notice {
   id: string;
   title: string;
   message: string;
-  notice_type: string;
+  notice_type?: string;
+  type?: string;
   priority: string;
   published: boolean;
   created_at: string;
@@ -56,7 +57,7 @@ export function StudentNoticeBoard() {
           throw res.error;
         }
       } else {
-        setNotices(res.data as Notice[]);
+        setNotices((res.data || []) as Notice[]);
       }
     } catch (err: any) {
       console.error("[StudentNoticeBoard] load error:", err);
@@ -138,7 +139,7 @@ export function StudentNoticeBoard() {
       {!loading && !error && notices.length > 0 && (
         <div className="space-y-3">
           {notices.map((notice) => {
-            const cfg = typeConfig[notice.notice_type] || typeConfig.general;
+            const cfg = typeConfig[notice.notice_type || notice.type || "general"] || typeConfig.general;
             const TypeIcon = cfg.icon;
             const isImportant = notice.priority === "important";
 

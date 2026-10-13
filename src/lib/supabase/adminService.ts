@@ -360,7 +360,7 @@ export const adminApi = {
   // ── Notice Board (Admin) ──────────────────────────────────────────────
   listAllNotices: () =>
     adminSupabase
-      .from("notices")
+      .from("admin_notices")
       .select("*")
       .order("created_at", { ascending: false })
       .range(0, 99),
@@ -374,7 +374,7 @@ export const adminApi = {
   }) => {
     const { data: { user } } = await adminSupabase.auth.getUser();
     if (!user) throw new Error("Unauthenticated");
-    const { error } = await adminSupabase.from("notices").insert({
+    const { error } = await adminSupabase.from("admin_notices").insert({
       ...notice,
       created_by: user.id,
     });
@@ -392,7 +392,7 @@ export const adminApi = {
     }>
   ) => {
     const { error } = await adminSupabase
-      .from("notices")
+      .from("admin_notices")
       .update(updates)
       .eq("id", id);
     if (error) throw error;
@@ -400,7 +400,7 @@ export const adminApi = {
 
   deleteNoticeById: async (id: string) => {
     const { error } = await adminSupabase
-      .from("notices")
+      .from("admin_notices")
       .delete()
       .eq("id", id);
     if (error) throw error;
@@ -411,10 +411,14 @@ export const adminApi = {
 // Fetches only published notices using the student Supabase client (RLS enforced).
 export async function fetchPublishedNotices() {
   const { data, error } = await supabase
-    .from("notices")
-    .select("id,title,message,notice_type,priority,published,created_at")
+    .from("admin_notices")
+    .select("id,title,message,type,priority,published,created_at")
     .eq("published", true)
     .order("created_at", { ascending: false })
     .range(0, 50);
-  return { data: data ?? [], error };
+  const mapped = (data ?? []).map((row: any) => ({
+    ...row,
+    notice_type: row.type || "general",
+  }));
+  return { data: mapped, error };
 }

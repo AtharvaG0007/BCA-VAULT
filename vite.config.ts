@@ -73,6 +73,12 @@ export default defineConfig({
           if (id.includes('node_modules/@supabase')) {
             return 'supabase';
           }
+          if (id.includes('node_modules/recharts')) {
+            return 'charts';
+          }
+          if (id.includes('node_modules/@radix-ui')) {
+            return 'radix';
+          }
           if (id.includes('node_modules/motion') || id.includes('node_modules/framer-motion')) {
             return 'motion';
           }

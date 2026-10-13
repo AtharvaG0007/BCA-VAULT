@@ -297,6 +297,17 @@ const EXAM_ROADMAP_CONFIGS: ExamRoadmapCardConfig[] = [
   },
 ];
 
+interface DashboardDataCache {
+  userId: string;
+  access: AccessItem[];
+  notes: NoteItem[];
+  latestPayment: PaymentRecord | null;
+  noticeCount: number;
+  timestamp: number;
+}
+
+let studentDashboardCache: DashboardDataCache | null = null;
+
 export function StudentDashboard() {
   const { user, appUser, logout } = useAuth();
   const location = useLocation();
@@ -379,7 +390,22 @@ export function StudentDashboard() {
     navigate(`/app/${tab === "dashboard" ? "dashboard" : tab}`);
   };
 
-  async function loadData() {
+  async function loadData(forceRefresh = false) {
+    if (
+      !forceRefresh &&
+      user?.id &&
+      studentDashboardCache &&
+      studentDashboardCache.userId === user.id &&
+      Date.now() - studentDashboardCache.timestamp < 120_000
+    ) {
+      setAccess(studentDashboardCache.access);
+      setNotes(studentDashboardCache.notes);
+      setLatestPayment(studentDashboardCache.latestPayment);
+      setNoticeCount(studentDashboardCache.noticeCount);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setMessage(null);
     try {
@@ -392,7 +418,8 @@ export function StudentDashboard() {
         .from("notes")
         .select("id,title,subject,semester,description,storage_bucket,storage_path,priority,status")
         .eq("published", true)
-        .order("semester", { ascending: true });
+        .order("semester", { ascending: true })
+        .limit(150);
 
       const paymentPromise = user?.id
         ? supabase
@@ -411,23 +438,43 @@ export function StudentDashboard() {
         supabase.from("admin_notices").select("id", { count: "exact", head: true }).eq("published", true),
       ]);
 
+      let loadedAccess: AccessItem[] = [];
+      let loadedNotes: NoteItem[] = [];
+      let loadedPayment: PaymentRecord | null = null;
+      let loadedNoticeCount = 0;
+
       if (accessRes.error) {
         console.error("Access fetch error:", accessRes.error);
       } else {
-        setAccess((accessRes.data ?? []) as unknown as AccessItem[]);
+        loadedAccess = (accessRes.data ?? []) as unknown as AccessItem[];
+        setAccess(loadedAccess);
       }
 
       if (notesRes.error) {
         console.error("Notes fetch error:", notesRes.error);
       } else {
-        setNotes((notesRes.data ?? []) as unknown as NoteItem[]);
+        loadedNotes = (notesRes.data ?? []) as unknown as NoteItem[];
+        setNotes(loadedNotes);
       }
 
       if (paymentRes && !paymentRes.error && paymentRes.data) {
-        setLatestPayment(paymentRes.data as PaymentRecord);
+        loadedPayment = paymentRes.data as PaymentRecord;
+        setLatestPayment(loadedPayment);
       }
       if (typeof noticeRes?.count === "number") {
-        setNoticeCount(noticeRes.count);
+        loadedNoticeCount = noticeRes.count;
+        setNoticeCount(loadedNoticeCount);
+      }
+
+      if (user?.id) {
+        studentDashboardCache = {
+          userId: user.id,
+          access: loadedAccess,
+          notes: loadedNotes,
+          latestPayment: loadedPayment,
+          noticeCount: loadedNoticeCount,
+          timestamp: Date.now(),
+        };
       }
     } catch (err) {
       console.error("Dashboard load error:", err);

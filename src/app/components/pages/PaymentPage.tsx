@@ -1,5 +1,5 @@
 import { quizCall } from "@/lib/supabase/quizService";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import {
   ArrowUpRight,
@@ -90,23 +90,34 @@ export function PaymentPage() {
     `BCA Vault Semester 1 Bundle`
   )}`;
 
-  const handleClaimWinner = async () => {
+  const claimedRef = useRef(false);
+
+  const handleClaimWinner = useCallback(async () => {
+    if (claimedRef.current || winnerRedeeming) return;
     setWinnerError(null);
-    if (!user) { setWinnerError("Sign in with your winning account to check eligibility."); return; }
+    if (!user) {
+      setWinnerError("Sign in with your winning account to check eligibility.");
+      return;
+    }
+    claimedRef.current = true;
     setWinnerRedeeming(true);
     try {
-      const data = await quizCall<{redemption_id:string}>('claim');
+      const data = await quizCall<{ redemption_id: string }>("claim");
       setWinnerRedemptionId(data.redemption_id);
-    } catch (error) { setWinnerError(error instanceof Error ? error.message : "Unable to check reward eligibility."); }
-    finally { setWinnerRedeeming(false); }
-  };
+    } catch (error) {
+      claimedRef.current = false;
+      setWinnerError(error instanceof Error ? error.message : "Unable to check reward eligibility.");
+    } finally {
+      setWinnerRedeeming(false);
+    }
+  }, [user, winnerRedeeming]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("quizReward") === "1" && user && !winnerRedemptionId && !winnerRedeeming) {
+    if (params.get("quizReward") === "1" && user && !winnerRedemptionId && !winnerRedeeming && !claimedRef.current) {
       void handleClaimWinner();
     }
-  }, [user, winnerRedemptionId, winnerRedeeming]);
+  }, [user, winnerRedemptionId, winnerRedeeming, handleClaimWinner]);
 
   const handleApplyReferral = async () => {
     const raw = referralInput.trim();

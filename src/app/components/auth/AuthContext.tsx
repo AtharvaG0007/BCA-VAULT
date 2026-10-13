@@ -76,105 +76,163 @@ function isRateLimitError(error: any): boolean {
   return message.includes("rate limit") || message.includes("too many requests") || message.includes("email rate limit");
 }
 
+interface ProfileCacheEntry {
+  profile: AppUser;
+  timestamp: number;
+}
+
+const PROFILE_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const profileMemoryCache = new Map<string, ProfileCacheEntry>();
+let inFlightProfilePromise: Promise<AppUser | null> | null = null;
+let inFlightUserId: string | null = null;
+
+export function clearProfileCache(userId?: string) {
+  if (userId) {
+    profileMemoryCache.delete(userId);
+  } else {
+    profileMemoryCache.clear();
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  async function loadProfile(nextUser: User | null): Promise<AppUser | null> {
+  async function loadProfile(nextUser: User | null, forceRefresh = false): Promise<AppUser | null> {
     if (!nextUser) {
       setAppUser(null);
       return null;
     }
-    try {
-      const { data: admin } = await supabase
-        .from("admin_profiles")
-        .select("*")
-        .eq("user_id", nextUser.id)
-        .maybeSingle();
 
-      if (admin?.status === "active") {
-        const adminUser = mapAdmin(admin);
-        setAppUser(adminUser);
-        return adminUser;
+    const userId = nextUser.id;
+
+    // Check memory cache if not force refreshing
+    if (!forceRefresh) {
+      const cached = profileMemoryCache.get(userId);
+      if (cached && Date.now() - cached.timestamp < PROFILE_CACHE_TTL_MS) {
+        setAppUser(cached.profile);
+        return cached.profile;
       }
 
-      let { data: profile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", nextUser.id)
-        .maybeSingle();
+      // Deduplicate concurrent in-flight profile requests for the same user
+      if (inFlightProfilePromise && inFlightUserId === userId) {
+        const result = await inFlightProfilePromise;
+        if (result) setAppUser(result);
+        return result;
+      }
+    }
 
-      if (!profile) {
-        try {
-          const rawSem = nextUser.user_metadata?.semester;
-          const sem = typeof rawSem === "number" ? rawSem : Number(rawSem) || 1;
-          const newProfile = {
-            user_id: nextUser.id,
-            full_name:
-              nextUser.user_metadata?.full_name ||
-              nextUser.user_metadata?.name ||
-              nextUser.email?.split("@")[0] ||
-              "Student",
-            email: nextUser.email || "",
-            course: nextUser.user_metadata?.course || "BCA",
-            semester: sem,
-            status: "inactive",
-          };
-          const { data: inserted, error: insertErr } = await supabase
-            .from("profiles")
-            .upsert(newProfile, { onConflict: "user_id" })
-            .select()
-            .maybeSingle();
-          if (!insertErr && inserted) {
-            profile = inserted;
+    const fetchPromise = (async (): Promise<AppUser | null> => {
+      try {
+        const { data: admin } = await supabase
+          .from("admin_profiles")
+          .select("*")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (admin?.status === "active") {
+          const adminUser = mapAdmin(admin);
+          profileMemoryCache.set(userId, { profile: adminUser, timestamp: Date.now() });
+          setAppUser(adminUser);
+          return adminUser;
+        }
+
+        let { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (!profile) {
+          try {
+            const rawSem = nextUser.user_metadata?.semester;
+            const sem = typeof rawSem === "number" ? rawSem : Number(rawSem) || 1;
+            const newProfile = {
+              user_id: userId,
+              full_name:
+                nextUser.user_metadata?.full_name ||
+                nextUser.user_metadata?.name ||
+                nextUser.email?.split("@")[0] ||
+                "Student",
+              email: nextUser.email || "",
+              course: nextUser.user_metadata?.course || "BCA",
+              semester: sem,
+              status: "inactive",
+            };
+            const { data: inserted, error: insertErr } = await supabase
+              .from("profiles")
+              .upsert(newProfile, { onConflict: "user_id" })
+              .select()
+              .maybeSingle();
+            if (!insertErr && inserted) {
+              profile = inserted;
+            }
+          } catch (repairErr) {
+            console.warn("[AuthContext] Auto-repair profiles catch:", repairErr);
           }
-        } catch (repairErr) {
-          console.warn("[AuthContext] Auto-repair profiles catch:", repairErr);
+        }
+
+        const rawMetaSem = nextUser.user_metadata?.semester;
+        const fallbackSem = typeof rawMetaSem === "number" ? rawMetaSem : Number(rawMetaSem) || 1;
+
+        const studentUser: AppUser = profile
+          ? mapStudent(profile)
+          : {
+              uid: userId,
+              name:
+                nextUser.user_metadata?.full_name ||
+                nextUser.user_metadata?.name ||
+                nextUser.email?.split("@")[0] ||
+                "Student",
+              email: nextUser.email || "",
+              role: "member" as UserRole,
+              status: "active" as const,
+              semester: fallbackSem,
+              branch: nextUser.user_metadata?.course || "BCA",
+              createdAt: nextUser.created_at || new Date().toISOString(),
+              createdBy: "system",
+            };
+
+        profileMemoryCache.set(userId, { profile: studentUser, timestamp: Date.now() });
+        setAppUser(studentUser);
+        return studentUser;
+      } catch (err) {
+        console.error("[AuthContext] loadProfile error:", err);
+        setAppUser(null);
+        return null;
+      } finally {
+        if (inFlightUserId === userId) {
+          inFlightProfilePromise = null;
+          inFlightUserId = null;
         }
       }
+    })();
 
-      const rawMetaSem = nextUser.user_metadata?.semester;
-      const fallbackSem = typeof rawMetaSem === "number" ? rawMetaSem : Number(rawMetaSem) || 1;
+    inFlightProfilePromise = fetchPromise;
+    inFlightUserId = userId;
 
-      const studentUser: AppUser = profile
-        ? mapStudent(profile)
-        : {
-            uid: nextUser.id,
-            name:
-              nextUser.user_metadata?.full_name ||
-              nextUser.user_metadata?.name ||
-              nextUser.email?.split("@")[0] ||
-              "Student",
-            email: nextUser.email || "",
-            role: "member" as UserRole,
-            status: "active" as const,
-            semester: fallbackSem,
-            branch: nextUser.user_metadata?.course || "BCA",
-            createdAt: nextUser.created_at || new Date().toISOString(),
-            createdBy: "system",
-          };
-      setAppUser(studentUser);
-      return studentUser;
-    } catch (err) {
-      console.error("[AuthContext] loadProfile error:", err);
-      setAppUser(null);
-      return null;
-    }
+    return fetchPromise;
   }
 
   async function refreshProfile() {
-    await loadProfile(user);
+    if (user?.id) {
+      clearProfileCache(user.id);
+    }
+    await loadProfile(user, true);
   }
 
   useEffect(() => {
     let mounted = true;
+    let lastHandledUserId: string | null = null;
+    let initialLoadDone = false;
 
     async function initializeAuth() {
       try {
         const { data } = await supabase.auth.getSession();
         if (!mounted) return;
         const currentUser = data.session?.user ?? null;
+        lastHandledUserId = currentUser?.id ?? null;
         setUser(currentUser);
         if (currentUser) {
           await loadProfile(currentUser);
@@ -184,6 +242,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (err) {
         console.error("[AuthContext] Session init error:", err);
       } finally {
+        initialLoadDone = true;
         if (mounted) setLoading(false);
       }
     }
@@ -193,12 +252,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
       const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      if (currentUser) {
-        await loadProfile(currentUser);
-      } else {
+      const currentUserId = currentUser?.id ?? null;
+
+      // Handle sign out explicitly
+      if (event === "SIGNED_OUT" || !currentUser) {
+        lastHandledUserId = null;
+        profileMemoryCache.clear();
+        setUser(null);
         setAppUser(null);
+        if (mounted) setLoading(false);
+        return;
       }
+
+      // If user ID hasn't changed and we already loaded profile, skip redundant loadProfile calls
+      // (e.g. initial duplicate onAuthStateChange trigger or periodic TOKEN_REFRESHED)
+      if (initialLoadDone && currentUserId === lastHandledUserId) {
+        setUser(currentUser);
+        return;
+      }
+
+      lastHandledUserId = currentUserId;
+      setUser(currentUser);
+      await loadProfile(currentUser);
       if (mounted) setLoading(false);
     });
 
@@ -315,6 +390,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function logout() {
+    profileMemoryCache.clear();
     await supabase.auth.signOut();
     setUser(null);
     setAppUser(null);
