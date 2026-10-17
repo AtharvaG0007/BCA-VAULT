@@ -28,12 +28,12 @@ const UPI_ID = "gogawaleatharva997-1@oksbi";
 const UPI_NAME = "BCA Vault";
 
 /** Regular price — always enforced server-side */
-const REGULAR_PRICE = 349;
+const REGULAR_PRICE = 199;
 /** Top 3 Winner price — requires authenticated server-side redemption */
-const WINNER_PRICE = 299;
+const WINNER_PRICE = 199;
 
 const instructions = [
-  "Pay ₹349 (or ₹299 for eligible Top 3 Quiz Winners) using any UPI app or QR code.",
+  "Pay ₹199 — the same price for every student using any UPI app or QR code.",
   "Capture a screenshot showing the 12-digit UTR / UPI Transaction ID.",
   "Click 'Submit Payment Form' and upload your payment details.",
   "Create your BCA Vault account — your payment details will be auto-filled.",
@@ -81,7 +81,7 @@ export function PaymentPage() {
     return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   };
 
-  /** Server-authorized price — ₹299 only with valid redemption */
+  /** Server-authorized price — ₹199 only with valid redemption */
   const currentPrice = winnerRedemptionId ? WINNER_PRICE : REGULAR_PRICE;
 
   const upiUrl = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(
@@ -178,7 +178,7 @@ export function PaymentPage() {
           <div className="flex items-start sm:items-center gap-2 font-medium min-w-0">
             <Timer className="h-4 w-4 text-amber-400 animate-pulse shrink-0 mt-0.5 sm:mt-0" />
             <span className="leading-snug">
-              BCA Sem 1: <strong className="text-emerald-300 font-bold">₹349</strong> · Top 3 Quiz Winners: <strong className="text-amber-300 font-bold">₹299</strong>
+              All students: <strong className="text-emerald-300 font-bold">₹199</strong> · One-time bundle access
             </span>
           </div>
           <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto shrink-0 pt-1.5 sm:pt-0 border-t border-white/10 sm:border-t-0">
@@ -212,14 +212,11 @@ export function PaymentPage() {
             <div className="my-5 border-y border-slate-100 py-4 sm:py-5">
               <div className="flex items-baseline gap-3">
                 <p className="font-mono text-4xl sm:text-5xl font-extrabold text-slate-950">₹{currentPrice}</p>
-                {winnerRedemptionId && (
-                  <span className="font-mono text-lg sm:text-xl text-slate-400 line-through">₹{REGULAR_PRICE}</span>
-                )}
               </div>
               {winnerRedemptionId ? (
                 <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
                   <Trophy className="h-3 w-3" />
-                  <span>Top 3 Winner discount applied — ₹299</span>
+                  <span>Student bundle price — ₹199</span>
                 </div>
               ) : (
                 <p className="mt-1.5 text-xs text-slate-500">One-time manual UPI payment</p>
@@ -228,8 +225,8 @@ export function PaymentPage() {
 
             <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
               <h3 className="flex items-center gap-2 font-bold text-amber-900"><Trophy className="h-4 w-4" /> Top 3 Quiz Winner Offer</h3>
-              <p className="mt-2 text-sm text-amber-900">After official results are published, verified winners can unlock ₹299 using their winning account.</p>
-              {winnerRedemptionId ? <p className="mt-3 text-sm font-semibold text-emerald-800">Winner offer verified · ₹299</p> : <button type="button" disabled={winnerRedeeming} onClick={() => void handleClaimWinner()} className="mt-3 min-h-11 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{winnerRedeeming ? "Checking…" : "Check My Winner Offer"}</button>}
+              <p className="mt-2 text-sm text-amber-900">Every student can purchase the Semester 1 bundle for ₹199. No winner code or special eligibility is required.</p>
+              {winnerRedemptionId ? <p className="mt-3 text-sm font-semibold text-emerald-800">Universal student price · ₹199</p> : <button type="button" disabled={winnerRedeeming} onClick={() => void handleClaimWinner()} className="mt-3 min-h-11 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{winnerRedeeming ? "Checking…" : "Check My Winner Offer"}</button>}
               {winnerError && <p role="alert" className="mt-3 text-sm text-red-800">{winnerError}</p>}
             </div>
 
