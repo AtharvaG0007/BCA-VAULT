@@ -81,7 +81,7 @@ export function PaymentPage() {
     return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   };
 
-  /** Server-authorized price — ₹199 only with valid redemption */
+  /** Universal bundle price — ₹199 for every student */
   const currentPrice = winnerRedemptionId ? WINNER_PRICE : REGULAR_PRICE;
 
   const upiUrl = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(
@@ -224,9 +224,9 @@ export function PaymentPage() {
             </div>
 
             <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-              <h3 className="flex items-center gap-2 font-bold text-amber-900"><Trophy className="h-4 w-4" /> Top 3 Quiz Winner Offer</h3>
+              <h3 className="flex items-center gap-2 font-bold text-amber-900"><Trophy className="h-4 w-4" /> Quiz Winner Recognition</h3>
               <p className="mt-2 text-sm text-amber-900">Every student can purchase the Semester 1 bundle for ₹199. No winner code or special eligibility is required.</p>
-              {winnerRedemptionId ? <p className="mt-3 text-sm font-semibold text-emerald-800">Universal student price · ₹199</p> : <button type="button" disabled={winnerRedeeming} onClick={() => void handleClaimWinner()} className="mt-3 min-h-11 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{winnerRedeeming ? "Checking…" : "Check My Winner Offer"}</button>}
+              {winnerRedemptionId ? <p className="mt-3 text-sm font-semibold text-emerald-800">Universal student price · ₹199</p> : <button type="button" disabled={winnerRedeeming} onClick={() => void handleClaimWinner()} className="mt-3 min-h-11 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{winnerRedeeming ? "Checking…" : "Verify Quiz Winner Status"}</button>}
               {winnerError && <p role="alert" className="mt-3 text-sm text-red-800">{winnerError}</p>}
             </div>
 
