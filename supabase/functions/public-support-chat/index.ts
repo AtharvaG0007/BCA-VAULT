@@ -79,9 +79,9 @@ ABOUT BCA VAULT:
 
 BUNDLE & PRICING:
 - BCA Vault offers the Semester 1 Bundle (Theory Notes + Most Repeated Topics).
-- Standard launch price: ₹349 (regular price ₹499).
+- Universal student price: ₹199 for every student.
 - Top 3 Quiz Winners: eligible for account-bound special pricing after official result publication.
-- SECURITY DIRECTIVE: NEVER disclose, reveal, or confirm any secret coupon codes or winner codes. If asked for coupon codes, explain that the ₹349 launch price is applied automatically, and quiz rewards are verified against the signed-in winning account.
+- SECURITY DIRECTIVE: NEVER disclose, reveal, or confirm any secret coupon codes or winner codes. If asked for coupon codes, explain that the ₹199 student price is applied automatically, and quiz rewards are verified against the signed-in winning account.
 - Bundle includes: Semester 1 theory notes, most repeated topics, exam preparation material.
 - One-time purchase, semester access.
 
@@ -194,11 +194,11 @@ function generateSupportFallback(message: string): string {
   const q = message.toLowerCase();
 
   if (q.includes("price") || q.includes("cost") || q.includes("how much")) {
-    return `The BCA Vault Semester 1 Bundle is currently available at a launch offer price of **₹349** (regular price ₹499).\n\n🏆 **Top 3 Quiz Winners:** Eligible for **₹299** pricing via verified private winner code.\n\nVisit the [Pricing Page](https://bcavault.in/pricing) or [Payment Page](https://bcavault.in/purchase) to get access!\n\nNeed help? WhatsApp us at **+91 93263 42123**.`;
+    return `The BCA Vault Semester 1 Bundle is currently available at a student price of **₹199** for every student.\n\n🏆 **All Students:** Pay **₹199**; no winner code is required.\n\nVisit the [Pricing Page](https://bcavault.in/pricing) or [Payment Page](https://bcavault.in/purchase) to get access!\n\nNeed help? WhatsApp us at **+91 93263 42123**.`;
   }
 
   if (q.includes("bundle") || q.includes("include") || q.includes("what do i get")) {
-    return `The **BCA Vault Semester 1 Bundle** includes:\n\n📚 Complete Semester 1 theory notes\n📝 Most repeated exam topics & PYQs\n⭐ Unit-wise exam preparation roadmap\n🔒 In-browser secure reader access\n\nLaunch price: **₹349** (regular ₹499) | Top 3 Winners: **₹299**\n\nVisit [Bundles](https://bcavault.in/bundles) for details!`;
+    return `The **BCA Vault Semester 1 Bundle** includes:\n\n📚 Complete Semester 1 theory notes\n📝 Most repeated exam topics & PYQs\n⭐ Unit-wise exam preparation roadmap\n🔒 In-browser secure reader access\n\nUniversal student price: **₹199** for every student.\n\nVisit [Bundles](https://bcavault.in/bundles) for details!`;
   }
 
   if (q.includes("pay") || q.includes("upi") || q.includes("payment")) {
@@ -214,7 +214,7 @@ function generateSupportFallback(message: string): string {
   }
 
   if (q.includes("coupon") || q.includes("discount") || q.includes("offer")) {
-    return `**Current Pricing & Offers:**\n\n🎉 **Launch Offer:** ₹349 (Regular ₹499 — applied directly!)\n🏆 **Top 3 Quiz Winners:** Special ₹299 pricing unlocked via private winner codes distributed to quiz winners.\n\nVisit the [Payment Page](https://bcavault.in/purchase) to proceed!`;
+    return `**Current Pricing & Offers:**\n\n🎉 **All-Student Price:** ₹199 for the Semester 1 bundle. No winner code or special eligibility is required.\n\nVisit the [Payment Page](https://bcavault.in/purchase) to proceed!`;
   }
 
   if (q.includes("refund")) {
