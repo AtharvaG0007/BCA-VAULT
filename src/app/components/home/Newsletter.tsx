@@ -50,7 +50,7 @@ export function Newsletter() {
                 ₹199
               </p>
               <p className="text-xs text-slate-300 mt-1">
-                Top 3 quiz performers unlock special access at ₹199 with verified winner access.
+                Quiz winners are recognized separately; every student pays the same ₹199 bundle price.
               </p>
             </div>
 
