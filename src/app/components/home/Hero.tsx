@@ -164,7 +164,7 @@ export function Hero() {
                   {[
                     { label: "Semester", value: "1 Only" },
                     { label: "First Batch", value: "Open" },
-                    { label: "Offer Price", value: "₹499" },
+                    { label: "Offer Price", value: "₹199" },
                   ].map((stat) => (
                     <div key={stat.label} className="bg-white/10 rounded-xl p-3">
                       <p className="text-lg font-bold" style={{ fontFamily: 'var(--font-mono)' }}>{stat.value}</p>
@@ -231,7 +231,7 @@ export function Hero() {
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-gray-900">Introductory Offer</p>
-                  <p className="text-xs text-emerald-600 font-bold">₹349 (Launch Offer)</p>
+                  <p className="text-xs text-emerald-600 font-bold">₹199 (Student Price)</p>
                 </div>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-gray-500">

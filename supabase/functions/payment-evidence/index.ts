@@ -154,7 +154,7 @@ Deno.serve(async (request: Request) => {
           submission_id: submissionId,
           storage_path: path,
           token: data.token,
-          bundle: { id: bundle.id, title: bundle.title, price: 349 },
+          bundle: { id: bundle.id, title: bundle.title, price: 199 },
         },
         200,
         corsHeaders
@@ -195,23 +195,22 @@ Deno.serve(async (request: Request) => {
         return respond({ success: false, error: "Your upload session is invalid. Please select your screenshot again." }, 400, corsHeaders);
       }
 
-      // Regular payments are ₹349. The ₹299 price is only valid with a server-issued
-      // Top 3 winner redemption belonging to the authenticated student.
-      const allowedPrices = [349, 299];
+      // The Semester 1 bundle has one universal price of ₹199 for every student.
+      const allowedPrices = [199];
       if (!allowedPrices.includes(amount)) {
-        return respond({ success: false, error: "Invalid payment amount. Valid pricing is ₹349 or ₹299." }, 400, corsHeaders);
+        return respond({ success: false, error: "Invalid payment amount. The bundle price is ₹199." }, 400, corsHeaders);
       }
 
       const winnerRedemptionId = text(body.winner_redemption_id);
       let couponRedemptionId: string | null = null;
 
       // Resolve the caller once before any price/coupon authorization checks.
-      // A ₹299 payment must always be bound to the authenticated Supabase user.
+      // The universal ₹199 price is available to authenticated and guest students.
       let effectiveUserId = user?.id || null;
 
       if (amount === 299) {
         if (!effectiveUserId || !winnerRedemptionId) {
-          return respond({ success: false, error: "The ₹299 winner price requires a valid Top 3 winner redemption while signed in." }, 403, corsHeaders);
+          return respond({ success: false, error: "The bundle price is ₹199 for every student." }, 403, corsHeaders);
         }
 
         if (semester !== 1) return respond({ success: false, error: "The quiz offer applies to Semester 1." }, 403, corsHeaders);
