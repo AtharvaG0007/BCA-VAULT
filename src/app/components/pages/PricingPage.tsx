@@ -68,7 +68,7 @@ export function PricingPage() {
               <p className="text-sm text-gray-500">Semester 1 Notes + Most Repeated Topics</p>
             </div>
             <div className="text-center mb-6 py-5 border-y border-gray-100">
-              <p className="text-5xl font-black text-gray-900" style={{ fontFamily: "var(--font-mono)" }}>₹349</p>
+              <p className="text-5xl font-black text-gray-900" style={{ fontFamily: "var(--font-mono)" }}>₹199</p>
               <p className="text-xs text-gray-400 mt-2">One-time payment · Semester 1 access</p>
             </div>
             <div className="space-y-3 mb-6">
