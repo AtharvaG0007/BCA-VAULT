@@ -13,7 +13,7 @@ const includes = [
 
 const steps = [
   { icon: UserCheck, label: "Create Account", desc: "Create your student account" },
-  { icon: ShoppingBag, label: "Purchase Bundle", desc: "Pay ₹199 from your dashboard" },
+  { icon: ShoppingBag, label: "Purchase Bundle", desc: "Pay ₹100 from your dashboard" },
   { icon: Clock, label: "Payment Reviewed", desc: "Admin verifies your payment" },
   { icon: ShieldCheck, label: "Access Activated", desc: "Materials unlock after approval" },
   { icon: BookOpen, label: "Start Studying", desc: "Open your Semester 1 materials" },
@@ -64,7 +64,7 @@ export function BundlesPage() {
               </div>
               <div className="text-center">
                 <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-5">
-                  <p className="text-4xl font-black text-slate-900">₹199</p>
+                  <p className="text-4xl font-black text-slate-900">₹100</p>
                   <p className="mt-1 text-xs text-slate-500">One-time payment</p>
                 </div>
                 <button
