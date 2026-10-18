@@ -26,7 +26,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -55,4 +55,5 @@ jobs:
           echo "### Exam Kits preview deployed" >> "$GITHUB_STEP_SUMMARY"
           echo "- Worker: bca-vault-exam-kits" >> "$GITHUB_STEP_SUMMARY"
           echo "- Expected URL: https://bca-vault-exam-kits.portalbcavault.workers.dev" >> "$GITHUB_STEP_SUMMARY"
-          echo "- This is a preview UI; checkout and content delivery remain disabled until backend/payment integration is complete." >> "$GITHUB_STEP_SUMMARY"
+          echo "- Checkout uses authenticated Supabase order creation and manual UPI verification." >> "$GITHUB_STEP_SUMMARY"
+          echo "- Study content remains intentionally unpublished until materials are selected and reviewed." >> "$GITHUB_STEP_SUMMARY"
