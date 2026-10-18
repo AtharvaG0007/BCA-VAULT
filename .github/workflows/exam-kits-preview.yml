@@ -45,15 +45,22 @@ jobs:
         run: node scripts/test_exam_kits_api.mjs
 
       - name: Deploy separate Cloudflare Worker
-        if: ${{ success() }}
+        if: ${{ success() && secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy --config wrangler.jsonc
 
+      - name: Explain skipped preview deployment
+        if: ${{ success() && (secrets.CLOUDFLARE_API_TOKEN == '' || secrets.CLOUDFLARE_ACCOUNT_ID == '') }}
+        run: |
+          echo "### Preview deployment skipped" >> "$GITHUB_STEP_SUMMARY"
+          echo "- TypeScript, production build, and API authentication smoke tests passed." >> "$GITHUB_STEP_SUMMARY"
+          echo "- Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in repository Actions secrets to deploy the isolated preview Worker." >> "$GITHUB_STEP_SUMMARY"
+
       - name: Deployment summary
-        if: ${{ success() }}
+        if: ${{ success() && secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
         run: |
           echo "### Exam Kits preview deployed" >> "$GITHUB_STEP_SUMMARY"
           echo "- Worker: bca-vault-exam-kits" >> "$GITHUB_STEP_SUMMARY"
