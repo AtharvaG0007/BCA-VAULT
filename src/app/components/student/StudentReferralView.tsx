@@ -167,14 +167,14 @@ export function StudentReferralView({
   const successfulCount = referrals.filter((r) => r.status === "successful").length;
   const pendingCount = referrals.filter((r) => r.status === "pending").length;
   const displayCount = Math.min(successfulCount, REQUIRED_REFERRALS);
-  const isRewardUnlocked = Boolean(reward?.status === "unlocked" && successfulCount >= REQUIRED_REFERRALS);
+  const isRewardUnlocked = Boolean(reward?.status === "unlocked");
   const progressPercent = Math.min(100, Math.round((displayCount / REQUIRED_REFERRALS) * 100));
 
   const getProgressMessage = (count: number) => {
-    if (count === 0) return "Refer 3 students to unlock your reward.";
-    if (count === 1) return "Great start! 2 more successful referrals to unlock your reward.";
-    if (count === 2) return "You're almost there! 1 more successful referral to unlock your reward.";
-    return "🎉 You've unlocked your reward!";
+    if (count === 0) return "Share your identifier; approved purchases are tracked here.";
+    if (count === 1) return "1 successful referral recorded.";
+    if (count === 2) return "2 successful referrals recorded.";
+    return "Referral activity updated.";
   };
 
   if (loading) {
@@ -187,13 +187,13 @@ export function StudentReferralView({
       <header className="space-y-1.5">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200/60 text-indigo-700 text-xs font-bold uppercase tracking-wider">
           <Gift className="w-3.5 h-3.5 text-indigo-600" />
-          🎁 Referral Reward
+          Referral Tracking
         </div>
         <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-          Refer 3 friends. Unlock Most Repeated Questions FREE.
+          Track Your Successful Referrals
         </h1>
         <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
-          Refer 3 friends who successfully purchase the Semester 1 Bundle and unlock the Semester 1 Most Repeated Questions Pack — FREE.
+          Share your identifier with friends. Referral status updates when an eligible Semester 1 payment is approved by an admin.
         </p>
       </header>
 
@@ -231,7 +231,7 @@ export function StudentReferralView({
 
           <div className="flex items-center gap-2 self-start sm:self-center bg-indigo-50/70 border border-indigo-100 rounded-2xl px-4 py-3 text-xs text-indigo-800">
             <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
-            <span className="font-semibold">Requires 3 approved Semester 1 purchases</span>
+            <span className="font-semibold">Counts only approved eligible purchases</span>
           </div>
         </div>
       </section>
@@ -241,11 +241,11 @@ export function StudentReferralView({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Referral Qualification Progress
+              Referral Activity Progress
             </span>
             <div className="flex items-center gap-3 mt-1">
               <h2 className="text-2xl font-black text-slate-900" style={{ fontFamily: "var(--font-mono)" }}>
-                {displayCount} / {REQUIRED_REFERRALS} Successful Referrals
+                {successfulCount} Successful Referrals
               </h2>
               {isRewardUnlocked ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800 border border-emerald-200">
@@ -312,14 +312,14 @@ export function StudentReferralView({
             >
               <div className="text-[10px] uppercase font-bold tracking-wider opacity-70">Referral 3</div>
               <div className="text-xs font-bold mt-0.5">
-                {displayCount >= 3 ? "🎉 Reward Unlocks!" : "Reward Unlocks"}
+                {displayCount >= 3 ? "Referral Counted" : "Awaiting Count"}
               </div>
             </div>
           </div>
         </div>
 
         <p className="text-[11px] text-slate-500">
-          Your reward unlocks after 3 successful referrals — when the referred students complete an approved Semester 1 purchase.
+          Referral status is updated after admin approval. New referrals no longer unlock free-content rewards.
         </p>
       </section>
 
@@ -330,7 +330,7 @@ export function StudentReferralView({
             Clear Referral Workflow
           </span>
           <h2 className="text-lg font-black text-slate-900 mt-0.5">
-            How the 3-Referral Program Works
+            How Referral Tracking Works
           </h2>
           <p className="text-xs text-slate-500">
             A referral counts only when your friend purchases Semester 1 and payment is approved by admin.
@@ -383,7 +383,7 @@ export function StudentReferralView({
               <span className="text-[10px] font-black uppercase text-emerald-600 tracking-wider">Step 5</span>
               <h3 className="text-xs font-bold text-slate-900 mt-1 mb-1">Reward at 3/3</h3>
               <p className="text-[11px] text-slate-500 leading-relaxed">
-                After 3 successful referrals, your Most Repeated Questions pack unlocks FREE!
+                The purchase is recorded as a successful referral. Free-content rewards are no longer granted for new referrals.
               </p>
             </div>
           </div>
@@ -420,7 +420,7 @@ export function StudentReferralView({
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
           </div>
           <p className="text-2xl font-black text-emerald-700" style={{ fontFamily: "var(--font-mono)" }}>
-            {successfulCount} <span className="text-sm font-semibold text-slate-400">({displayCount}/3 toward reward)</span>
+            {successfulCount}
           </p>
           <p className="text-[11px] text-slate-400 mt-1">Eligible payments approved</p>
         </div>
@@ -452,7 +452,7 @@ export function StudentReferralView({
             <p className="text-xs text-slate-500">
               {isRewardUnlocked
                 ? "3 / 3 Successful Referrals — Your reward contains high-frequency exam questions for Semester 1."
-                : "Unlock after 3 successful referrals. Currently: " + displayCount + " / 3 Successful Referrals."}
+                : "Free-content referral rewards are no longer offered for new referrals."}
             </p>
           </div>
 
@@ -549,7 +549,7 @@ export function StudentReferralView({
           <div>
             <h2 className="text-base font-bold text-slate-900">Referral Activity History</h2>
             <p className="text-xs text-slate-500">
-              Progress: <strong className="text-slate-800">{displayCount} / {REQUIRED_REFERRALS} Successful Referrals</strong>
+              Successful referrals: <strong className="text-slate-800">{successfulCount}</strong>
             </p>
           </div>
           <span className="text-xs font-semibold text-slate-400">
@@ -600,7 +600,7 @@ export function StudentReferralView({
                       {item.status === "successful" ? (
                         <span className="text-emerald-700 font-bold text-[11px] inline-flex items-center gap-1">
                           <CheckCircle2 className="w-3 h-3" />
-                          {isRewardUnlocked ? "Reward Unlocked (3/3)" : "Counted (+1 toward 3/3)"}
+                          {isRewardUnlocked ? "Existing Reward Available" : "Counted (+1)"}
                         </span>
                       ) : (
                         <span className="text-slate-400 font-medium text-[11px]">
