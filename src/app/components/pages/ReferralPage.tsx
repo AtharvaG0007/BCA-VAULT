@@ -320,7 +320,7 @@ export function ReferralPage() {
             </h2>
 
             <p className="text-base sm:text-lg text-blue-100 max-w-xl mx-auto mb-8 leading-relaxed">
-              Refer 3 friends. Referral rewards update in progress when they complete an approved Semester 1 purchase.
+              Referral rewards are temporarily paused while the verified-purchase reward system is updated.
             </p>
 
             <Button
