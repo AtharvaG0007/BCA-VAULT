@@ -63,7 +63,7 @@ jobs:
           echo "- Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in repository Actions secrets to deploy the isolated preview Worker." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Deployment summary
-        if: ${{ success() && secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        if: ${{ success() && env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
         run: |
           echo "### Exam Kits preview deployed" >> "$GITHUB_STEP_SUMMARY"
           echo "- Worker: bca-vault-exam-kits" >> "$GITHUB_STEP_SUMMARY"
