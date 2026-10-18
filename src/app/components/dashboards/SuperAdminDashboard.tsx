@@ -65,6 +65,7 @@ const PAGES = [
   { key: "dashboard", label: "Dashboard", icon: BarChart3, group: "DASHBOARD" },
   { key: "students", label: "Students", icon: Users, group: "STUDENTS" },
   { key: "payments", label: "Payment CRM", icon: ShieldCheck, group: "PAYMENTS" },
+  { key: "exam-kits", label: "Exam Kits Verification", icon: ShieldCheck, group: "PAYMENTS" },
   { key: "referrals", label: "Referral Management", icon: Gift, group: "REFERRALS" },
   { key: "notices", label: "Notice Board", icon: Bell, group: "NOTICES" },
   { key: "bundles", label: "Bundles", icon: Package, group: "CONTENT" },
