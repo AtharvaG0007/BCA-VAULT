@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  ArrowRight, CalendarDays, CheckCircle2, Clock3, Code2, ExternalLink,
+  ArrowRight, CheckCircle2, Clock3, Code2, ExternalLink,
   Laptop, Layers3, MonitorPlay, Sparkles, Video, Wrench, Zap,
 } from "lucide-react";
 import { toast } from "sonner";
