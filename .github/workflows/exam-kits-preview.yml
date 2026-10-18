@@ -41,6 +41,9 @@ jobs:
       - name: Verify build output
         run: test -f dist/index.html
 
+      - name: Live API authentication smoke tests
+        run: node scripts/test_exam_kits_api.mjs
+
       - name: Deploy separate Cloudflare Worker
         if: ${{ success() }}
         uses: cloudflare/wrangler-action@v3
