@@ -35,31 +35,13 @@ const subjects: Subject[] = [
     topics: ["Algorithms & flowcharts", "C fundamentals", "Control structures"],
   },
   {
-    id: "html",
-    title: "HTML",
-    short: "Web page structure",
-    description: "HTML concepts and question practice for web foundations.",
+    id: "client-side",
+    title: "Client-side Web Technologies (HTML, CSS & JavaScript)",
+    short: "HTML, CSS and JavaScript — one combined subject",
+    description: "A single combined kit covering web page structure, styling and client-side scripting.",
     icon: Globe,
     accent: "orange",
-    topics: ["HTML document structure", "Elements & attributes", "Forms and semantic HTML"],
-  },
-  {
-    id: "css",
-    title: "CSS",
-    short: "Styling and layout",
-    description: "Important styling concepts and concise revision material.",
-    icon: Sparkles,
-    accent: "sky",
-    topics: ["Selectors & specificity", "Box model", "Layouts and responsive design"],
-  },
-  {
-    id: "javascript",
-    title: "JavaScript",
-    short: "Client-side programming",
-    description: "Core JavaScript concepts, examples and exam-focused answers.",
-    icon: Code2,
-    accent: "amber",
-    topics: ["Variables & operators", "Functions and events", "DOM fundamentals"],
+    topics: ["HTML structure, elements and forms", "CSS selectors, box model and layouts", "JavaScript variables, functions, events and DOM"],
   },
   {
     id: "mathematics",
@@ -75,7 +57,7 @@ const subjects: Subject[] = [
 const plans = [
   { id: "single", title: "Single Subject", price: 49, detail: "Choose any one subject", badge: "" },
   { id: "double", title: "Any 2 Subjects", price: 79, detail: "Pick any two subject kits", badge: "SAVE ₹19" },
-  { id: "all", title: "Complete Exam Combo", price: 129, detail: "All 6 subject kits", badge: "BEST VALUE" },
+  { id: "all", title: "Complete Exam Combo", price: 129, detail: "All 4 subject kits", badge: "BEST VALUE" },
 ];
 
 export function ExamKitsPage() {
@@ -119,7 +101,7 @@ export function ExamKitsPage() {
                 Revise smarter.<br /><span className="text-indigo-200">One subject at a time.</span>
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-6 text-indigo-100 sm:text-base">
-                Explore subject-wise repeated questions, answers and concise revision topics for your BCA exam preparation.
+                Explore subject-wise repeated questions, answers and concise revision topics for your BCA exam preparation. HTML, CSS and JavaScript are combined into one Client-side Web Technologies kit.
               </p>
               <div className="mt-6 flex flex-wrap gap-3 text-xs font-semibold text-indigo-50">
                 <span className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2"><FileQuestion className="h-4 w-4" /> Questions + answers</span>
@@ -135,12 +117,12 @@ export function ExamKitsPage() {
                   <p className="mt-1 text-3xl font-black">₹49</p>
                 </div>
                 <div className="rounded-2xl bg-amber-300 p-4 text-slate-950">
-                  <p className="text-xs font-bold">All 6 kits</p>
+                  <p className="text-xs font-bold">All 4 kits</p>
                   <p className="mt-1 text-3xl font-black">₹129</p>
-                  <p className="mt-1 text-[11px] font-semibold">Save ₹165 vs individual</p>
+                  <p className="mt-1 text-[11px] font-semibold">Save ₹67 vs individual</p>
                 </div>
               </div>
-              <p className="mt-3 text-xs leading-5 text-indigo-100">Choose a single kit or get every listed subject in one combo.</p>
+              <p className="mt-3 text-xs leading-5 text-indigo-100">Choose a single kit or get all four subject kits in one combo.</p>
             </div>
           </div>
         </section>
@@ -150,7 +132,7 @@ export function ExamKitsPage() {
             <div>
               <p className="text-xs font-black uppercase tracking-[0.18em] text-indigo-600">Choose your focus</p>
               <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Explore subject kits</h2>
-              <p className="mt-2 max-w-2xl text-sm text-slate-600">Select up to two subjects to build a ₹79 combo, or choose the complete kit below.</p>
+              <p className="mt-2 max-w-2xl text-sm text-slate-600">Select up to two subjects to build a ₹79 combo, or choose the complete four-subject kit below.</p>
             </div>
             <label className="relative block w-full sm:max-w-xs">
               <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
