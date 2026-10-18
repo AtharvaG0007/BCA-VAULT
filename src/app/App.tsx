@@ -48,6 +48,7 @@ const NotesPage = safeLazy(() => import("./components/pages/NotesPage").then((m)
 const PYQPage = safeLazy(() => import("./components/pages/PYQPage").then((m) => ({ default: m.PYQPage })));
 const BundlesPage = safeLazy(() => import("./components/pages/BundlesPage").then((m) => ({ default: m.BundlesPage })));
 const ExamKitsPage = safeLazy(() => import("./components/pages/ExamKitsPage").then((m) => ({ default: m.ExamKitsPage })));
+const BootcampsPage = safeLazy(() => import("./components/pages/BootcampsPage").then((m) => ({ default: m.BootcampsPage })));
 const StudentExamKitsPortal = safeLazy(() => import("./components/pages/StudentExamKitsPortal").then((m) => ({ default: m.StudentExamKitsPortal })));
 const AdminExamKitsPage = safeLazy(() => import("./components/pages/AdminExamKitsPage").then((m) => ({ default: m.AdminExamKitsPage })));
 const PricingPage = safeLazy(() => import("./components/pages/PricingPage").then((m) => ({ default: m.PricingPage })));
@@ -111,6 +112,7 @@ function AppLayout() {
               <Route path="/bundles" element={<PageWrapper><BundlesPage /></PageWrapper>} />
               <Route path="/exam-kits" element={<PageWrapper><ExamKitsPage /></PageWrapper>} />
               <Route path="/app/exam-kits" element={<ProtectedRoute allowedRoles={["member"]}><ExamKitsPage /></ProtectedRoute>} />
+              <Route path="/app/bootcamps" element={<ProtectedRoute allowedRoles={["member"]}><BootcampsPage /></ProtectedRoute>} />
               <Route path="/app/exam-kits/portal" element={<ProtectedRoute allowedRoles={["member"]}><StudentExamKitsPortal /></ProtectedRoute>} />
               <Route path="/referral" element={<PageWrapper><ReferralPage /></PageWrapper>} />
               <Route path="/referral-program" element={<Navigate to="/referral" replace />} />
