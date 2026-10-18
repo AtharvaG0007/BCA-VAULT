@@ -1205,6 +1205,33 @@ export function StudentDashboard() {
               </section>
             )}
 
+            {/* Exam Kits — separate product from the existing Semester bundle */}
+            <section className="rounded-3xl border border-violet-200 bg-gradient-to-r from-violet-50 via-white to-indigo-50 p-4 sm:p-6 shadow-sm">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3.5 min-w-0">
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-violet-100 text-violet-700">
+                    <Flame className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-base font-black text-slate-900">Most Repeated Questions & Exam Kits</h2>
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-800">NEW</span>
+                    </div>
+                    <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-600">
+                      Explore subject-wise questions, answers, important topics and Maths practice with solutions.
+                    </p>
+                    <p className="mt-2 text-xs font-bold text-violet-800">Single subject ₹49 · Any 2 ₹79 · Complete combo ₹129</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => navigate("/app/exam-kits")}
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-violet-700 px-5 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-violet-800 cursor-pointer"
+                >
+                  Explore Exam Kits <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </section>
+
             {/* Active Courses Section */}
             <section className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 lg:p-7 shadow-2xs w-full min-w-0">
               <div className="flex items-center gap-3 mb-5 border-b border-slate-100 pb-4">
