@@ -1,8 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
+import { supabase } from "@/lib/supabase/client";
+import { useAuth } from "@/app/components/auth/AuthContext";
+import { QRCodeSVG } from "qrcode.react";
 import {
   ArrowLeft, ArrowRight, BookOpen, Calculator, Check, Code2, FileQuestion,
-  Globe, GraduationCap, Layers3, LockKeyhole, Search, ShieldCheck, Sparkles,
+  Globe, GraduationCap, Layers3, LockKeyhole, Search, ShieldCheck, Sparkles, X, Loader2, Copy, CheckCircle2,
 } from "lucide-react";
 
 type Subject = {
@@ -62,9 +65,22 @@ const plans = [
 
 export function ExamKitsPage() {
   const navigate = useNavigate();
+  const { user, appUser } = useAuth();
   const [selected, setSelected] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [notice, setNotice] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState<"single"|"double"|"all"|null>(null);
+  const [checkoutStep, setCheckoutStep] = useState<"details"|"payment"|"submitted">("details");
+  const [checkoutBusy, setCheckoutBusy] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
+  const [order, setOrder] = useState<any>(null);
+  const [student, setStudent] = useState({ name: appUser?.name || "", email: user?.email || appUser?.email || "", phone: "" });
+  const [utr, setUtr] = useState("");
+  const [screenshot, setScreenshot] = useState<File|null>(null);
+  const upiId = "gogawaleatharva997-1@oksbi";
+  const chosenSubjects = checkoutPlan === "all" ? subjects.map(s=>s.id) : selected;
+  const chosenPrice = checkoutPlan ? ({single:49,double:79,all:129} as const)[checkoutPlan] : 0;
+  const upiUri = order ? `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent("BCA Vault")}&am=${order.amount}&cu=INR&tn=${encodeURIComponent("BCA Vault Exam Kits "+order.order_code)}` : "";
 
   const visibleSubjects = useMemo(
     () => subjects.filter((s) => (s.title + " " + s.short + " " + s.topics.join(" ")).toLowerCase().includes(search.toLowerCase())),
@@ -176,7 +192,10 @@ export function ExamKitsPage() {
               <button onClick={() => {
                 if (plan.id === "single" && selected.length !== 1) { setNotice(true); return; }
                 if (plan.id === "double" && selected.length !== 2) { setNotice(true); return; }
-                setNotice(true);
+                setNotice(false);
+                if (!user) { navigate("/login"); return; }
+                setCheckoutPlan(plan.id as "single"|"double"|"all");
+                setCheckoutStep("details"); setCheckoutError(""); setOrder(null);
               }} className={`mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition ${plan.id === "all" ? "bg-indigo-600 text-white hover:bg-indigo-700" : "border border-slate-200 text-slate-800 hover:bg-slate-50"}`}>
                 {plan.id === "single" ? "Continue with 1 subject" : plan.id === "double" ? "Continue with 2 subjects" : "Get complete combo"} <ArrowRight className="h-4 w-4" />
               </button>
@@ -190,14 +209,29 @@ export function ExamKitsPage() {
             <p className="mt-1 text-xs leading-5 text-indigo-800">{formatSubjects.join(" · ")}</p>
             {selected.length === 2 && <p className="mt-1 text-xs font-bold text-indigo-800">Combo price: ₹79</p>}
           </div>
-          <button onClick={() => setNotice(true)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-700 px-5 py-3 text-sm font-bold text-white hover:bg-indigo-800">Continue <ArrowRight className="h-4 w-4" /></button>
+          <button onClick={() => { if (!user) { navigate("/login"); return; } setCheckoutPlan(selected.length===1?"single":"double"); setCheckoutStep("details"); setCheckoutError(""); setOrder(null); }} className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-700 px-5 py-3 text-sm font-bold text-white hover:bg-indigo-800">Continue <ArrowRight className="h-4 w-4" /></button>
         </section>}
 
-        {notice && <div role="status" className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-          <p className="font-bold">Checkout is not connected yet.</p>
-          <p className="mt-1 text-xs leading-5">This branch currently contains the product-selection UI. Before accepting payment, the team must add database-backed product records, verify ₹49/₹79/₹129 server-side, and grant access only after payment approval. No payment has been initiated.</p>
-          <button onClick={() => setNotice(false)} className="mt-2 text-xs font-bold underline">Dismiss</button>
-        </div>}
+        {notice && <div role="status" className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><p className="font-bold">Choose the correct plan</p><p className="mt-1 text-xs leading-5">Select one subject for ₹49 or two subjects for ₹79 before continuing.</p><button onClick={() => setNotice(false)} className="mt-2 text-xs font-bold underline">Dismiss</button></div>}
+
+        {checkoutPlan && <div className="fixed inset-0 z-[120] overflow-y-auto bg-slate-950/70 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label="Exam Kits checkout"><div className="mx-auto my-4 w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+          <div className="flex items-start justify-between border-b border-slate-100 p-5 sm:p-7"><div><p className="text-xs font-black uppercase tracking-widest text-indigo-600">BCA Vault · Secure checkout</p><h2 className="mt-1 text-2xl font-black text-slate-950">{checkoutStep==="details"?"Your order details":checkoutStep==="payment"?"Pay and submit evidence":"Order submitted"}</h2><p className="mt-1 text-sm text-slate-500">{checkoutStep==="submitted"?"Your order is waiting for manual verification.": "Order total: ₹"+chosenPrice}</p></div><button onClick={()=>setCheckoutPlan(null)} className="rounded-xl p-2 text-slate-500 hover:bg-slate-100" aria-label="Close checkout"><X className="h-5 w-5"/></button></div>
+          {checkoutError && <div role="alert" className="mx-5 mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{checkoutError}</div>}
+          {checkoutStep==="details" && <form className="space-y-4 p-5 sm:p-7" onSubmit={async(e:FormEvent)=>{e.preventDefault();setCheckoutBusy(true);setCheckoutError("");try{const {data,error}=await supabase.functions.invoke("exam-kits",{body:{action:"create-order",subjects:chosenSubjects,plan_type:checkoutPlan,full_name:student.name,email:student.email,phone:student.phone}});if(error||!data?.success)throw new Error(data?.error||error?.message||"Could not create order.");setOrder(data.order);setCheckoutStep("payment");}catch(err:any){setCheckoutError(err.message||"Unable to create order.");}finally{setCheckoutBusy(false);}}}>
+            <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-bold uppercase text-slate-500">Selected kits</p><p className="mt-2 text-sm font-semibold text-slate-800">{chosenSubjects.map(id=>subjects.find(s=>s.id===id)?.title).join(" · ")}</p><p className="mt-2 text-2xl font-black text-indigo-700">₹{chosenPrice}</p></div>
+            <label className="block text-sm font-bold text-slate-700">Full name<input required minLength={2} maxLength={100} value={student.name} onChange={e=>setStudent({...student,name:e.target.value})} className="mt-1 w-full rounded-xl border border-slate-200 p-3 font-normal" autoComplete="name"/></label>
+            <label className="block text-sm font-bold text-slate-700">Account email<input required type="email" value={student.email} readOnly className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 p-3 font-normal"/></label>
+            <label className="block text-sm font-bold text-slate-700">Phone number<input required type="tel" pattern="\+?[0-9\s-]{10,18}" value={student.phone} onChange={e=>setStudent({...student,phone:e.target.value})} className="mt-1 w-full rounded-xl border border-slate-200 p-3 font-normal" autoComplete="tel" placeholder="10-digit mobile number"/></label>
+            <button disabled={checkoutBusy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 p-3.5 font-bold text-white disabled:opacity-60">{checkoutBusy&&<Loader2 className="h-4 w-4 animate-spin"/>}Create order and continue <ArrowRight className="h-4 w-4"/></button>
+          </form>}
+          {checkoutStep==="payment" && order && <form className="space-y-4 p-5 sm:p-7" onSubmit={async(e:FormEvent)=>{e.preventDefault();if(!screenshot){setCheckoutError("Upload the payment screenshot first.");return;}setCheckoutBusy(true);setCheckoutError("");try{const {data:upload,error:uploadError}=await supabase.functions.invoke("exam-kits",{body:{action:"create-upload",order_id:order.id,content_type:screenshot.type,size:screenshot.size}});if(uploadError||!upload?.success)throw new Error(upload?.error||uploadError?.message||"Could not prepare screenshot upload.");const {error:storageError}=await supabase.storage.from("exam-kit-payment-evidence").uploadToSignedUrl(upload.storage_path,upload.token,screenshot,{contentType:screenshot.type});if(storageError)throw storageError;const {data:submitted,error:submitError}=await supabase.functions.invoke("exam-kits",{body:{action:"submit-payment",order_id:order.id,utr:utr.trim(),storage_path:upload.storage_path}});if(submitError||!submitted?.success)throw new Error(submitted?.error||submitError?.message||"Could not submit payment evidence.");setCheckoutStep("submitted");}catch(err:any){setCheckoutError(err.message||"Could not submit payment evidence.");}finally{setCheckoutBusy(false);}}}>
+            <div className="grid gap-5 sm:grid-cols-[180px_1fr] sm:items-center"><div className="mx-auto rounded-2xl border border-slate-200 p-3"><QRCodeSVG value={upiUri} size={156} level="M"/><p className="mt-2 text-center text-xs font-bold">Scan with UPI app</p></div><div><p className="text-sm text-slate-600">Pay the exact amount shown below using any UPI app. Then enter the UTR and upload the payment screenshot. Access is granted after manual verification.</p><p className="mt-3 text-xs font-bold uppercase text-slate-500">Payee UPI ID</p><p className="break-all font-bold text-slate-900">{upiId}</p><p className="mt-2 text-3xl font-black text-indigo-700">₹{order.amount}</p><p className="mt-1 text-xs text-slate-500">Order {order.order_code}</p><a href={upiUri} className="mt-3 inline-flex rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white">Open UPI app</a></div></div>
+            <label className="block text-sm font-bold text-slate-700">UPI transaction ID / UTR<input required minLength={6} maxLength={64} value={utr} onChange={e=>setUtr(e.target.value.toUpperCase())} className="mt-1 w-full rounded-xl border border-slate-200 p-3 font-mono font-normal" placeholder="Transaction reference"/></label>
+            <label className="block text-sm font-bold text-slate-700">Payment screenshot (JPG, PNG or WebP; max 5 MB)<input required type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setScreenshot(e.target.files?.[0]??null)} className="mt-1 block w-full rounded-xl border border-slate-200 p-3 text-sm font-normal"/></label>
+            <button disabled={checkoutBusy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 p-3.5 font-bold text-white disabled:opacity-60">{checkoutBusy&&<Loader2 className="h-4 w-4 animate-spin"/>}Submit payment for verification</button>
+          </form>}
+          {checkoutStep==="submitted" && <div className="p-7 text-center"><CheckCircle2 className="mx-auto h-12 w-12 text-emerald-600"/><h3 className="mt-3 text-xl font-black">Payment evidence submitted</h3><p className="mt-2 text-sm leading-6 text-slate-600">Order {order.order_code} is pending manual verification. Your selected kits will be unlocked after an administrator approves the payment.</p><button onClick={()=>{setCheckoutPlan(null);navigate("/app/dashboard");}} className="mt-5 rounded-xl bg-indigo-600 px-5 py-3 font-bold text-white">Return to dashboard</button></div>}
+        </div></div>}
 
         <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-5 sm:p-6">
           <div className="flex items-start gap-3">
