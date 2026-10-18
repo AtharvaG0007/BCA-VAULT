@@ -29,6 +29,7 @@ import {
   ShoppingBag,
   Sparkles,
   User,
+  Video,
   X,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
@@ -527,6 +528,15 @@ export function StudentDashboard() {
             </button>
 
             <button
+              onClick={() => navigate("/app/bootcamps")}
+              className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 hover:bg-violet-50 hover:text-violet-700 transition text-left"
+            >
+              <Video className="h-4 w-4 shrink-0 text-violet-600" />
+              <span>Live Bootcamps</span>
+              <span className="ml-auto rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-black text-emerald-700">FREE</span>
+            </button>
+
+            <button
               onClick={() => {
                 switchTab("dashboard");
                 setTimeout(() => {
@@ -820,6 +830,15 @@ export function StudentDashboard() {
               >
                 <BookOpen className="h-4 w-4 shrink-0 text-indigo-600" />
                 <span>Study Materials & Notes</span>
+              </button>
+
+              <button
+                onClick={() => { setMobileMenuOpen(false); navigate("/app/bootcamps"); }}
+                className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-violet-50 hover:text-violet-700 transition text-left min-h-[44px] cursor-pointer"
+              >
+                <Video className="h-4 w-4 shrink-0 text-violet-600" />
+                <span>Live Bootcamps</span>
+                <span className="ml-auto rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-black text-emerald-700">FREE</span>
               </button>
 
               <button
