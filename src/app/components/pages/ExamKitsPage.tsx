@@ -59,8 +59,8 @@ const subjects: Subject[] = [
 
 const plans = [
   { id: "single", title: "Single Subject", price: 49, detail: "Choose any one subject", badge: "" },
-  { id: "double", title: "Any 2 Subjects", price: 79, detail: "Pick any two subject kits", badge: "SAVE ₹19" },
-  { id: "all", title: "Complete Exam Combo", price: 129, detail: "All 4 subject kits", badge: "BEST VALUE" },
+  { id: "double", title: "Any 2 Subjects", price: 79, detail: "Pick any two subject kits · ₹19 less than buying separately", badge: "SAVE ₹19" },
+  { id: "all", title: "Complete Exam Combo", price: 129, detail: "All 4 subject kits · ₹67 less than buying separately", badge: "BEST VALUE" },
 ];
 
 export function ExamKitsPage() {
@@ -139,7 +139,7 @@ export function ExamKitsPage() {
                   <p className="mt-1 text-[11px] font-semibold">Save ₹67 vs individual</p>
                 </div>
               </div>
-              <p className="mt-3 text-xs leading-5 text-indigo-100">Choose a single kit or get all four subject kits in one combo.</p>
+              <p className="mt-3 text-xs leading-5 text-indigo-100">Transparent one-time pricing. The combo savings compare against buying the same kits individually at ₹49 each. No countdowns or limited-seat claims.</p>
             </div>
           </div>
         </section>
@@ -188,8 +188,8 @@ export function ExamKitsPage() {
             <article key={plan.id} className={`relative rounded-3xl border bg-white p-5 shadow-sm ${plan.id === "all" ? "border-indigo-300 ring-2 ring-indigo-100" : "border-slate-200"}`}>
               {plan.badge && <span className={`absolute -top-3 right-5 rounded-full px-3 py-1 text-[10px] font-black tracking-wider ${plan.id === "all" ? "bg-amber-300 text-amber-950" : "bg-emerald-100 text-emerald-800"}`}>{plan.badge}</span>}
               <p className="text-sm font-bold text-slate-700">{plan.title}</p>
-              <div className="mt-2 flex items-baseline gap-1"><span className="text-4xl font-black text-slate-950">₹{plan.price}</span><span className="text-xs text-slate-500">one-time</span></div>
-              <p className="mt-2 text-sm text-slate-600">{plan.detail}</p>
+              <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1"><span className="text-4xl font-black text-slate-950">₹{plan.price}</span><span className="text-xs text-slate-500">one-time</span>{plan.id === "double" && <span className="text-xs text-slate-400 line-through">₹98 separately</span>}{plan.id === "all" && <span className="text-xs text-slate-400 line-through">₹196 separately</span>}</div>
+              <p className="mt-2 text-sm text-slate-600">{plan.detail}</p>{plan.id === "all" && <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">Best per-subject value: ₹32.25 per kit</p>}{plan.id === "double" && <p className="mt-3 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800">₹39.50 per kit</p>}
               <button onClick={() => {
                 if (plan.id === "single" && selected.length !== 1) { setNotice(true); return; }
                 if (plan.id === "double" && selected.length !== 2) { setNotice(true); return; }
