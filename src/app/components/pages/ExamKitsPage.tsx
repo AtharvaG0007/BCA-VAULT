@@ -105,6 +105,7 @@ export function ExamKitsPage() {
         <button onClick={() => navigate("/app/dashboard")} className="mb-5 inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-white hover:text-indigo-700">
           <ArrowLeft className="h-4 w-4" /> Back to dashboard
         </button>
+        <button onClick={() => navigate("/app/exam-kits/portal")} className="mb-5 ml-2 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-50"><LockKeyhole className="h-4 w-4" /> My orders & purchased kits</button>
 
         <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-950 via-indigo-950 to-indigo-800 p-6 text-white shadow-xl sm:p-10">
           <div className="pointer-events-none absolute -right-10 -top-16 h-64 w-64 rounded-full bg-indigo-400/20 blur-3xl" />
