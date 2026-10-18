@@ -66,11 +66,11 @@ export function ReferralPage() {
               className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.1] mb-6"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              Refer 3 friends. <span className="text-[#1E40AF]">Unlock Most Repeated Questions FREE.</span>
+              Referral rewards are being updated.
             </h1>
 
             <p className="text-base sm:text-lg lg:text-xl text-slate-600 max-w-2xl mx-auto mb-8 leading-relaxed">
-              Your reward unlocks after 3 successful referrals — when the referred students complete an approved Semester 1 purchase.
+              We are updating the referral program to support rewards only after a referred student’s purchase has been verified.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -93,7 +93,7 @@ export function ReferralPage() {
             </div>
 
             <p className="text-[11px] text-slate-600 mt-4">
-              * Reward unlocks strictly after 3 successful Semester 1 referral payment approvals.
+              Cash rewards are not active until the updated verified-purchase program is enabled.
             </p>
           </motion.div>
         </div>
@@ -110,7 +110,7 @@ export function ReferralPage() {
               How It Works
             </h2>
             <p className="text-slate-600 text-sm sm:text-base">
-              A transparent, 3-step process designed to reward students who help fellow classmates prepare better.
+              We are rebuilding referral rewards around verified purchases and auditable reward tracking.
             </p>
           </div>
 
@@ -177,9 +177,9 @@ export function ReferralPage() {
                     <CheckCircle2 className="w-5 h-5" />
                   </div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">3 Referrals Unlocks Reward</h3>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Verified Purchase Rewards</h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Once 3 friends have their Semester 1 purchase verified and approved by admin, your Semester 1 Most Repeated Questions pack unlocks automatically!
+                  Referral reward eligibility and payment tracking will be available after the updated reward system is enabled. 1 Most Repeated Questions pack unlocks automatically!
                 </p>
               </div>
               <div className="mt-6 pt-4 border-t border-slate-200/60 text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
@@ -205,7 +205,7 @@ export function ReferralPage() {
               Semester 1 Most Repeated Questions
             </h2>
             <p className="text-slate-600 text-sm sm:text-base">
-              Once you complete 3 successful referrals with approved Semester 1 purchases, these three high-yield revision resources are unlocked:
+              Once you complete verified purchase with approved Semester 1 purchases, these three high-yield revision resources are unlocked:
             </p>
           </div>
 
@@ -320,7 +320,7 @@ export function ReferralPage() {
             </h2>
 
             <p className="text-base sm:text-lg text-blue-100 max-w-xl mx-auto mb-8 leading-relaxed">
-              Refer 3 friends. Unlock Most Repeated Questions FREE when they complete an approved Semester 1 purchase.
+              Refer 3 friends. Referral rewards update in progress when they complete an approved Semester 1 purchase.
             </p>
 
             <Button
