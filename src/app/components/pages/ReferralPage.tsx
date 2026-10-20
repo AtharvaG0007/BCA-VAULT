@@ -158,7 +158,7 @@ export function ReferralPage() {
                 </p>
               </div>
               <div className="mt-6 pt-4 border-t border-slate-200/60 text-[11px] text-slate-500 font-medium">
-                Trackable in real time on your dashboard
+                Status updates after admin approval
               </div>
             </div>
 
