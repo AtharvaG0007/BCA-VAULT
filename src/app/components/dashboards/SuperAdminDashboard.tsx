@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link, useLocation } from "react-router";
 import { toast } from "sonner";
 import {
@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock,
-  ClipboardCheck,
   Copy,
   Eye,
   EyeOff,
@@ -58,10 +57,8 @@ function generateStrongPassword(): string {
 
 type Row = Record<string, any>;
 
-const AdminQuizManagement = lazy(() => import("../quiz/AdminQuizManagement").then(m => ({default:m.AdminQuizManagement})));
 
 const PAGES = [
-  { key: "quiz", label: "Quiz Management", icon: ClipboardCheck, group: "CONTENT" },
   { key: "dashboard", label: "Dashboard", icon: BarChart3, group: "DASHBOARD" },
   { key: "students", label: "Students", icon: Users, group: "STUDENTS" },
   { key: "payments", label: "Payment CRM", icon: ShieldCheck, group: "PAYMENTS" },
@@ -554,7 +551,6 @@ export function SuperAdminDashboard() {
   }, []);
 
   const loadData = async () => {
-    if (activeTab === "quiz") { setLoading(false); setError(""); return; }
     setLoading(true);
     setError("");
     try {
@@ -989,7 +985,6 @@ export function SuperAdminDashboard() {
           </div>
         )}
 
-        {activeTab === "quiz" && <Suspense fallback={<p>Loading quiz management…</p>}><AdminQuizManagement /></Suspense>}
         {loading && !Object.keys(data).length ? (
           <>
             {activeTab === "dashboard" && <DashboardSkeleton />}

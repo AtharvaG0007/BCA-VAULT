@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
-import { BookOpen, Menu, X, Search, ChevronDown, User, LogOut, LayoutDashboard, Gift, Home, FileText, Package, Trophy } from "lucide-react";
+import { BookOpen, Menu, X, Search, ChevronDown, User, LogOut, LayoutDashboard, Gift, Home, FileText, Package } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "./ui/utils";
 import { useAuth } from "./auth/AuthContext";
@@ -9,8 +9,7 @@ import { useAuth } from "./auth/AuthContext";
 const navLinks = [
   { label: "Notes", href: "/notes", children: [{ label: "Semester 1 Notes", href: "/semester/1" }, { label: "All Subjects", href: "/notes" }, { label: "Semester 2 (Coming Soon)", href: "/notes" }] },
   { label: "PYQ", href: "/pyq", children: [{ label: "PYQ Papers", href: "/pyq" }, { label: "PYQ Analysis", href: "/pyq/analysis" }] },
-  { label: "Bundles", href: "/bundles" },
-  { label: "Quiz", href: "/app/quiz", badge: "₹299 Prize" },
+  { label: "Question Packs", href: "/exam-kits", badge: "Paid add-on" },
   { label: "Referral Program", href: "/referral", badge: "Unlock Qs" },
 ];
 
@@ -159,8 +158,7 @@ export function Navbar() {
       <div><span className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-2 block mb-1.5">Main Navigation</span><div className="space-y-0.5">
         <MobileLink to="/" icon={<Home className="w-3.5 h-3.5" />} label="Home" close={() => setMobileOpen(false)} />
         <MobileLink to="/notes" icon={<FileText className="w-3.5 h-3.5" />} label="Notes" close={() => setMobileOpen(false)} />
-        <MobileLink to="/bundles" icon={<Package className="w-3.5 h-3.5" />} label="Semester 1 Bundle" close={() => setMobileOpen(false)} />
-        <MobileLink to="/app/quiz" icon={<Trophy className="w-3.5 h-3.5 text-amber-500" />} label="Quiz Competition" close={() => setMobileOpen(false)} />
+        <MobileLink to="/exam-kits" icon={<Package className="w-3.5 h-3.5" />} label="Paid Question Packs" close={() => setMobileOpen(false)} />
         {isLoggedIn && <MobileLink to="/app/notices" icon={<BellIcon />} label="Notice Board" close={() => setMobileOpen(false)} />}
         <MobileLink to="/referral" icon={<Gift className="w-3.5 h-3.5" />} label="Referral Program" close={() => setMobileOpen(false)} />
       </div></div>

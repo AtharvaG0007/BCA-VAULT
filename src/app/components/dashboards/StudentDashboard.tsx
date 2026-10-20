@@ -1,4 +1,3 @@
-import { QuizDiscovery } from "../quiz/QuizPage";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import {
@@ -40,7 +39,7 @@ import { StudentLearningView } from "../student/StudentLearningView";
 import { StudentProfileView } from "../student/StudentProfileView";
 import { StudentReferralView } from "../student/StudentReferralView";
 import { StudentNoticeBoard } from "../student/StudentNoticeBoard";
-import { Bell, Gift, Trophy, Award } from "lucide-react";
+import { Bell, Gift, Award } from "lucide-react";
 
 interface AccessItem {
   id: string;
@@ -474,8 +473,6 @@ export function StudentDashboard() {
   const studentName = appUser?.name || "Student";
   const studentSemester = appUser?.semester || 1;
   const hasActiveBundle = access.length > 0;
-  const isPaymentPending = !hasActiveBundle && latestPayment?.status === "pending";
-  const isNoPurchase = !hasActiveBundle && !isPaymentPending;
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col lg:flex-row w-full max-w-full overflow-x-hidden">
@@ -576,20 +573,7 @@ export function StudentDashboard() {
               <span>Answer Writing Guide</span>
             </button>
 
-            <div className="pt-2 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
-              Practice & Challenges
-            </div>
 
-            <button
-              onClick={() => navigate('/app/quiz')}
-              className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 hover:bg-blue-50 hover:text-[#1E40AF] transition text-left"
-            >
-              <Trophy className="h-4 w-4 shrink-0 text-amber-500" />
-              <span>Quiz Competition</span>
-              <span className="ml-auto text-[10px] font-extrabold bg-blue-100 text-[#1E40AF] px-1.5 py-0.5 rounded-full">
-                ₹100
-              </span>
-            </button>
 
             <button
               onClick={() => switchTab("ai")}
@@ -881,23 +865,7 @@ export function StudentDashboard() {
                 <span>Answer Writing Guide</span>
               </button>
 
-              <div className="pt-2 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
-                Practice & Challenges
-              </div>
-
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  navigate("/app/quiz");
-                }}
-                className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-[#1E40AF] transition text-left min-h-[44px] cursor-pointer"
-              >
-                <Trophy className="h-4 w-4 shrink-0 text-amber-500" />
-                <span>Quiz Competition</span>
-                <span className="ml-auto text-[10px] font-extrabold bg-blue-100 text-[#1E40AF] px-1.5 py-0.5 rounded-full">
-                  ₹100
-                </span>
-              </button>
+  
 
               <button
                 onClick={() => switchTab("ai")}
@@ -1039,7 +1007,6 @@ export function StudentDashboard() {
               </button>
             </header>
 
-            <QuizDiscovery />
             {message && (
               <div
                 role="alert"
@@ -1067,162 +1034,22 @@ export function StudentDashboard() {
               </div>
             )}
 
-            {/* ── State Hero: State A (No Purchase), State B (Pending), or State C (Active) ── */}
-            {hasActiveBundle ? (
-              /* STATE C: PAYMENT APPROVED / BUNDLE ACTIVE */
-              <section className="rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50/80 via-white to-teal-50/40 p-4 sm:p-6 lg:p-7 shadow-2xs w-full min-w-0">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-1.5 min-w-0">
-                    <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-bold text-emerald-800 border border-emerald-200">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                      <span>Semester 1 Bundle Active</span>
-                    </div>
-                    <h2 className="text-base sm:text-xl font-bold text-slate-900 leading-snug">
-                      Your Semester 1 study materials are ready
-                    </h2>
-                    <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
-                      You have full access to official theory notes and most repeated topics. Start studying below or ask the AI assistant whenever you need help.
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      const el = document.getElementById("study-materials") || document.getElementById("exam-roadmaps");
-                      if (el) el.scrollIntoView({ behavior: "smooth" });
-                    }}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-xs font-bold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 transition shrink-0 cursor-pointer"
-                  >
-                    <span>Start Studying</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
+            {/* Free-first onboarding: all published study notes are free. */}
+            <section className="relative overflow-hidden rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-sky-50 p-5 sm:p-7 shadow-sm">
+              <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-emerald-100/70 blur-2xl" aria-hidden="true" />
+              <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="max-w-2xl">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide text-emerald-700"><CheckCircle2 className="h-3.5 w-3.5" /> Study notes are free</span>
+                  <h2 className="mt-3 text-xl sm:text-2xl font-black tracking-tight text-slate-900">Learn first. Pay only for exam-ready answers.</h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">Explore published BCA notes, revision material and important topics at no cost. Optional Most Repeated Questions packs include exam-focused questions with answers.</p>
+                  <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold"><span className="rounded-full bg-white px-3 py-1.5 text-emerald-800 border border-emerald-100">✓ Free study notes</span><span className="rounded-full bg-white px-3 py-1.5 text-slate-700 border border-slate-200">✓ No paid notes bundle</span></div>
                 </div>
-              </section>
-            ) : isPaymentPending ? (
-              /* STATE B: PAYMENT PENDING REVIEW */
-              <section className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50/90 via-white to-orange-50/50 p-4 sm:p-6 lg:p-8 shadow-2xs w-full min-w-0">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-5">
-                  <div className="space-y-2 min-w-0">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-100 px-3 py-1 text-xs font-bold text-amber-900">
-                      <Clock className="h-3.5 w-3.5 text-amber-600 animate-pulse shrink-0" />
-                      <span>⏳ Payment Under Review</span>
-                    </div>
-                    <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
-                      Payment Under Review
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-600 max-w-xl leading-relaxed">
-                      Your payment has been submitted successfully. We're reviewing your payment. Your Semester 1 access will appear here once approved.
-                    </p>
-                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs pt-1">
-                      <span className="font-semibold text-amber-900">Status: ⏳ Payment Pending</span>
-                      {latestPayment?.reference_id && (
-                        <span className="font-mono text-slate-500 text-[11px] sm:text-xs">
-                          Ref: <strong className="text-slate-700">{latestPayment.reference_id}</strong>
-                          {latestPayment.utr ? ` • UTR: ${latestPayment.utr}` : ""}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-start sm:items-end gap-2 shrink-0 w-full sm:w-auto">
-                    <button
-                      onClick={() => void loadData()}
-                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-amber-300 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold px-4 py-2.5 text-xs transition cursor-pointer shadow-xs"
-                    >
-                      <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-                      <span>Check Payment Status</span>
-                    </button>
-                    <span className="text-[11px] text-slate-500">Verification usually takes a short time</span>
-                  </div>
+                <div className="relative flex w-full shrink-0 flex-col gap-2 sm:w-auto">
+                  <button onClick={() => { document.getElementById("study-materials")?.scrollIntoView({behavior:"smooth"}); }} className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700">Browse free notes <BookOpen className="h-4 w-4" /></button>
+                  <button onClick={() => navigate("/app/exam-kits")} className="inline-flex items-center justify-center gap-2 rounded-xl border border-violet-200 bg-white px-5 py-3 text-sm font-bold text-violet-800 transition hover:bg-violet-50">Explore question packs <ArrowRight className="h-4 w-4" /></button>
                 </div>
-              </section>
-            ) : (
-              /* STATE A: NEW STUDENT / NO PURCHASE ONBOARDING */
-              <section className="rounded-3xl border border-indigo-200 bg-gradient-to-br from-indigo-50/90 via-white to-amber-50/40 p-4 sm:p-6 lg:p-8 shadow-2xs w-full min-w-0">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 sm:gap-6">
-                  <div className="space-y-3 min-w-0">
-                    <div className="inline-flex items-center gap-2 rounded-full bg-indigo-100/80 px-3 py-1 text-xs font-bold text-indigo-900 flex-wrap">
-                      <span>👋 Welcome to BCA Vault</span>
-                      <span className="text-indigo-400 hidden sm:inline">•</span>
-                      <span className="text-amber-800 font-semibold">Semester 1 bundle isn't active yet</span>
-                    </div>
-                    <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
-                      Get your Semester 1 Study Notes + Most Repeated Topics
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-600 max-w-xl leading-relaxed">
-                      Your account is ready! Complete your bundle purchase to unlock all official Semester 1 study notes and high-priority exam topics in one complete package.
-                    </p>
-                    <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 text-xs font-semibold text-slate-700 pt-1">
-                      <span className="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" /> Semester 1 Study Notes
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" /> Semester 1 Most Repeated Topics
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end gap-3 shrink-0 bg-white/90 border border-indigo-100 rounded-2xl p-4 sm:p-5 shadow-xs w-full lg:w-auto min-w-0">
-                    <div>
-                      <span className="text-xs font-medium text-slate-500">Semester 1 BCA Bundle</span>
-                      <div className="text-2xl sm:text-3xl font-black text-slate-900">₹100</div>
-                    </div>
-                    <button
-                      onClick={() => navigate("/purchase")}
-                      className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 py-3 text-xs shadow-md shadow-indigo-600/20 transition cursor-pointer"
-                    >
-                      <ShoppingBag className="h-4 w-4" />
-                      <span>Buy Semester 1 Bundle</span>
-                    </button>
-                    <button
-                      onClick={() => void loadData()}
-                      className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 underline transition cursor-pointer"
-                    >
-                      Already purchased? Refresh your status
-                    </button>
-                  </div>
-                </div>
-
-                {/* Compact Onboarding Steps */}
-                <div className="mt-6 pt-5 border-t border-indigo-100/80">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">
-                    Here's how it works:
-                  </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
-                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-2.5 sm:p-3 min-w-0">
-                      <div className="flex items-center justify-between text-xs font-bold text-emerald-800">
-                        <span>1. Account</span>
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                      </div>
-                      <p className="text-[10px] text-emerald-700 mt-1">Created ✓</p>
-                    </div>
-
-                    <div className="rounded-xl border-2 border-indigo-500 bg-indigo-50/80 p-2.5 sm:p-3 shadow-xs min-w-0">
-                      <div className="flex items-center justify-between text-xs font-bold text-indigo-900">
-                        <span>2. Purchase</span>
-                        <span className="rounded bg-indigo-600 text-white text-[9px] px-1.5 py-0.2 font-extrabold uppercase tracking-wider shrink-0">NEXT</span>
-                      </div>
-                      <p className="text-[10px] text-indigo-800 mt-1">₹499 Package</p>
-                    </div>
-
-                    <div className="rounded-xl border border-slate-200 bg-white/70 p-2.5 sm:p-3 opacity-80 min-w-0">
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-600">
-                        <span>3. Approval</span>
-                        <Clock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                      </div>
-                      <p className="text-[10px] text-slate-500 mt-1">Review</p>
-                    </div>
-
-                    <div className="rounded-xl border border-slate-200 bg-white/70 p-2.5 sm:p-3 opacity-80 min-w-0">
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-600">
-                        <span>4. Study</span>
-                        <BookOpen className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                      </div>
-                      <p className="text-[10px] text-slate-500 mt-1">Access Notes</p>
-                    </div>
-                  </div>
-                </div>
-              </section>
-            )}
+              </div>
+            </section>
 
             {/* Exam Kits — separate product from the existing Semester bundle */}
             <section className="rounded-3xl border border-violet-200 bg-gradient-to-r from-violet-50 via-white to-indigo-50 p-4 sm:p-6 shadow-sm">
@@ -1258,8 +1085,8 @@ export function StudentDashboard() {
                   <ShieldCheck className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">Active Courses</h2>
-                  <p className="text-xs text-slate-500">Authorized curriculum packages linked to your account</p>
+                  <h2 className="text-base font-bold text-slate-900">My Access</h2>
+                  <p className="text-xs text-slate-500">Optional paid question packs and any other access granted to your account</p>
                 </div>
               </div>
 

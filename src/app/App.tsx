@@ -42,7 +42,6 @@ function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ d
   });
 }
 
-const QuizPage = safeLazy(() => import("./components/quiz/QuizPage").then(m => ({default:m.QuizPage})));
 const HomePage = safeLazy(() => import("./components/pages/HomePage").then((m) => ({ default: m.HomePage })));
 const NotesPage = safeLazy(() => import("./components/pages/NotesPage").then((m) => ({ default: m.NotesPage })));
 const PYQPage = safeLazy(() => import("./components/pages/PYQPage").then((m) => ({ default: m.PYQPage })));
@@ -142,8 +141,8 @@ function AppLayout() {
               <Route path="/admin-root/:subpage" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/superadmin" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/superadmin/*" element={<Navigate to="/admin/dashboard" replace />} />
-              <Route path="/app/quiz" element={<QuizPage />} />
-              <Route path="/app/quiz/:competitionId" element={<QuizPage />} />
+              <Route path="/app/quiz" element={<Navigate to="/app/dashboard" replace />} />
+              <Route path="/app/quiz/:competitionId" element={<Navigate to="/app/dashboard" replace />} />
               <Route path="/app/dashboard" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
               <Route path="/app/notices" element={<ProtectedRoute allowedRoles={["member"]}><StudentNoticeBoardPage /></ProtectedRoute>} />
               <Route path="/app/*" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />

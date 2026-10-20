@@ -47,19 +47,19 @@ export function Hero() {
             </h1>
 
             <p className="text-lg text-[#4B5563] leading-relaxed mb-4 max-w-lg font-medium">
-              Semester 1 Notes + Most Repeated Topics — organised to help you prepare smarter for your BCA theory exams.
+              Free BCA study notes for everyday learning. Pay only when you want subject-wise Most Repeated Questions with exam-ready answers.
             </p>
 
             <p className="text-sm text-[#4B5563] leading-relaxed mb-6 max-w-lg">
-              Built for BCA students, with exam-focused material designed around real student preparation needs.
+              Browse notes for free, then choose an affordable question pack only when you need a focused last-mile revision.
             </p>
 
             {/* Mini feature list */}
             <div className="flex flex-col gap-2 mb-8">
               {[
-                "Semester 1 BCA Study Notes",
-                "Semester 1 Most Repeated Topics",
-                "Unit-Wise & Topic-Wise Theory Material",
+                "Free study notes and topic-wise learning material",
+                "No subscription or paid notes bundle",
+                "Optional paid Most Repeated Questions with answers",
               ].map((f) => (
                 <div key={f} className="flex items-center gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
@@ -76,9 +76,9 @@ export function Hero() {
                 <Button
                   size="lg"
                   className="bg-[#1E40AF] hover:bg-[#1E3A8A] text-white px-8 h-12 rounded-xl shadow-lg shadow-blue-200 text-sm font-bold"
-                  onClick={() => navigate("/purchase")}
+                  onClick={() => navigate("/notes")}
                 >
-                  <span>Get Semester 1 Bundle</span>
+                  <span>Explore Free Notes</span>
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
 
@@ -97,10 +97,10 @@ export function Hero() {
                     size="lg"
                     variant="outline"
                     className="border-slate-200 text-slate-700 hover:bg-slate-50 h-12 rounded-xl text-sm font-bold"
-                    onClick={() => navigate("/auth/signup")}
+                    onClick={() => navigate("/exam-kits")}
                   >
                     <UserPlus className="w-4 h-4 mr-2 text-[#1E40AF]" />
-                    <span>Create Free Account</span>
+                    <span>View Question Packs</span>
                   </Button>
                 )}
               </div>
