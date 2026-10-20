@@ -7,6 +7,7 @@ import {
   Bell,
   BookOpen,
   CheckCircle2,
+  ClipboardCheck,
   ChevronRight,
   Clock,
   Copy,
