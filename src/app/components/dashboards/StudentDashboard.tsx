@@ -25,7 +25,6 @@ import {
   Search,
   ShieldAlert,
   ShieldCheck,
-  ShoppingBag,
   Sparkles,
   User,
   Video,
@@ -449,6 +448,7 @@ export function StudentDashboard() {
   const studentName = appUser?.name || "Student";
   const studentSemester = appUser?.semester || 1;
   const hasActiveBundle = access.length > 0;
+  const isPaymentPending = false;
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col lg:flex-row w-full max-w-full overflow-x-hidden">
@@ -1054,195 +1054,14 @@ export function StudentDashboard() {
               </div>
             </section>
 
-            {/* Active Courses Section */}
-            <section className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 lg:p-7 shadow-2xs w-full min-w-0">
-              <div className="flex items-center gap-3 mb-5 border-b border-slate-100 pb-4">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-600 shrink-0">
-                  <ShieldCheck className="h-5 w-5" />
-                </div>
-                <div>
-                  <h2 className="text-base font-bold text-slate-900">My Access</h2>
-                  <p className="text-xs text-slate-500">Optional paid question packs and any other access granted to your account</p>
-                </div>
+            {/* Free notes are the default; purchases apply only to question-answer packs. */}
+            <section className="rounded-2xl border border-slate-200 bg-white px-4 py-4 sm:px-5">
+              <div className="flex items-start gap-3">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><BookOpen className="h-5 w-5" /></div>
+                <div><h2 className="text-sm font-extrabold text-slate-900">Your study library is free</h2><p className="mt-1 text-xs leading-5 text-slate-600">Open any published study note or topic guide below. Only optional Most Repeated Questions packs with answers require payment.</p></div>
               </div>
-
-              {loading && access.length === 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {Array.from({ length: 2 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/60 p-4"
-                    >
-                      <div className="space-y-2">
-                        <div className="h-3.5 w-20 bg-indigo-100 rounded-md animate-pulse" />
-                        <div className="h-4 w-44 bg-slate-200 rounded animate-pulse" />
-                      </div>
-                      <div className="h-6 w-20 rounded-full bg-emerald-100/70 animate-pulse" />
-                    </div>
-                  ))}
-                </div>
-              ) : isPaymentPending ? (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-start sm:items-center gap-3.5">
-                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-100 text-amber-800 shrink-0">
-                      <Clock className="h-5 w-5 animate-pulse" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900">Semester 1 Bundle — Verification In Progress</h3>
-                      <p className="text-xs text-slate-600 mt-0.5">
-                        Your payment was submitted. Materials unlock automatically as soon as verified by our team.
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => void loadData()}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-white px-3.5 py-2 text-xs font-bold text-amber-900 hover:bg-amber-50 transition shrink-0 self-start sm:self-auto cursor-pointer"
-                  >
-                    <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
-                    <span>Check Status</span>
-                  </button>
-                </div>
-              ) : isNoPurchase ? (
-                <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-start sm:items-center gap-3.5">
-                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-indigo-100 text-indigo-700 shrink-0">
-                      <Package className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900">You haven't purchased the Semester 1 Bundle yet</h3>
-                      <p className="text-xs text-slate-600 mt-0.5">
-                        Purchase the bundle to unlock your Semester 1 study materials.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
-                    <button
-                      onClick={() => navigate("/purchase")}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-xs font-bold text-white shadow-sm transition cursor-pointer"
-                    >
-                      <ShoppingBag className="h-3.5 w-3.5" />
-                      <span>Buy Semester 1 Bundle</span>
-                    </button>
-                    <button
-                      onClick={() => void loadData()}
-                      className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
-                      title="Refresh status"
-                    >
-                      <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
-                      <span>Refresh</span>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {access.map((item) => {
-                    const title = Array.isArray(item.bundles)
-                      ? item.bundles[0]?.title
-                      : item.bundles?.title;
-                    return (
-                      <div
-                        key={item.id}
-                        className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/60 p-4"
-                      >
-                        <div className="space-y-1">
-                          <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase text-indigo-700">
-                            Semester {studentSemester}
-                          </span>
-                          <h3 className="text-xs font-bold text-slate-900">
-                            {title || "BCA Semester 1 Complete Bundle"}
-                          </h3>
-                        </div>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200">
-                          <CheckCircle2 className="h-3 w-3" /> Active
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
             </section>
 
-            {/* ── Materials Categorization & Display ──────────────────────── */}
-            {(() => {
-              // Strictly Semester 1: exclude Semester 2, referral rewards, duplicate C Programming records, dedicated Roadmaps, and Exam Writing Guide
-              const displayableNotes = notes.filter(
-                (n) =>
-                  (n.semester === 1 || n.semester === null) &&
-                  !isReferralReward(n) &&
-                  !isDuplicateCProgRecord(n) &&
-                  !isExamRoadmap(n) &&
-                  !isExamAnswerWritingGuide(n)
-              );
-
-              // Deduplicate so each normalized subject has AT MOST one canonical note
-              const mostRepeatedTopicNotes = CANONICAL_TOPIC_SUBJECTS.map((subjectKey) => {
-                if (subjectKey === "C Programming") {
-                  const cProgNote = displayableNotes.find(
-                    (n) => n.id === CANONICAL_C_PROGRAMMING_NOTE_ID
-                  );
-                  if (cProgNote) return formatCanonicalTopicNote(cProgNote);
-                }
-
-                if (subjectKey === "Foundation of Computing") {
-                  const foundationNote = displayableNotes.find(
-                    (n) => n.id === CANONICAL_FOUNDATION_NOTE_ID
-                  );
-                  if (foundationNote) return formatCanonicalTopicNote(foundationNote);
-                }
-
-                const matchedNote = displayableNotes.find(
-                  (n) => isMostRepeatedTopic(n) && getNormalizedTopicSubject(n) === subjectKey
-                );
-                return matchedNote ? formatCanonicalTopicNote(matchedNote) : null;
-              }).filter(Boolean) as NoteItem[];
-
-              const filteredNotes = displayableNotes
-                .filter((n) => {
-                  if (noteCategory === "repeated" && !isMostRepeatedTopic(n)) return false;
-                  if (noteCategory === "theory" && !isStudyNote(n)) return false;
-                  if (noteSearch.trim()) {
-                    const q = noteSearch.toLowerCase().trim();
-                    const matchTitle = n.title.toLowerCase().includes(q);
-                    const matchSubject = n.subject?.toLowerCase().includes(q);
-                    const matchDesc = n.description?.toLowerCase().includes(q);
-                    return Boolean(matchTitle || matchSubject || matchDesc);
-                  }
-                  return true;
-                })
-                .map((n) => (isMostRepeatedTopic(n) ? formatCanonicalTopicNote(n) : n))
-                .sort((a, b) => {
-                  const isTopicA = isMostRepeatedTopic(a);
-                  const isTopicB = isMostRepeatedTopic(b);
-                  if (isTopicA && isTopicB) {
-                    return (
-                      topicSortOrder(getNormalizedTopicSubject(a)) -
-                      topicSortOrder(getNormalizedTopicSubject(b))
-                    );
-                  }
-                  if (isTopicA && !isTopicB) return -1;
-                  if (!isTopicA && isTopicB) return 1;
-                  return 0;
-                });
-
-              const examRoadmapCards = EXAM_ROADMAP_CONFIGS.map((cfg) => {
-                const matchedNote = notes.find((n) => {
-                  if (!isExamRoadmap(n)) return false;
-                  const p = (n.storage_path || "").toLowerCase();
-                  const t = (n.title || "").toLowerCase();
-                  return p.includes(cfg.pathMatch) || t.includes(cfg.titleMatch);
-                });
-                return {
-                  ...cfg,
-                  note: matchedNote,
-                };
-              });
-
-              // Retrieve the Exam Answer Writing Guide note
-              const examAnswerGuideNote = notes.find((n) => isExamAnswerWritingGuide(n));
-
-              return (
-                <>
-                  {/* ── 📚 1. Study Notes & Materials Hub Section ───────────────── */}
                   <section id="study-materials" className="space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div>
@@ -1396,7 +1215,7 @@ export function StudentDashboard() {
                               </div>
 
                               <div className="mt-5 pt-3 border-t border-slate-100">
-                                {hasActiveBundle ? (
+                                {true ? (
                                   <button
                                     onClick={() => void openNote(note)}
                                     disabled={openingId === note.id}
@@ -1433,7 +1252,7 @@ export function StudentDashboard() {
                                     className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-xs font-bold text-white transition cursor-pointer shadow-xs"
                                   >
                                     <Lock className="h-3.5 w-3.5" />
-                                    <span>Unlock with Bundle (₹499)</span>
+                                    <span>View Question Packs</span>
                                   </button>
                                 )}
                               </div>
@@ -1570,7 +1389,7 @@ export function StudentDashboard() {
                             </div>
 
                             <div className="mt-4 pt-3 border-t border-slate-100">
-                              {hasActiveBundle ? (
+                              {true ? (
                                 <button
                                   onClick={() => card.note && void openNote(card.note)}
                                   disabled={!card.note || openingId === card.note?.id}
@@ -1689,7 +1508,7 @@ export function StudentDashboard() {
 
                       {/* Primary CTA Area */}
                       <div className="flex flex-col sm:flex-row lg:flex-col items-stretch lg:items-end justify-center gap-3 shrink-0 lg:min-w-[240px] pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100">
-                        {hasActiveBundle ? (
+                        {true ? (
                           <button
                             onClick={() => examAnswerGuideNote && void openNote(examAnswerGuideNote)}
                             disabled={!examAnswerGuideNote || openingId === examAnswerGuideNote?.id}
@@ -1805,7 +1624,7 @@ export function StudentDashboard() {
                             </div>
 
                             <div className="mt-5 pt-3 border-t border-slate-100">
-                              {hasActiveBundle ? (
+                              {true ? (
                                 <button
                                   onClick={() => void openNote(note)}
                                   disabled={openingId === note.id}
