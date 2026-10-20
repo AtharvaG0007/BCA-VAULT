@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { PDFDocument, rgb, StandardFonts, degrees } from "npm:pdf-lib@1.17.9";
+import { PDFDocument, rgb, StandardFonts, degrees } from "npm:pdf-lib@1.17.1";
 
 const ALLOWED_ORIGINS = new Set([
   "https://bca-vault.portalbcavault.workers.dev",
