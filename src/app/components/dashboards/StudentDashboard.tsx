@@ -560,6 +560,15 @@ export function StudentDashboard() {
             </button>
 
             <button
+              onClick={() => navigate("/student/exam-kits")}
+              className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 transition text-left"
+            >
+              <Package className="h-4 w-4 shrink-0 text-indigo-600" />
+              <span>My Exam Kits</span>
+              <span className="ml-auto rounded-full bg-indigo-100 px-1.5 py-0.5 text-[9px] font-black text-indigo-700">KITS</span>
+            </button>
+
+            <button
               onClick={() => {
                 switchTab("dashboard");
                 setTimeout(() => {
@@ -849,6 +858,15 @@ export function StudentDashboard() {
                 <Video className="h-4 w-4 shrink-0 text-violet-600" />
                 <span>Live Bootcamps</span>
                 <span className="ml-auto rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-black text-emerald-700">FREE</span>
+              </button>
+
+              <button
+                onClick={() => { setMobileMenuOpen(false); navigate("/student/exam-kits"); }}
+                className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition text-left min-h-[44px] cursor-pointer"
+              >
+                <Package className="h-4 w-4 shrink-0 text-indigo-600" />
+                <span>My Exam Kits</span>
+                <span className="ml-auto rounded-full bg-indigo-100 px-1.5 py-0.5 text-[9px] font-black text-indigo-700">KITS</span>
               </button>
 
               <button

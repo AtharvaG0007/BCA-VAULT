@@ -160,6 +160,8 @@ function AppLayout() {
               <Route path="/app/dashboard" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
               <Route path="/app/notices" element={<ProtectedRoute allowedRoles={["member"]}><StudentNoticeBoardPage /></ProtectedRoute>} />
               <Route path="/app/*" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
+              <Route path="/student/exam-kits" element={<ProtectedRoute allowedRoles={["member"]}><StudentExamKitsPortal /></ProtectedRoute>} />
+              <Route path="/student/exam-kits/*" element={<ProtectedRoute allowedRoles={["member"]}><StudentExamKitsPortal /></ProtectedRoute>} />
               <Route path="/student" element={<Navigate to="/app/dashboard" replace />} />
               <Route path="/student/*" element={<Navigate to="/app/dashboard" replace />} />
               <Route path="/terms-and-conditions" element={<TermsPage />} />
