@@ -377,8 +377,8 @@ export function StudentReferralView({
             </div>
             <p className="text-xs text-slate-500">
               {isRewardUnlocked
-                ? "3 / 3 Successful Referrals — Your reward contains high-frequency exam questions for Semester 1."
-                : "Free-content referral rewards are no longer offered for new referrals."}
+                ? "Your previously unlocked Semester 1 resources remain available."
+                : "The referral reward program is being updated and has not launched yet."}
             </p>
           </div>
 
@@ -398,7 +398,7 @@ export function StudentReferralView({
         {/* Subjects Included Breakdown */}
         {isRewardUnlocked && (
           <div className="mb-6 p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 flex flex-wrap items-center gap-4 text-xs font-bold text-emerald-900">
-            <span className="text-[11px] uppercase tracking-wider text-emerald-700">Included in your reward:</span>
+            <span className="text-[11px] uppercase tracking-wider text-emerald-700">Your existing reward includes:</span>
             <span className="inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> C Programming</span>
             <span className="inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Foundation of Computing</span>
             <span className="inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> HTML + CSS + JavaScript</span>
