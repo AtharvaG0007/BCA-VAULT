@@ -1722,9 +1722,6 @@ export function StudentDashboard() {
                       </button>
                     </div>
                   </section>
-                </>
-              );
-            })()}
           </div>
         )}
       </main>
