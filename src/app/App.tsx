@@ -45,7 +45,6 @@ function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ d
 const HomePage = safeLazy(() => import("./components/pages/HomePage").then((m) => ({ default: m.HomePage })));
 const NotesPage = safeLazy(() => import("./components/pages/NotesPage").then((m) => ({ default: m.NotesPage })));
 const PYQPage = safeLazy(() => import("./components/pages/PYQPage").then((m) => ({ default: m.PYQPage })));
-const BundlesPage = safeLazy(() => import("./components/pages/BundlesPage").then((m) => ({ default: m.BundlesPage })));
 const ExamKitsPage = safeLazy(() => import("./components/pages/ExamKitsPage").then((m) => ({ default: m.ExamKitsPage })));
 const BootcampsPage = safeLazy(() => import("./components/pages/BootcampsPage").then((m) => ({ default: m.BootcampsPage })));
 const StudentExamKitsPortal = safeLazy(() => import("./components/pages/StudentExamKitsPortal").then((m) => ({ default: m.StudentExamKitsPortal })));
@@ -62,7 +61,6 @@ const TermsPage = safeLazy(() => import("./components/pages/TermsPage").then((m)
 const PrivacyPage = safeLazy(() => import("./components/pages/PrivacyPage").then((m) => ({ default: m.PrivacyPage })));
 const LegalConsentPage = safeLazy(() => import("./components/pages/LegalConsentPage").then((m) => ({ default: m.LegalConsentPage })));
 const SuccessPage = safeLazy(() => import("./components/pages/SuccessPage").then((m) => ({ default: m.SuccessPage })));
-const PaymentPage = safeLazy(() => import("./components/pages/PaymentPage").then((m) => ({ default: m.PaymentPage })));
 const AdminLoginPage = safeLazy(() => import("./components/pages/AdminLoginPage").then((m) => ({ default: m.AdminLoginPage })));
 const AdminEmailPage = safeLazy(() => import("./components/pages/AdminEmailPage").then((m) => ({ default: m.AdminEmailPage })));
 
@@ -108,7 +106,7 @@ function AppLayout() {
               <Route path="/notes" element={<PageWrapper><NotesPage /></PageWrapper>} />
               <Route path="/pyq" element={<PageWrapper><PYQPage /></PageWrapper>} />
               <Route path="/pyq/analysis" element={<PageWrapper><PYQPage /></PageWrapper>} />
-              <Route path="/bundles" element={<PageWrapper><BundlesPage /></PageWrapper>} />
+              <Route path="/bundles" element={<Navigate to="/pricing" replace />} />
               <Route path="/exam-kits" element={<PageWrapper><ExamKitsPage /></PageWrapper>} />
               <Route path="/app/exam-kits" element={<ProtectedRoute allowedRoles={["member"]}><ExamKitsPage /></ProtectedRoute>} />
               <Route path="/app/bootcamps" element={<ProtectedRoute allowedRoles={["member"]}><BootcampsPage /></ProtectedRoute>} />
@@ -118,7 +116,7 @@ function AppLayout() {
               <Route path="/pricing" element={<PageWrapper><PricingPage /></PageWrapper>} />
               <Route path="/semester/:sem" element={<PageWrapper><NotesPage /></PageWrapper>} />
               <Route path="/success" element={<PageWrapper><SuccessPage /></PageWrapper>} />
-              <Route path="/purchase" element={<PageWrapper><PaymentPage /></PageWrapper>} />
+              <Route path="/purchase" element={<Navigate to="/exam-kits" replace />} />
               <Route path="/auth/login" element={<PageWrapper><LoginPage /></PageWrapper>} />
               <Route path="/auth/signup" element={<PageWrapper><LoginPage initialMode="signup" /></PageWrapper>} />
               <Route path="/auth/register" element={<PageWrapper><LoginPage initialMode="signup" /></PageWrapper>} />

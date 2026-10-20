@@ -48,15 +48,6 @@ interface AccessItem {
   bundles: { title: string; price: number } | { title: string; price: number }[] | null;
 }
 
-interface PaymentRecord {
-  id: string;
-  reference_id?: string;
-  amount?: number;
-  utr?: string;
-  status?: string;
-  created_at?: string;
-}
-
 interface NoteItem {
   id: string;
   title: string;
@@ -341,7 +332,6 @@ export function StudentDashboard() {
   }, [mobileMenuOpen]);
 
   const [access, setAccess] = useState<AccessItem[]>([]);
-  const [latestPayment, setLatestPayment] = useState<PaymentRecord | null>(null);
   const [notes, setNotes] = useState<NoteItem[]>([]);
   const [noteCategory, setNoteCategory] = useState<"all" | "repeated" | "theory">("all");
   const [noteSearch, setNoteSearch] = useState("");
@@ -394,20 +384,9 @@ export function StudentDashboard() {
         .eq("published", true)
         .order("semester", { ascending: true });
 
-      const paymentPromise = user?.id
-        ? supabase
-            .from("payment_submissions")
-            .select("id,reference_id,amount,utr,status,created_at")
-            .eq("user_id", user.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle()
-        : Promise.resolve({ data: null, error: null });
-
-      const [accessRes, notesRes, paymentRes, noticeRes] = await Promise.all([
+      const [accessRes, notesRes, noticeRes] = await Promise.all([
         accessPromise,
         notesPromise,
-        paymentPromise,
         supabase.from("admin_notices").select("id", { count: "exact", head: true }).eq("published", true),
       ]);
 
@@ -423,9 +402,6 @@ export function StudentDashboard() {
         setNotes((notesRes.data ?? []) as unknown as NoteItem[]);
       }
 
-      if (paymentRes && !paymentRes.error && paymentRes.data) {
-        setLatestPayment(paymentRes.data as PaymentRecord);
-      }
       if (typeof noticeRes?.count === "number") {
         setNoticeCount(noticeRes.count);
       }

@@ -6,7 +6,7 @@ const footerLinks = {
     { label: "Notes", href: "/notes" },
     { label: "PYQ Papers", href: "/pyq" },
     { label: "PYQ Analysis", href: "/pyq/analysis" },
-    { label: "Bundles", href: "/bundles" },
+    { label: "Question Packs", href: "/exam-kits" },
   ],
   Company: [
     { label: "About Us", href: "/about" },
