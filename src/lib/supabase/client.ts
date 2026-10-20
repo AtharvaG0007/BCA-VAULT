@@ -13,11 +13,11 @@ export const supabase = createClient(supabaseUrl, publicAnonKey, {
   },
 });
 
-// Client for Super Admin UI (isolated memory session - no session persistence)
+// Client for Super Admin UI (isolated admin session in localStorage under bca_admin_auth)
 export const adminSupabase = createClient(supabaseUrl, publicAnonKey, {
   auth: {
-    persistSession: false,
-    autoRefreshToken: false,
+    persistSession: true,
+    autoRefreshToken: true,
     storageKey: "bca_admin_auth",
   },
 });

@@ -38,14 +38,6 @@ async function getAdminHeaders(): Promise<Record<string, string>> {
   } catch (err) {
     console.warn("[AdminExamKits] adminSupabase session error:", err);
   }
-  try {
-    const { data: studentSessionData } = await supabase.auth.getSession();
-    if (studentSessionData?.session?.access_token) {
-      return { Authorization: `Bearer ${studentSessionData.session.access_token}` };
-    }
-  } catch (err) {
-    console.warn("[AdminExamKits] supabase session error:", err);
-  }
   return {};
 }
 
@@ -63,6 +55,9 @@ export function AdminExamKitsPage({ embedded = false }: { embedded?: boolean }) 
     setError("");
     try {
       const headers = await getAdminHeaders();
+      if (!headers.Authorization) {
+        throw new Error("Super Admin session required. Please sign in via /admin-root-login to view and verify Exam Kits orders.");
+      }
       const { data, error } = await supabase.functions.invoke("exam-kits", {
         body: { action: "admin-list" },
         headers,

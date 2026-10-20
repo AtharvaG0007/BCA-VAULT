@@ -1542,6 +1542,17 @@ export function SuperAdminDashboard() {
                                     className="inline-flex items-center justify-end gap-2 relative"
                                     data-action-menu={s.user_id}
                                   >
+                                    {assignedBundles.length === 0 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setModal({ kind: "grant_access", initialUserId: s.user_id })}
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-indigo-500 transition shadow-xs cursor-pointer"
+                                        title="Approve access and grant bundle to student"
+                                      >
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-300" />
+                                        <span>Approve Access</span>
+                                      </button>
+                                    )}
                                     <button
                                       type="button"
                                       onClick={async () => {
