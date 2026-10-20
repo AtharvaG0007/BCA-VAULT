@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import { Link, useNavigate } from "react-router";
 import {
+  Award,
   Gift,
   Share2,
   Users,
