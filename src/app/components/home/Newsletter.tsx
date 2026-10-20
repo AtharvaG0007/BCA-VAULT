@@ -47,10 +47,10 @@ export function Newsletter() {
                 Top 3 Performers
               </div>
               <p className="text-2xl font-black text-white" style={{ fontFamily: 'var(--font-mono)' }}>
-                ₹199
+                ₹100
               </p>
               <p className="text-xs text-slate-300 mt-1">
-                Quiz winners are recognized separately; every student pays the same ₹199 bundle price.
+                Quiz winners are recognized separately; every student pays the same ₹100 bundle price.
               </p>
             </div>
 
@@ -60,10 +60,10 @@ export function Newsletter() {
                 First-Batch Students
               </div>
               <p className="text-2xl font-black text-white" style={{ fontFamily: 'var(--font-mono)' }}>
-                ₹199
+                ₹100
               </p>
               <p className="text-xs text-slate-300 mt-1">
-                Every student can get the complete Semester 1 bundle for ₹199.
+                Every student can get the complete Semester 1 bundle for ₹100.
               </p>
             </div>
           </div>

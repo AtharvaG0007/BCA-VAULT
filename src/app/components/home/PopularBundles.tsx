@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";
-import { ArrowRight, BookOpen, Check, X as XIcon, Zap, FileText, Sparkles, Trophy } from "lucide-react";
+import { ArrowRight, BookOpen, Check, X as XIcon, Zap, FileText, Sparkles } from "lucide-react";
 import { Button } from "../ui/button";
 
 const INCLUDES = [
@@ -13,7 +13,7 @@ const INCLUDES = [
 
 const EXCLUDES = [
   "Semester 2 Material (Future Release)",
-  "Most Repeated Questions (Referral Reward)",
+  "Most Repeated Questions (separate paid add-on)",
   "Previous Year Questions (PYQs)",
   "PYQ Analysis",
   "Mathematics",
@@ -93,11 +93,6 @@ export function PopularBundles() {
                   </div>
                 </div>
 
-                {/* Quiz winner banner */}
-                <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 px-3.5 py-2 text-xs font-medium text-amber-900">
-                  <Trophy className="h-4 w-4 text-amber-600 shrink-0" />
-                  <span>Top 3 Quiz Winners → <strong>₹299</strong> with exclusive winner access</span>
-                </div>
               </div>
 
               {/* Right: Price + CTA */}
@@ -118,8 +113,8 @@ export function PopularBundles() {
                 <div className="text-center mb-6">
                   <div className="flex items-baseline justify-center gap-1.5 mb-1">
                     <span className="text-lg font-bold text-gray-500">₹</span>
-                    <span className="text-5xl font-black text-gray-900" style={{ fontFamily: "var(--font-mono)" }}>349</span>
-                    <span className="text-sm font-bold text-gray-400 line-through">₹499</span>
+                    <span className="text-5xl font-black text-gray-900" style={{ fontFamily: "var(--font-mono)" }}>100</span>
+                    
                   </div>
                   <p className="text-xs font-bold text-emerald-700">First-Batch Launch Offer</p>
                   <p className="text-[10px] text-gray-400 mt-0.5">One-time · Lifetime access</p>
@@ -145,7 +140,7 @@ export function PopularBundles() {
               <span>Study Together. Earn More.</span>
             </div>
             <p className="text-xs text-slate-700 leading-relaxed max-w-md">
-              Refer 3 friends. Unlock <strong className="text-slate-900 font-semibold">Most Repeated Questions</strong> FREE after their eligible Semester 1 purchases are approved.
+              The referral reward program is being updated. Cash rewards will be shown here only after the verified-purchase reward system is enabled.
             </p>
           </div>
           <Button
@@ -154,7 +149,7 @@ export function PopularBundles() {
             onClick={() => navigate("/referral")}
             className="shrink-0 bg-white border-blue-200 text-[#1E40AF] hover:bg-blue-50 text-xs font-bold rounded-xl shadow-xs"
           >
-            Refer 3 Friends
+            Referral updates
           </Button>
         </div>
       </div>

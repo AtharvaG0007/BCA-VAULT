@@ -1,0 +1,72 @@
+name: Exam Kits Preview Deployment
+
+on:
+  push:
+    branches:
+      - feature/most-repeated-questions
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: exam-kits-preview
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    name: Build and deploy isolated Exam Kits Worker
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/most-repeated-questions
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript check
+        run: npm run typecheck
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Verify build output
+        run: test -f dist/index.html
+
+      - name: Live API authentication smoke tests
+        run: node scripts/test_exam_kits_api.mjs
+
+      - name: Deploy separate Cloudflare Worker
+        if: ${{ success() && env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config wrangler.jsonc
+
+      - name: Explain skipped preview deployment
+        if: ${{ success() && (env.CLOUDFLARE_API_TOKEN == '' || env.CLOUDFLARE_ACCOUNT_ID == '') }}
+        run: |
+          echo "### Preview deployment skipped" >> "$GITHUB_STEP_SUMMARY"
+          echo "- TypeScript, production build, and API authentication smoke tests passed." >> "$GITHUB_STEP_SUMMARY"
+          echo "- Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in repository Actions secrets to deploy the isolated preview Worker." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Deployment summary
+        if: ${{ success() && env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          echo "### Exam Kits preview deployed" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Worker: bca-vault-exam-kits" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Expected URL: https://bca-vault-exam-kits.portalbcavault.workers.dev" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Checkout uses authenticated Supabase order creation and manual UPI verification." >> "$GITHUB_STEP_SUMMARY"
+          echo "- Study content remains intentionally unpublished until materials are selected and reviewed." >> "$GITHUB_STEP_SUMMARY"

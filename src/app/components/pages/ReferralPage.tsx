@@ -10,7 +10,6 @@ import {
   ShieldCheck,
   BookOpen,
   FileText,
-  Award,
   ChevronRight
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
@@ -66,11 +65,11 @@ export function ReferralPage() {
               className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.1] mb-6"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              Refer 3 friends. <span className="text-[#1E40AF]">Unlock Most Repeated Questions FREE.</span>
+              Referral rewards are being updated.
             </h1>
 
             <p className="text-base sm:text-lg lg:text-xl text-slate-600 max-w-2xl mx-auto mb-8 leading-relaxed">
-              Your reward unlocks after 3 successful referrals — when the referred students complete an approved Semester 1 purchase.
+              We are updating the referral program to support rewards only after a referred student’s purchase has been verified.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -93,7 +92,7 @@ export function ReferralPage() {
             </div>
 
             <p className="text-[11px] text-slate-600 mt-4">
-              * Reward unlocks strictly after 3 successful Semester 1 referral payment approvals.
+              Cash rewards are not active until the updated verified-purchase program is enabled.
             </p>
           </motion.div>
         </div>
@@ -110,7 +109,7 @@ export function ReferralPage() {
               How It Works
             </h2>
             <p className="text-slate-600 text-sm sm:text-base">
-              A transparent, 3-step process designed to reward students who help fellow classmates prepare better.
+              We are rebuilding referral rewards around verified purchases and auditable reward tracking.
             </p>
           </div>
 
@@ -159,7 +158,7 @@ export function ReferralPage() {
                 </p>
               </div>
               <div className="mt-6 pt-4 border-t border-slate-200/60 text-[11px] text-slate-500 font-medium">
-                Trackable in real time on your dashboard
+                Status updates after admin approval
               </div>
             </div>
 
@@ -177,26 +176,26 @@ export function ReferralPage() {
                     <CheckCircle2 className="w-5 h-5" />
                   </div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">3 Referrals Unlocks Reward</h3>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Verified Purchase Rewards</h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Once 3 friends have their Semester 1 purchase verified and approved by admin, your Semester 1 Most Repeated Questions pack unlocks automatically!
+                  Referral rewards are being updated. No free-content unlock or cash reward is active at this time.
                 </p>
               </div>
               <div className="mt-6 pt-4 border-t border-slate-200/60 text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" /> Direct high-yield study access
+                <Sparkles className="w-3.5 h-3.5" /> Rewards launching soon
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── SECTION 3: WHAT YOU UNLOCK ─────────────────────────────── */}
+      {/* ── SECTION 3: STUDY RESOURCES ─────────────────────────────── */}
       <section className="py-20 bg-slate-50 border-t border-slate-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-14">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 border border-amber-200 text-amber-900 text-xs font-bold uppercase tracking-wider mb-3">
               <Award className="w-3.5 h-3.5 text-amber-700" />
-              Verified Referrer Reward
+              Study Resources
             </div>
             <h2
               className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-3"
@@ -205,7 +204,7 @@ export function ReferralPage() {
               Semester 1 Most Repeated Questions
             </h2>
             <p className="text-slate-600 text-sm sm:text-base">
-              Once you complete 3 successful referrals with approved Semester 1 purchases, these three high-yield revision resources are unlocked:
+              Explore the Most Repeated Questions resources available for Semester 1. They remain useful study materials, but they are not currently unlocked through referrals.
             </p>
           </div>
 
@@ -235,7 +234,7 @@ export function ReferralPage() {
 
                 <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-[11px] font-semibold text-emerald-700">
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  <span>Unlocked after 3 approved referrals</span>
+                  <span>Study resource · referral reward not active</span>
                 </div>
               </div>
             ))}
@@ -244,7 +243,7 @@ export function ReferralPage() {
           {/* Important note */}
           <div className="max-w-2xl mx-auto mt-10 p-4 rounded-2xl bg-blue-50/60 border border-blue-200/70 text-center">
             <p className="text-xs text-slate-700 leading-relaxed">
-              <strong className="text-[#1E40AF] font-bold">Note on Access:</strong> The referral reward grants complete, high-priority access to these three Most Repeated Questions resources with our secure PDF reader. It does not include the full ₹349 Semester 1 bundle.
+              <strong className="text-[#1E40AF] font-bold">Referral program update:</strong> Rewards are being rebuilt and are not active yet. These cards describe the study resources only; they do not promise free access, a referral unlock, or a cash payout.
             </p>
           </div>
         </div>
@@ -282,7 +281,7 @@ export function ReferralPage() {
               </div>
               <h3 className="text-base font-bold text-slate-900">Study Smarter</h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Unlock high-frequency exam questions across core programming and theory modules without spending extra money.
+                Explore high-frequency exam questions across core programming and theory modules.
               </p>
             </div>
 
@@ -292,7 +291,7 @@ export function ReferralPage() {
               </div>
               <h3 className="text-base font-bold text-slate-900">Simple & Transparent</h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                No complicated points, no gimmicks. When your friend's payment is verified, your rewards unlock automatically in your portal.
+                Referral activity can be tracked in your portal. Reward eligibility and mechanics will be announced once the updated program launches.
               </p>
             </div>
           </div>
@@ -320,7 +319,7 @@ export function ReferralPage() {
             </h2>
 
             <p className="text-base sm:text-lg text-blue-100 max-w-xl mx-auto mb-8 leading-relaxed">
-              Refer 3 friends. Unlock Most Repeated Questions FREE when they complete an approved Semester 1 purchase.
+              Referral rewards are temporarily paused while the verified-purchase reward system is updated.
             </p>
 
             <Button

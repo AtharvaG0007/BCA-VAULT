@@ -29,6 +29,7 @@ import {
   ShoppingBag,
   Sparkles,
   User,
+  Video,
   X,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
@@ -527,6 +528,15 @@ export function StudentDashboard() {
             </button>
 
             <button
+              onClick={() => navigate("/app/bootcamps")}
+              className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 hover:bg-violet-50 hover:text-violet-700 transition text-left"
+            >
+              <Video className="h-4 w-4 shrink-0 text-violet-600" />
+              <span>Live Bootcamps</span>
+              <span className="ml-auto rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-black text-emerald-700">FREE</span>
+            </button>
+
+            <button
               onClick={() => {
                 switchTab("dashboard");
                 setTimeout(() => {
@@ -577,7 +587,7 @@ export function StudentDashboard() {
               <Trophy className="h-4 w-4 shrink-0 text-amber-500" />
               <span>Quiz Competition</span>
               <span className="ml-auto text-[10px] font-extrabold bg-blue-100 text-[#1E40AF] px-1.5 py-0.5 rounded-full">
-                ₹199
+                ₹100
               </span>
             </button>
 
@@ -823,6 +833,15 @@ export function StudentDashboard() {
               </button>
 
               <button
+                onClick={() => { setMobileMenuOpen(false); navigate("/app/bootcamps"); }}
+                className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-violet-50 hover:text-violet-700 transition text-left min-h-[44px] cursor-pointer"
+              >
+                <Video className="h-4 w-4 shrink-0 text-violet-600" />
+                <span>Live Bootcamps</span>
+                <span className="ml-auto rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-black text-emerald-700">FREE</span>
+              </button>
+
+              <button
                 onClick={() => {
                   switchTab("dashboard");
                   setTimeout(() => {
@@ -876,7 +895,7 @@ export function StudentDashboard() {
                 <Trophy className="h-4 w-4 shrink-0 text-amber-500" />
                 <span>Quiz Competition</span>
                 <span className="ml-auto text-[10px] font-extrabold bg-blue-100 text-[#1E40AF] px-1.5 py-0.5 rounded-full">
-                  ₹199
+                  ₹100
                 </span>
               </button>
 
@@ -1145,7 +1164,7 @@ export function StudentDashboard() {
                   <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end gap-3 shrink-0 bg-white/90 border border-indigo-100 rounded-2xl p-4 sm:p-5 shadow-xs w-full lg:w-auto min-w-0">
                     <div>
                       <span className="text-xs font-medium text-slate-500">Semester 1 BCA Bundle</span>
-                      <div className="text-2xl sm:text-3xl font-black text-slate-900">₹199</div>
+                      <div className="text-2xl sm:text-3xl font-black text-slate-900">₹100</div>
                     </div>
                     <button
                       onClick={() => navigate("/purchase")}
@@ -1204,6 +1223,33 @@ export function StudentDashboard() {
                 </div>
               </section>
             )}
+
+            {/* Exam Kits — separate product from the existing Semester bundle */}
+            <section className="rounded-3xl border border-violet-200 bg-gradient-to-r from-violet-50 via-white to-indigo-50 p-4 sm:p-6 shadow-sm">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3.5 min-w-0">
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-violet-100 text-violet-700">
+                    <Flame className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-base font-black text-slate-900">Most Repeated Questions & Exam Kits</h2>
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-800">NEW</span>
+                    </div>
+                    <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-600">
+                      Explore subject-wise questions, answers, important topics and Maths practice with solutions.
+                    </p>
+                    <p className="mt-2 text-xs font-bold text-violet-800">Single subject ₹49 · Any 2 ₹79 · Complete combo ₹129</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => navigate("/app/exam-kits")}
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-violet-700 px-5 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-violet-800 cursor-pointer"
+                >
+                  Explore Exam Kits <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </section>
 
             {/* Active Courses Section */}
             <section className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 lg:p-7 shadow-2xs w-full min-w-0">
