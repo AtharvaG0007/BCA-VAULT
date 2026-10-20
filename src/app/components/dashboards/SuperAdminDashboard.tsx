@@ -33,8 +33,8 @@ import {
 import { adminApi } from "@/lib/supabase/adminService";
 import { supabase } from "@/lib/supabase/client";
 import { useAdminAuth } from "../auth/AdminAuthContext";
-import { availableSubjects } from "../../data/syllabus";
 import { AdminEmailPage } from "../pages/AdminEmailPage";
+import { AdminExamKitsPage } from "../pages/AdminExamKitsPage";
 import {
   DashboardSkeleton,
   StudentsTableSkeleton,
@@ -1859,6 +1859,10 @@ export function SuperAdminDashboard() {
 
             {activeTab === "email" && (
               <AdminEmailPage embedded />
+            )}
+
+            {activeTab === "exam-kits" && (
+              <AdminExamKitsPage embedded />
             )}
 
             {/* ── NOTICE BOARD MANAGEMENT ────────────────────────────── */}
