@@ -15,7 +15,7 @@ const ALLOWED_ORIGINS = new Set([
 function isAllowedOrigin(origin: string): boolean {
   if (!origin) return false;
   if (ALLOWED_ORIGINS.has(origin)) return true;
-  if (/^https:\/\/bca-vault(-[a-z0-9]+)?\.portalbcavault\.workers\.dev$/.test(origin)) return true;
+  if (/^https:\/\/bca-vault(-[a-z0-9-]+)?\.portalbcavault\.workers\.dev$/.test(origin)) return true;
   if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
   return false;
 }
