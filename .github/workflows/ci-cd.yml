@@ -27,7 +27,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies (exact lockfile)
@@ -41,6 +41,9 @@ jobs:
 
       - name: Edge Functions verification suite
         run: npx tsx scripts/test_edge_functions_types.ts
+
+      - name: Document access regression tests
+        run: npm run test:notes
 
       - name: Production Vite build
         run: npm run build
@@ -191,9 +194,9 @@ jobs:
 
       - name: Record Deployment Summary
         run: |
-          echo "### Production Deployment Successful 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "### Backend deployment workflow completed" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit SHA:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Frontend:** Deployed via Cloudflare Git Integration (\`https://bca-vault.portalbcavault.workers.dev\`)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Frontend:** Verify deployment separately in Cloudflare Git Integration (\`https://bca-vault.portalbcavault.workers.dev\`)" >> $GITHUB_STEP_SUMMARY
           echo "- **Database:** Migrations applied via Supabase CLI (\`supabase db push\`)" >> $GITHUB_STEP_SUMMARY
           echo "- **Edge Functions:** Deployed via Supabase Management API (\`--use-api\`)" >> $GITHUB_STEP_SUMMARY

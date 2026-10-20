@@ -82,8 +82,12 @@ async function main() {
     console.log("STATUS: ALL EDGE FUNCTIONS TYPES & CONFIGURATIONS FULLY VALIDATED.");
   } else {
     console.warn(`STATUS: ${total - passed} CHECKS FAILED.`);
+    process.exitCode = 1;
   }
   console.log("==================================================================\n");
 }
 
-main().catch(console.error);
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

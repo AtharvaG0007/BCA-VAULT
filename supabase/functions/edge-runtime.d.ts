@@ -83,7 +83,7 @@ declare module "npm:pdf-lib" {
   export * from "pdf-lib";
 }
 
-declare module "npm:pdf-lib@1.17.9" {
+declare module "npm:pdf-lib@1.17.1" {
   export * from "pdf-lib";
 }
 
