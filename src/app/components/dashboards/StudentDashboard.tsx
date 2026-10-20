@@ -500,6 +500,48 @@ export function StudentDashboard() {
   const hasActiveBundle = access.length > 0;
   const isPaymentPending = false;
 
+  // Keep legacy note categorization helpers as the single source of truth for dashboard lists.
+  const displayableNotes = notes.filter(
+    (note) =>
+      !isReferralReward(note) &&
+      !isDuplicateCProgRecord(note) &&
+      !isExamRoadmap(note) &&
+      !isExamAnswerWritingGuide(note),
+  );
+
+  const filteredNotes = displayableNotes.filter((note) => {
+    if (noteCategory === "repeated" && !isMostRepeatedTopic(note)) return false;
+    if (noteCategory === "theory" && !isStudyNote(note)) return false;
+
+    const query = noteSearch.trim().toLowerCase();
+    if (!query) return true;
+    return [note.title, note.subject || "", note.description || ""]
+      .join(" ")
+      .toLowerCase()
+      .includes(query);
+  });
+
+  const mostRepeatedTopicNotes = notes
+    .filter(isMostRepeatedTopic)
+    .map(formatCanonicalTopicNote)
+    .sort(
+      (a, b) =>
+        topicSortOrder(getNormalizedTopicSubject(a)) -
+        topicSortOrder(getNormalizedTopicSubject(b)),
+    );
+
+  const examRoadmapCards = EXAM_ROADMAP_CONFIGS.map((config) => {
+    const note = notes.find((candidate) => {
+      if (!isExamRoadmap(candidate)) return false;
+      const path = (candidate.storage_path || "").toLowerCase();
+      const title = (candidate.title || "").toLowerCase();
+      return path.includes(config.pathMatch) || title.includes(config.titleMatch);
+    });
+    return { ...config, note };
+  });
+
+  const examAnswerGuideNote = notes.find(isExamAnswerWritingGuide) || null;
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col lg:flex-row w-full max-w-full overflow-x-hidden">
       {/* ── Desktop Navigation Sidebar (lg and up) ──────────────────── */}

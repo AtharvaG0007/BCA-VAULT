@@ -1,7 +1,38 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { PDFDocument, rgb, StandardFonts, degrees } from "npm:pdf-lib@1.17.1";
-import { getNoteCorsHeaders } from "../_shared/note-cors.ts";
+
+const ALLOWED_ORIGINS = new Set([
+  "https://bca-vault.portalbcavault.workers.dev",
+  "https://bcavault.in",
+  "https://www.bcavault.in",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:3000",
+  "http://localhost:4173",
+]);
+
+function isAllowedOrigin(origin: string): boolean {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.has(origin)) return true;
+  if (/^https:\/\/bca-vault(-[a-z0-9-]+)?\.portalbcavault\.workers\.dev$/.test(origin)) return true;
+  if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
+  return false;
+}
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("Origin") || "";
+  const allowOrigin = isAllowedOrigin(origin) ? origin : "https://bcavault.in";
+
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type, x-requested-with",
+    "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+    "Access-Control-Max-Age": "86400",
+    "Vary": "Origin",
+  };
+}
 
 const url = Deno.env.get("SUPABASE_URL") ?? "";
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
