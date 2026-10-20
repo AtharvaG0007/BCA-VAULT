@@ -72,6 +72,9 @@ export function usePdfDocument(
         disableRange: false,
         disableStream: false,
         disableAutoFetch: false,
+        cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjsLib.version || "4.8.69"}/cmaps/`,
+        cMapPacked: true,
+        standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjsLib.version || "4.8.69"}/standard_fonts/`,
       });
       loadingTaskRef.current = loadingTask;
 
