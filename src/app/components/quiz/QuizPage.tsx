@@ -132,10 +132,10 @@ export function QuizDiscovery() {
     ctaVariant = 'default';
   } else if (detail) {
     if (detail.winner) {
-      ctaText = 'Get Bundle · ₹199';
+      ctaText = 'Get Bundle · ₹100';
       ctaLink = '/purchase?quizReward=1';
     } else if (detail.competition.status === 'RESULTS_PUBLISHED') {
-      ctaText = 'Get Semester 1 Bundle · ₹199';
+      ctaText = 'Get Semester 1 Bundle · ₹100';
       ctaLink = '/purchase';
       ctaVariant = 'outline';
     } else if (detail.attempt) {
@@ -185,7 +185,7 @@ export function QuizDiscovery() {
           </h2>
           <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
             {competition
-              ? 'Practice with instant feedback to learn, or take the official timed challenge. All students can purchase the bundle for ₹199.'
+              ? 'Practice with instant feedback to learn, or take the official timed challenge. All students can purchase the bundle for ₹100.'
               : 'Prepare and master Semester 1 concepts with instant answer feedback. New official competitions will be announced soon!'}
           </p>
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-1">
@@ -199,7 +199,7 @@ export function QuizDiscovery() {
               🎯 Instant Feedback Practice
             </span>
             <span className="rounded-xl border border-amber-300 bg-amber-50/90 px-3 py-1.5 text-xs font-bold text-amber-900 shadow-2xs">
-              🎓 All Students → ₹199
+              🎓 All Students → ₹100
             </span>
           </div>
         </div>
@@ -637,7 +637,7 @@ function QuizContent() {
                     </ul>
 
                     <p className="mt-5 text-sm font-medium text-slate-800">
-                      🎓 All students can get the Semester 1 bundle for ₹199.
+                      🎓 All students can get the Semester 1 bundle for ₹100.
                     </p>
 
                     {c.start_at && (
@@ -827,10 +827,10 @@ function QuizContent() {
                               🏆 Top 3 Winner · Place {state.winner.rank}
                             </h3>
                             <p className="mt-2 text-sm text-amber-900">
-                              Congratulations on your quiz result! The Semester 1 bundle is available to every student for ₹199.
+                              Congratulations on your quiz result! The Semester 1 bundle is available to every student for ₹100.
                             </p>
                             <Button asChild className="mt-4 bg-[#1E40AF] text-white font-bold">
-                              <Link to="/purchase?quizReward=1">Get Bundle · ₹199</Link>
+                              <Link to="/purchase?quizReward=1">Get Bundle · ₹100</Link>
                             </Button>
                           </div>
                         ) : (
@@ -839,7 +839,7 @@ function QuizContent() {
                               Thank you for taking part. Keep building your Semester 1 knowledge.
                             </p>
                             <Button asChild variant="outline" className="mt-4 min-h-12 font-bold">
-                              <Link to="/purchase">Get Semester 1 Bundle · ₹199</Link>
+                              <Link to="/purchase">Get Semester 1 Bundle · ₹100</Link>
                             </Button>
                           </div>
                         )}
