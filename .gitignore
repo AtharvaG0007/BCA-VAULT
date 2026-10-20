@@ -31,3 +31,4 @@ Thumbs.db
 config.local.*
 secrets/
 .opencode
+.qa-release-*/

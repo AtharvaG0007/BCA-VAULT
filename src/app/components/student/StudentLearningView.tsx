@@ -89,12 +89,15 @@ export function StudentLearningView({ onBackToDashboard }: StudentLearningViewPr
     scrollToBottom();
   }, [messages, loading]);
 
-  // Adjust textarea height automatically
+  // Adjust textarea height automatically without causing forced synchronous reflow
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 140)}px`;
-    }
+    const el = textareaRef.current;
+    if (!el) return;
+    const rafId = requestAnimationFrame(() => {
+      el.style.height = "auto";
+      el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
+    });
+    return () => cancelAnimationFrame(rafId);
   }, [input]);
 
   const handleCopy = async (id: string, text: string) => {

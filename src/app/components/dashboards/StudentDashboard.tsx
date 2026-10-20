@@ -322,7 +322,7 @@ export function StudentDashboard() {
   // Prevent background scroll when mobile drawer is open
   useEffect(() => {
     if (mobileMenuOpen) {
-      const originalStyle = window.getComputedStyle(document.body).overflow;
+      const originalStyle = document.body.style.overflow;
       document.body.style.overflow = "hidden";
       return () => {
         document.body.style.overflow = originalStyle;
