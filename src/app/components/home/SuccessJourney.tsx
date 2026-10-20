@@ -156,7 +156,7 @@ export function SuccessJourney() {
               First-Batch Student Offer is Active
             </p>
             <p className="text-sm text-gray-500 mt-0.5">
-              Get complete access for eligible Semester 1 theory subjects for ₹349 (Original ₹899).
+              Get complete access for eligible Semester 1 theory subjects for ₹100.
             </p>
           </div>
           <Link

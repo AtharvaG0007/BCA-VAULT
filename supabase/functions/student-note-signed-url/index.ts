@@ -139,7 +139,7 @@ Deno.serve(async (request: Request) => {
       );
     }
 
-    // 3. Classify resource type & verify bundle if applicable
+    // 3. Classify resource type. Regular published notes are free; question-answer packs remain gated.
     const REFERRAL_BONUS_QUESTION_NOTE_IDS = [
       "33cc389f-4a00-4d3e-89dd-670e514e2ed3", // Foundation of Computing — Most Repeated Questions
       "6d971cc5-5677-43f5-958f-add182553c87", // C Programming — Most Repeated Questions
@@ -155,11 +155,16 @@ Deno.serve(async (request: Request) => {
             note.storage_path.toLowerCase().includes("referral_bonus"))
       );
 
+    const isPaidQuestionResource = !isReferralQuestionResource && (
+      /most repeated questions/i.test(note.title || "") ||
+      /most_repeated_questions|repted_questions|questions_complete|question.*answer/i.test(note.storage_path || "")
+    );
+
     let bundleTitle = isReferralQuestionResource
       ? "Referral Reward: Most Repeated Questions"
-      : "Independent Note";
+      : isPaidQuestionResource ? "Paid Question Pack" : "Free Study Material";
 
-    if (note.bundle_id && !isReferralQuestionResource) {
+    if (isPaidQuestionResource && note.bundle_id) {
       const { data: bundle, error: bundleErr } = await admin
         .from("bundles")
         .select("id, title, published")
@@ -178,9 +183,10 @@ Deno.serve(async (request: Request) => {
 
     // 4. Verify student authorization
     // Strict distinction:
-    // - Paid bundle access (access_permissions) -> grants access ONLY to paid study notes & most repeated topics
-    // - Referral reward access (referral_rewards) -> grants access ONLY to the 3 referral most repeated questions
-    // - Document-specific access (student_document_access) -> grants note-specific access
+    // - Regular published notes are free for active student accounts.
+    // - Referral reward question packs require the server-verified referral reward.
+    // - Other question-answer packs are not served from the free notes library; use Exam Kits.
+    // - Document-specific access can still grant explicitly approved note access.
     const nowIso = new Date().toISOString();
     let hasAccess = false;
 
@@ -223,36 +229,11 @@ Deno.serve(async (request: Request) => {
           hasAccess = true;
         }
       }
+    } else if (isPaidQuestionResource) {
+      const { data: directDocAccess } = await admin.from("student_document_access").select("id").eq("user_id", userId).eq("note_id", note.id).or(`expires_at.is.null,expires_at.gt.${nowIso}`).maybeSingle();
+      hasAccess = Boolean(directDocAccess);
     } else {
-      // 4B. Paid Bundle Course Authorization
-      if (note.bundle_id) {
-        const { data: permission } = await admin
-          .from("access_permissions")
-          .select("id")
-          .eq("user_id", userId)
-          .eq("bundle_id", note.bundle_id)
-          .eq("status", "active")
-          .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
-          .maybeSingle();
-
-        if (permission) {
-          hasAccess = true;
-        }
-      }
-
-      if (!hasAccess) {
-        const { data: directDocAccess } = await admin
-          .from("student_document_access")
-          .select("id")
-          .eq("user_id", userId)
-          .eq("note_id", note.id)
-          .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
-          .maybeSingle();
-
-        if (directDocAccess) {
-          hasAccess = true;
-        }
-      }
+      hasAccess = true;
     }
 
     if (!hasAccess) {
@@ -269,7 +250,7 @@ Deno.serve(async (request: Request) => {
             is_referral_reward: isReferralQuestionResource,
             reason: isReferralQuestionResource
               ? "referral_reward_locked"
-              : "no_active_access_permission",
+              : isPaidQuestionResource ? "paid_question_pack_requires_entitlement" : "no_access",
           },
         });
       } catch (logErr) {
@@ -281,7 +262,7 @@ Deno.serve(async (request: Request) => {
           success: false,
           error: isReferralQuestionResource
             ? "This resource is an exclusive referral reward. Invite friends to BCA Vault to unlock your Most Repeated Questions bonus."
-            : "You do not have active access to this note. Please verify your course bundle access.",
+            : "This question pack is not part of the free notes library. Open Exam Kits to purchase access.",
         },
         403,
         corsHeaders

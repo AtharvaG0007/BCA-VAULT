@@ -47,10 +47,10 @@ export function Newsletter() {
                 Top 3 Performers
               </div>
               <p className="text-2xl font-black text-white" style={{ fontFamily: 'var(--font-mono)' }}>
-                ₹299
+                ₹100
               </p>
               <p className="text-xs text-slate-300 mt-1">
-                Top 3 quiz performers unlock special access at ₹299 with verified winner access.
+                Quiz winners are recognized separately; every student pays the same ₹100 bundle price.
               </p>
             </div>
 
@@ -60,10 +60,10 @@ export function Newsletter() {
                 First-Batch Students
               </div>
               <p className="text-2xl font-black text-white" style={{ fontFamily: 'var(--font-mono)' }}>
-                ₹349
+                ₹100
               </p>
               <p className="text-xs text-slate-300 mt-1">
-                Everyone else can access the first-batch student offer at ₹349, subject to eligibility.
+                Every student can get the complete Semester 1 bundle for ₹100.
               </p>
             </div>
           </div>

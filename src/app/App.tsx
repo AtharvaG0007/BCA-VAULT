@@ -14,7 +14,7 @@ import { WhatsAppFloatingButton } from "./components/support/WhatsAppFloatingBut
 import { ReferralFloatingPromo } from "./components/marketing/ReferralFloatingPromo";
 import { StudentShellSkeleton } from "./components/student/StudentSkeletons";
 import { AdminSystemDeletionNav } from "./components/admin/AdminSystemDeletionNav";
-import { Toaster } from "./components/ui/sonner";
+import { Toaster } from "./components/ui/sonner";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
 function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ default: T }>, retries = 2) {
@@ -54,11 +54,15 @@ function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ d
   });
 }
 
-const QuizPage = safeLazy(() => import("./components/quiz/QuizPage").then(m => ({default:m.QuizPage})));
+const QuizPage = safeLazy(() => import("./components/quiz/QuizPage").then(m => ({ default: m.QuizPage })));
 const HomePage = safeLazy(() => import("./components/pages/HomePage").then((m) => ({ default: m.HomePage })));
 const NotesPage = safeLazy(() => import("./components/pages/NotesPage").then((m) => ({ default: m.NotesPage })));
 const PYQPage = safeLazy(() => import("./components/pages/PYQPage").then((m) => ({ default: m.PYQPage })));
 const BundlesPage = safeLazy(() => import("./components/pages/BundlesPage").then((m) => ({ default: m.BundlesPage })));
+const ExamKitsPage = safeLazy(() => import("./components/pages/ExamKitsPage").then((m) => ({ default: m.ExamKitsPage })));
+const BootcampsPage = safeLazy(() => import("./components/pages/BootcampsPage").then((m) => ({ default: m.BootcampsPage })));
+const StudentExamKitsPortal = safeLazy(() => import("./components/pages/StudentExamKitsPortal").then((m) => ({ default: m.StudentExamKitsPortal })));
+const AdminExamKitsPage = safeLazy(() => import("./components/pages/AdminExamKitsPage").then((m) => ({ default: m.AdminExamKitsPage })));
 const PricingPage = safeLazy(() => import("./components/pages/PricingPage").then((m) => ({ default: m.PricingPage })));
 const ReferralPage = safeLazy(() => import("./components/pages/ReferralPage").then((m) => ({ default: m.ReferralPage })));
 const LoginPage = safeLazy(() => import("./components/pages/LoginPage").then((m) => ({ default: m.LoginPage })));
@@ -99,7 +103,7 @@ function AppLayout() {
   const isAuthRoute = location.pathname.startsWith("/auth");
   const isQuizRoute = location.pathname.startsWith("/app/quiz");
   const isStudentRoute = location.pathname.startsWith("/app");
-  const isPurchaseRoute = location.pathname.startsWith("/purchase");
+  const isPurchaseRoute = location.pathname.startsWith("/purchase") || location.pathname.startsWith("/payment");
   const isAdminRoute = location.pathname.startsWith("/admin") || location.pathname.startsWith("/admin-root");
   const showDisclaimer = !hasAccepted && !noDisclaimerRoutes.some((p) => location.pathname.startsWith(p));
 
@@ -118,12 +122,17 @@ function AppLayout() {
               <Route path="/pyq" element={<PageWrapper><PYQPage /></PageWrapper>} />
               <Route path="/pyq/analysis" element={<PageWrapper><PYQPage /></PageWrapper>} />
               <Route path="/bundles" element={<PageWrapper><BundlesPage /></PageWrapper>} />
+              <Route path="/exam-kits" element={<PageWrapper><ExamKitsPage /></PageWrapper>} />
+              <Route path="/app/exam-kits" element={<ProtectedRoute allowedRoles={["member"]}><ExamKitsPage /></ProtectedRoute>} />
+              <Route path="/app/bootcamps" element={<ProtectedRoute allowedRoles={["member"]}><BootcampsPage /></ProtectedRoute>} />
+              <Route path="/app/exam-kits/portal" element={<ProtectedRoute allowedRoles={["member"]}><StudentExamKitsPortal /></ProtectedRoute>} />
               <Route path="/referral" element={<PageWrapper><ReferralPage /></PageWrapper>} />
               <Route path="/referral-program" element={<Navigate to="/referral" replace />} />
               <Route path="/pricing" element={<PageWrapper><PricingPage /></PageWrapper>} />
               <Route path="/semester/:sem" element={<PageWrapper><NotesPage /></PageWrapper>} />
               <Route path="/success" element={<PageWrapper><SuccessPage /></PageWrapper>} />
               <Route path="/purchase" element={<PageWrapper><PaymentPage /></PageWrapper>} />
+              <Route path="/payment" element={<PageWrapper><PaymentPage /></PageWrapper>} />
               <Route path="/auth/login" element={<PageWrapper><LoginPage /></PageWrapper>} />
               <Route path="/auth/signup" element={<PageWrapper><LoginPage initialMode="signup" /></PageWrapper>} />
               <Route path="/auth/register" element={<PageWrapper><LoginPage initialMode="signup" /></PageWrapper>} />
@@ -136,6 +145,7 @@ function AppLayout() {
               <Route path="/admin" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/admin/dashboard" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/admin/email" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminEmailPage /></AdminProtectedRoute>} />
+              <Route path="/admin/exam-kits" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminExamKitsPage /></AdminProtectedRoute>} />
               <Route path="/admin/delete-users" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminUserDeletionPage /></AdminProtectedRoute>} />
               <Route path="/admin/notices" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminNoticeBoardPage /></AdminProtectedRoute>} />
               <Route path="/admin/:subpage" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
@@ -171,7 +181,15 @@ function AppLayout() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <BrowserRouter><AuthProvider><AdminAuthProvider><LegalProvider><AppLayout /></LegalProvider></AdminAuthProvider></AuthProvider></BrowserRouter>
+      <BrowserRouter>
+        <AuthProvider>
+          <AdminAuthProvider>
+            <LegalProvider>
+              <AppLayout />
+            </LegalProvider>
+          </AdminAuthProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </ErrorBoundary>
   );
 }

@@ -348,6 +348,29 @@ export function ProtectedPdfViewer({
     };
   }, []);
 
+  // ── Scoped copy / context-menu / drag deterrence ───────────────────────────
+  // Deters casual copying inside the viewer only; it cannot block OS screenshots,
+  // external camera photos, or every browser capture method.
+  useEffect(() => {
+    const root = containerRef.current;
+    if (!root) return;
+
+    const prevent = (event: Event) => event.preventDefault();
+    root.addEventListener("contextmenu", prevent);
+    root.addEventListener("copy", prevent);
+    root.addEventListener("cut", prevent);
+    root.addEventListener("dragstart", prevent);
+    root.addEventListener("selectstart", prevent);
+
+    return () => {
+      root.removeEventListener("contextmenu", prevent);
+      root.removeEventListener("copy", prevent);
+      root.removeEventListener("cut", prevent);
+      root.removeEventListener("dragstart", prevent);
+      root.removeEventListener("selectstart", prevent);
+    };
+  }, [pdfDoc]);
+
   // ── Keyboard navigation & deterrence ──────────────────────────────────────
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

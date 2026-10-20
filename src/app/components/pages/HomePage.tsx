@@ -1,4 +1,3 @@
-import { QuizDiscovery } from "../quiz/QuizPage";
 import { Hero } from "../home/Hero";
 import { SocialProof } from "../home/SocialProof";
 import { StudentProblems } from "../home/StudentProblems";
@@ -17,7 +16,6 @@ export function HomePage() {
   return (
     <main>
       <Hero />
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><QuizDiscovery /></div>
       <SocialProof />
       <StudentProblems />
       <HowItWorks />
