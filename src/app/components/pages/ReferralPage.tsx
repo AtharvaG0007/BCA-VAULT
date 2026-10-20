@@ -10,7 +10,6 @@ import {
   ShieldCheck,
   BookOpen,
   FileText,
-  Award,
   ChevronRight
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
@@ -179,24 +178,24 @@ export function ReferralPage() {
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mb-2">Verified Purchase Rewards</h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Referral reward eligibility and payment tracking will be available after the updated reward system is enabled. 1 Most Repeated Questions pack unlocks automatically!
+                  Referral rewards are being updated. No free-content unlock or cash reward is active at this time.
                 </p>
               </div>
               <div className="mt-6 pt-4 border-t border-slate-200/60 text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" /> Direct high-yield study access
+                <Sparkles className="w-3.5 h-3.5" /> Rewards launching soon
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── SECTION 3: WHAT YOU UNLOCK ─────────────────────────────── */}
+      {/* ── SECTION 3: STUDY RESOURCES ─────────────────────────────── */}
       <section className="py-20 bg-slate-50 border-t border-slate-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-14">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 border border-amber-200 text-amber-900 text-xs font-bold uppercase tracking-wider mb-3">
               <Award className="w-3.5 h-3.5 text-amber-700" />
-              Verified Referrer Reward
+              Study Resources
             </div>
             <h2
               className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-3"
@@ -205,7 +204,7 @@ export function ReferralPage() {
               Semester 1 Most Repeated Questions
             </h2>
             <p className="text-slate-600 text-sm sm:text-base">
-              Once you complete verified purchase with approved Semester 1 purchases, these three high-yield revision resources are unlocked:
+              Explore the Most Repeated Questions resources available for Semester 1. They remain useful study materials, but they are not currently unlocked through referrals.
             </p>
           </div>
 
@@ -235,7 +234,7 @@ export function ReferralPage() {
 
                 <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-[11px] font-semibold text-emerald-700">
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  <span>Unlocked after 3 approved referrals</span>
+                  <span>Study resource · referral reward not active</span>
                 </div>
               </div>
             ))}
@@ -244,7 +243,7 @@ export function ReferralPage() {
           {/* Important note */}
           <div className="max-w-2xl mx-auto mt-10 p-4 rounded-2xl bg-blue-50/60 border border-blue-200/70 text-center">
             <p className="text-xs text-slate-700 leading-relaxed">
-              <strong className="text-[#1E40AF] font-bold">Note on Access:</strong> The referral reward grants complete, high-priority access to these three Most Repeated Questions resources with our secure PDF reader. It does not include the full ₹349 Semester 1 bundle.
+              <strong className="text-[#1E40AF] font-bold">Referral program update:</strong> Rewards are being rebuilt and are not active yet. These cards describe the study resources only; they do not promise free access, a referral unlock, or a cash payout.
             </p>
           </div>
         </div>
@@ -282,7 +281,7 @@ export function ReferralPage() {
               </div>
               <h3 className="text-base font-bold text-slate-900">Study Smarter</h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Unlock high-frequency exam questions across core programming and theory modules without spending extra money.
+                Explore high-frequency exam questions across core programming and theory modules.
               </p>
             </div>
 
@@ -292,7 +291,7 @@ export function ReferralPage() {
               </div>
               <h3 className="text-base font-bold text-slate-900">Simple & Transparent</h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                No complicated points, no gimmicks. When your friend's payment is verified, your rewards unlock automatically in your portal.
+                Referral activity can be tracked in your portal. Reward eligibility and mechanics will be announced once the updated program launches.
               </p>
             </div>
           </div>
