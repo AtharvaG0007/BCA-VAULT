@@ -167,103 +167,15 @@ Deno.serve(async (request: Request) => {
     }
 
     // 3. Classify resource type. Regular published notes are free; question-answer packs remain gated.
-    const REFERRAL_BONUS_QUESTION_NOTE_IDS = [
-      "33cc389f-4a00-4d3e-89dd-670e514e2ed3", // Foundation of Computing — Most Repeated Questions
-      "6d971cc5-5677-43f5-958f-add182553c87", // C Programming — Most Repeated Questions
-      "20af0ae2-66e3-46cb-bbc2-4ae8e12f0500", // Client-Side Web Technologies — Most Repeated Questions
-    ];
-
-    const isReferralQuestionResource =
-      REFERRAL_BONUS_QUESTION_NOTE_IDS.includes(note.id) ||
-      Boolean(
-        note.storage_path &&
-          (note.storage_path.toLowerCase().includes("repted_questions") ||
-            note.storage_path.toLowerCase().includes("refral_bouns") ||
-            note.storage_path.toLowerCase().includes("referral_bonus"))
-      );
-
-    const isPaidQuestionResource = !isReferralQuestionResource && (
+    const isPaidQuestionResource = (
       /most repeated questions/i.test(note.title || "") ||
-      /most_repeated_questions|repted_questions|questions_complete|question.*answer/i.test(note.storage_path || "")
+      /most_repeated_questions|repted_questions|refral_bouns|referral_bonus|questions_complete|question.*answer/i.test(note.storage_path || "")
     );
 
-    let bundleTitle = isReferralQuestionResource
-      ? "Referral Reward: Most Repeated Questions"
-      : isPaidQuestionResource ? "Paid Question Pack" : "Free Study Material";
-
-    if (isPaidQuestionResource && note.bundle_id) {
-      const { data: bundle, error: bundleErr } = await admin
-        .from("bundles")
-        .select("id, title, published")
-        .eq("id", note.bundle_id)
-        .maybeSingle();
-
-      if (bundleErr || !bundle || !bundle.published) {
-        return respond(
-          { success: false, error: "The course bundle for this note is unavailable." },
-          403,
-          corsHeaders
-        );
-      }
-      bundleTitle = bundle.title;
-    }
-
     // 4. Verify student authorization
-    // Strict distinction:
-    // - Regular published notes are free for active student accounts.
-    // - Referral reward question packs require the server-verified referral reward.
-    // - Other question-answer packs are not served from the free notes library; use Exam Kits.
-    // - Document-specific access can still grant explicitly approved note access.
-    const nowIso = new Date().toISOString();
-    let hasAccess = false;
-
-    if (isReferralQuestionResource) {
-      // 4A. Exclusive Referral Reward Authorization
-      // Backend / Security rule: Reward unlocks ONLY when successful referral count >= 3
-      // and verified in referral_rewards.
-      const { count: successfulReferralsCount, error: countErr } = await admin
-        .from("referrals")
-        .select("id", { count: "exact", head: true })
-        .eq("referrer_user_id", userId)
-        .eq("status", "successful");
-
-      const hasRequiredReferrals = !countErr && (successfulReferralsCount ?? 0) >= 3;
-
-      if (hasRequiredReferrals) {
-        const { data: rewardAccess } = await admin
-          .from("referral_rewards")
-          .select("id")
-          .eq("user_id", userId)
-          .eq("reward_type", "most_repeated_questions")
-          .eq("status", "unlocked")
-          .maybeSingle();
-
-        if (rewardAccess) {
-          hasAccess = true;
-        }
-      }
-
-      if (!hasAccess) {
-        const { data: directDocAccess } = await admin
-          .from("student_document_access")
-          .select("id")
-          .eq("user_id", userId)
-          .eq("note_id", note.id)
-          .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
-          .maybeSingle();
-
-        if (directDocAccess) {
-          hasAccess = true;
-        }
-      }
-    } else if (isPaidQuestionResource) {
-      const { data: directDocAccess } = await admin.from("student_document_access").select("id").eq("user_id", userId).eq("note_id", note.id).or(`expires_at.is.null,expires_at.gt.${nowIso}`).maybeSingle();
-      hasAccess = Boolean(directDocAccess);
-    } else {
-      hasAccess = true;
-    }
-
-    if (!hasAccess) {
+    // Regular published notes are free for active student accounts. Paid question packs
+    // are served only through Exam Kits after a verified order grants an entitlement.
+    if (isPaidQuestionResource) {
       // Audit log access denial
       try {
         await admin.from("activity_logs").insert({
@@ -274,10 +186,7 @@ Deno.serve(async (request: Request) => {
           metadata: {
             note_title: note.title,
             bundle_id: note.bundle_id,
-            is_referral_reward: isReferralQuestionResource,
-            reason: isReferralQuestionResource
-              ? "referral_reward_locked"
-              : isPaidQuestionResource ? "paid_question_pack_requires_entitlement" : "no_access",
+            reason: "paid_question_pack_requires_exam_kit_entitlement",
           },
         });
       } catch (logErr) {
@@ -287,9 +196,7 @@ Deno.serve(async (request: Request) => {
       return respond(
         {
           success: false,
-          error: isReferralQuestionResource
-            ? "This resource is an exclusive referral reward. Invite friends to BCA Vault to unlock your Most Repeated Questions bonus."
-            : "This question pack is not part of the free notes library. Open Exam Kits to purchase access.",
+          error: "Most Repeated Questions are available through Exam Kits after payment verification.",
         },
         403,
         corsHeaders
@@ -516,7 +423,6 @@ Deno.serve(async (request: Request) => {
         metadata: {
           note_title: note.title,
           bundle_id: note.bundle_id,
-          bundle_title: bundleTitle,
           ttl_seconds: SIGNED_URL_TTL,
         },
       });
@@ -540,7 +446,7 @@ Deno.serve(async (request: Request) => {
           studentName,
           studentEmail,
           studentId: userId,
-          sessionTimestamp: nowIso,
+          sessionTimestamp: new Date().toISOString(),
         },
       },
       200,

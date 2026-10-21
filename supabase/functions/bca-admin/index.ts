@@ -411,63 +411,47 @@ Deno.serve(async (request: Request) => {
         return respond({ success: false, error: studentsErr.message }, 400, corsHeaders);
       }
 
-      if (!students || students.length === 0) {
-        return respond({ success: true, data: [], count: 0 }, 200, corsHeaders);
+      return respond({ success: true, data: students ?? [], count: count ?? 0 }, 200, corsHeaders);
+    }
+
+    if (request.method === "POST" && pathname === "/students/status") {
+      const { userId, status } = await request.json().catch(() => ({}));
+      const targetId = String(userId || "").trim();
+      if (!targetId || !["active", "inactive"].includes(status)) {
+        return respond({ success: false, error: "Valid student and account status are required." }, 400, corsHeaders);
+      }
+      if (targetId === access.user.id) {
+        return respond({ success: false, error: "You cannot ban your own administrator account." }, 400, corsHeaders);
       }
 
-      const userIds = students.map((s) => s.user_id);
-      const [accessRes, paymentsRes, authUsersRes] = await Promise.all([
-        admin
-          .from("access_permissions")
-          .select("user_id,bundle_id,status,bundles(title)")
-          .in("user_id", userIds)
-          .eq("status", "active"),
-        admin
-          .from("payment_submissions")
-          .select("user_id,status,created_at")
-          .in("user_id", userIds)
-          .order("created_at", { ascending: false }),
-        admin.auth.admin.listUsers({ perPage: 1000 }),
-      ]);
+      const { data: target, error: targetError } = await admin.auth.admin.getUserById(targetId);
+      if (targetError || !target?.user) {
+        return respond({ success: false, error: "Student account not found." }, 404, corsHeaders);
+      }
+      const { data: targetAdmin } = await admin.from("admin_profiles").select("user_id").eq("user_id", targetId).in("role", ["admin", "superadmin"]).maybeSingle();
+      if (targetAdmin) {
+        return respond({ success: false, error: "Administrator accounts cannot be changed from student management." }, 403, corsHeaders);
+      }
 
-      const accessByUserId = new Map<string, string[]>();
-      (accessRes.data || []).forEach((row: any) => {
-        const title = row.bundles?.title || "Active Bundle";
-        const list = accessByUserId.get(row.user_id) || [];
-        list.push(title);
-        accessByUserId.set(row.user_id, list);
+      const nextStatus = status as "active" | "inactive";
+      const authUpdate = await admin.auth.admin.updateUserById(targetId, {
+        ban_duration: nextStatus === "inactive" ? "876000h" : "none",
       });
+      if (authUpdate.error) {
+        return respond({ success: false, error: `Could not update sign-in access: ${authUpdate.error.message}` }, 400, corsHeaders);
+      }
 
-      const paymentByUserId = new Map<string, string>();
-      (paymentsRes.data || []).forEach((row: any) => {
-        if (!paymentByUserId.has(row.user_id)) {
-          paymentByUserId.set(row.user_id, row.status);
-        }
-      });
-
-      const authUserMap = new Map<string, { email_confirmed_at?: string | null; confirmed_at?: string | null; last_sign_in_at?: string | null }>();
-      (authUsersRes.data?.users || []).forEach((u: User) => {
-        authUserMap.set(u.id, {
-          email_confirmed_at: u.email_confirmed_at || null,
-          confirmed_at: (u as any).confirmed_at || null,
-          last_sign_in_at: u.last_sign_in_at || null,
+      const { error: profileError } = await admin.from("profiles").update({ status: nextStatus }).eq("user_id", targetId);
+      if (profileError) {
+        // Keep Auth and profile state aligned if the profile write fails.
+        await admin.auth.admin.updateUserById(targetId, {
+          ban_duration: nextStatus === "inactive" ? "none" : "876000h",
         });
-      });
+        return respond({ success: false, error: "Could not update the student profile status." }, 500, corsHeaders);
+      }
 
-      const enriched = students.map((s) => {
-        const authInfo = authUserMap.get(s.user_id);
-        const emailConfirmed = Boolean(authInfo?.email_confirmed_at || authInfo?.confirmed_at);
-        return {
-          ...s,
-          assigned_bundles: accessByUserId.get(s.user_id) || [],
-          payment_status: paymentByUserId.get(s.user_id) || "unpaid",
-          email_confirmed_at: authInfo?.email_confirmed_at || authInfo?.confirmed_at || null,
-          last_sign_in_at: authInfo?.last_sign_in_at || null,
-          is_verified: emailConfirmed,
-        };
-      });
-
-      return respond({ success: true, data: enriched, count }, 200, corsHeaders);
+      await log(access.user.id, nextStatus === "inactive" ? "student_banned" : "student_reactivated", "profile", targetId);
+      return respond({ success: true, status: nextStatus }, 200, corsHeaders);
     }
 
     if (request.method === "POST" && pathname === "/students/verify-email") {

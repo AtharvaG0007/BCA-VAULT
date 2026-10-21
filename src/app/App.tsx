@@ -11,9 +11,7 @@ import { AdminAuthProvider } from "@/app/components/auth/AdminAuthContext";
 import { AdminProtectedRoute } from "./components/guards/AdminProtectedRoute";
 import { PublicSupportChat } from "./components/chatbot/PublicSupportChat";
 import { WhatsAppFloatingButton } from "./components/support/WhatsAppFloatingButton";
-import { ReferralFloatingPromo } from "./components/marketing/ReferralFloatingPromo";
 import { StudentShellSkeleton } from "./components/student/StudentSkeletons";
-import { AdminSystemDeletionNav } from "./components/admin/AdminSystemDeletionNav";
 
 import { Toaster } from "./components/ui/sonner";
 
@@ -53,7 +51,6 @@ const PricingPage = safeLazy(() => import("./components/pages/PricingPage").then
 const ReferralPage = safeLazy(() => import("./components/pages/ReferralPage").then((m) => ({ default: m.ReferralPage })));
 const LoginPage = safeLazy(() => import("./components/pages/LoginPage").then((m) => ({ default: m.LoginPage })));
 const SuperAdminDashboard = safeLazy(() => import("./components/dashboards/SuperAdminDashboard").then((m) => ({ default: m.SuperAdminDashboard })));
-const AdminUserDeletionPage = safeLazy(() => import("./components/pages/AdminUserDeletionPage").then((m) => ({ default: m.AdminUserDeletionPage })));
 const AdminNoticeBoardPage = safeLazy(() => import("./components/pages/AdminNoticeBoardPage").then((m) => ({ default: m.AdminNoticeBoardPage })));
 const StudentNoticeBoardPage = safeLazy(() => import("./components/pages/StudentNoticeBoardPage").then((m) => ({ default: m.StudentNoticeBoardPage })));
 const StudentDashboard = safeLazy(() => import("./components/dashboards/StudentDashboard").then((m) => ({ default: m.StudentDashboard })));
@@ -62,7 +59,6 @@ const PrivacyPage = safeLazy(() => import("./components/pages/PrivacyPage").then
 const LegalConsentPage = safeLazy(() => import("./components/pages/LegalConsentPage").then((m) => ({ default: m.LegalConsentPage })));
 const SuccessPage = safeLazy(() => import("./components/pages/SuccessPage").then((m) => ({ default: m.SuccessPage })));
 const AdminLoginPage = safeLazy(() => import("./components/pages/AdminLoginPage").then((m) => ({ default: m.AdminLoginPage })));
-const AdminEmailPage = safeLazy(() => import("./components/pages/AdminEmailPage").then((m) => ({ default: m.AdminEmailPage })));
 
 function PageWrapper({ children }: { children: React.ReactNode }) {
   return <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }} className="w-full max-w-full min-w-0">{children}</motion.div>;
@@ -97,7 +93,6 @@ function AppLayout() {
       {showDisclaimer && <DisclaimerModal />}
       {!hideNav && <Navbar />}
       <div className="flex-1 w-full min-w-0">
-        {isAdminRoute && <AdminSystemDeletionNav />}
 
         <Suspense fallback={<StudentShellSkeleton />}>
           <AnimatePresence mode="wait">
@@ -111,8 +106,8 @@ function AppLayout() {
               <Route path="/app/exam-kits" element={<ProtectedRoute allowedRoles={["member"]}><ExamKitsPage /></ProtectedRoute>} />
               <Route path="/app/bootcamps" element={<ProtectedRoute allowedRoles={["member"]}><BootcampsPage /></ProtectedRoute>} />
               <Route path="/app/exam-kits/portal" element={<ProtectedRoute allowedRoles={["member"]}><StudentExamKitsPortal /></ProtectedRoute>} />
-              <Route path="/referral" element={<PageWrapper><ReferralPage /></PageWrapper>} />
-              <Route path="/referral-program" element={<Navigate to="/referral" replace />} />
+              <Route path="/referral" element={<Navigate to="/exam-kits" replace />} />
+              <Route path="/referral-program" element={<Navigate to="/exam-kits" replace />} />
               <Route path="/pricing" element={<PageWrapper><PricingPage /></PageWrapper>} />
               <Route path="/semester/:sem" element={<PageWrapper><NotesPage /></PageWrapper>} />
               <Route path="/success" element={<PageWrapper><SuccessPage /></PageWrapper>} />
@@ -128,19 +123,20 @@ function AppLayout() {
               <Route path="/dashboard/*" element={<RoleRedirect />} />
               <Route path="/admin" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/admin/dashboard" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
-              <Route path="/admin/email" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminEmailPage /></AdminProtectedRoute>} />
+              <Route path="/admin/email" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/admin/exam-kits" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminExamKitsPage /></AdminProtectedRoute>} />
-              <Route path="/admin/delete-users" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminUserDeletionPage /></AdminProtectedRoute>} />
+              <Route path="/admin/delete-users" element={<Navigate to="/admin/students" replace />} />
               <Route path="/admin/notices" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminNoticeBoardPage /></AdminProtectedRoute>} />
               <Route path="/admin/:subpage" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/admin-root" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
-              <Route path="/admin-root/email" element={<AdminEmailPage />} />
+              <Route path="/admin-root/email" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/admin-root/dashboard" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/admin-root/:subpage" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/superadmin" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/superadmin/*" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/app/quiz" element={<Navigate to="/app/dashboard" replace />} />
               <Route path="/app/quiz/:competitionId" element={<Navigate to="/app/dashboard" replace />} />
+              <Route path="/app/referral" element={<Navigate to="/exam-kits" replace />} />
               <Route path="/app/dashboard" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
               <Route path="/app/notices" element={<ProtectedRoute allowedRoles={["member"]}><StudentNoticeBoardPage /></ProtectedRoute>} />
               <Route path="/app/*" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
@@ -156,7 +152,7 @@ function AppLayout() {
       </div>
       {!hideNav && <Footer />}
       {!isAdminRoute && !isQuizRoute && <WhatsAppFloatingButton />}
-      {!isAdminRoute && !isStudentRoute && !isAuthRoute && <><PublicSupportChat />{!isPurchaseRoute && <ReferralFloatingPromo />}</>}
+      {!isAdminRoute && !isStudentRoute && !isAuthRoute && <PublicSupportChat />}
       <Toaster />
     </div>
   );

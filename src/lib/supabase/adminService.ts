@@ -69,47 +69,7 @@ export const adminApi = {
     }
 
     const { data: students, error: studentsErr, count } = await q;
-    if (studentsErr || !students?.length) {
-      return { data: students ?? [], error: studentsErr, count };
-    }
-
-    const userIds = students.map((s) => s.user_id);
-    const [accessRes, paymentsRes] = await Promise.all([
-      adminSupabase
-        .from("access_permissions")
-        .select("user_id,bundle_id,status,bundles(title)")
-        .in("user_id", userIds)
-        .eq("status", "active"),
-      adminSupabase
-        .from("payment_submissions")
-        .select("user_id,status,created_at")
-        .in("user_id", userIds)
-        .order("created_at", { ascending: false }),
-    ]);
-
-    const accessByUserId = new Map<string, string[]>();
-    (accessRes.data || []).forEach((row: any) => {
-      const title = row.bundles?.title || "Active Bundle";
-      const list = accessByUserId.get(row.user_id) || [];
-      list.push(title);
-      accessByUserId.set(row.user_id, list);
-    });
-
-    const paymentByUserId = new Map<string, string>();
-    (paymentsRes.data || []).forEach((row: any) => {
-      if (!paymentByUserId.has(row.user_id)) {
-        paymentByUserId.set(row.user_id, row.status);
-      }
-    });
-
-    const enriched = students.map((s) => ({
-      ...s,
-      assigned_bundles: accessByUserId.get(s.user_id) || [],
-      payment_status: paymentByUserId.get(s.user_id) || "unpaid",
-      is_verified: true, // fallback assumption if edge fn unavailable
-    }));
-
-    return { data: enriched, error: null, count };
+    return { data: students ?? [], error: studentsErr, count };
   },
   listAccess: async () => {
     const { data: access, error: accessError } = await adminSupabase.from("access_permissions").select("id,user_id,bundle_id,status,granted_at,granted_by,expires_at,bundles(title)").order("granted_at", { ascending: false }).range(0, 99);
@@ -276,8 +236,7 @@ export const adminApi = {
   },
 
   updateProfile: async (id: string, status: "active" | "inactive") => {
-    const result = await adminSupabase.from("profiles").update({ status }).eq("user_id", id);
-    if (result.error) throw result.error;
+    await adminFn<{ success: boolean }>("/students/status", { userId: id, status });
   },
   grantAccess: async (user_id: string, bundle_id: string, expires_at?: string) => {
     return adminFn<{ success: boolean; message: string }>("/access/grant", {

@@ -36,16 +36,8 @@ import { adminApi } from "@/lib/supabase/adminService";
 import { ProtectedPdfViewer } from "../viewer/ProtectedPdfViewer";
 import { StudentLearningView } from "../student/StudentLearningView";
 import { StudentProfileView } from "../student/StudentProfileView";
-import { StudentReferralView } from "../student/StudentReferralView";
 import { StudentNoticeBoard } from "../student/StudentNoticeBoard";
-import { Bell, Gift, Award } from "lucide-react";
-
-interface AccessItem {
-  id: string;
-  bundle_id: string;
-  status: string;
-  bundles: { title: string; price: number } | { title: string; price: number }[] | null;
-}
+import { Bell } from "lucide-react";
 
 interface NoteItem {
   id: string;
@@ -59,7 +51,7 @@ interface NoteItem {
   status?: string | null;
 }
 
-type TabType = "dashboard" | "ai" | "profile" | "notices" | "referral";
+type TabType = "dashboard" | "ai" | "profile" | "notices";
 
 type CanonicalTopicSubject =
   | "C Programming"
@@ -301,11 +293,10 @@ export function StudentDashboard() {
       ? "profile"
       : pathSegment === "notices"
       ? "notices"
-      : pathSegment === "referral"
-      ? "referral"
       : "dashboard";
 
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
+  const isPaymentPending = false;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Prevent background scroll when mobile drawer is open
@@ -330,7 +321,6 @@ export function StudentDashboard() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [mobileMenuOpen]);
 
-  const [access, setAccess] = useState<AccessItem[]>([]);
   const [notes, setNotes] = useState<NoteItem[]>([]);
   const [noteCategory, setNoteCategory] = useState<"all" | "repeated" | "theory">("all");
   const [noteSearch, setNoteSearch] = useState("");
@@ -357,7 +347,6 @@ export function StudentDashboard() {
     if (pathSegment === "ai") setActiveTab("ai");
     else if (pathSegment === "profile") setActiveTab("profile");
     else if (pathSegment === "notices") setActiveTab("notices");
-    else if (pathSegment === "referral") setActiveTab("referral");
     else setActiveTab("dashboard");
     setMobileMenuOpen(false);
   }, [location.pathname]);
@@ -372,28 +361,16 @@ export function StudentDashboard() {
     setLoading(true);
     setMessage(null);
     try {
-      const accessPromise = supabase
-        .from("access_permissions")
-        .select("id,bundle_id,status,bundles(title,price)")
-        .eq("status", "active");
-
       const notesPromise = supabase
         .from("notes")
         .select("id,title,subject,semester,description,storage_bucket,storage_path,priority,status")
         .eq("published", true)
         .order("semester", { ascending: true });
 
-      const [accessRes, notesRes, noticeRes] = await Promise.all([
-        accessPromise,
+      const [notesRes, noticeRes] = await Promise.all([
         notesPromise,
         supabase.from("admin_notices").select("id", { count: "exact", head: true }).eq("published", true),
       ]);
-
-      if (accessRes.error) {
-        console.error("Access fetch error:", accessRes.error);
-      } else {
-        setAccess((accessRes.data ?? []) as unknown as AccessItem[]);
-      }
 
       if (notesRes.error) {
         console.error("Notes fetch error:", notesRes.error);
@@ -447,8 +424,7 @@ export function StudentDashboard() {
 
   const studentName = appUser?.name || "Student";
   const studentSemester = appUser?.semester || 1;
-  const hasActiveBundle = access.length > 0;
-  const isPaymentPending = false;
+  const accountIsActive = appUser?.status === "active";
 
   // Keep legacy note categorization helpers as the single source of truth for dashboard lists.
   const displayableNotes = notes.filter(
@@ -629,31 +605,6 @@ export function StudentDashboard() {
               )}
             </button>
 
-            <button
-              onClick={() => switchTab("referral")}
-              className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold transition text-left ${
-                activeTab === "referral"
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              }`}
-            >
-              <Gift className="h-4 w-4 shrink-0 text-emerald-500" />
-              <span>Referral Program</span>
-            </button>
-
-            <button
-              onClick={() => {
-                switchTab("referral");
-                setTimeout(() => {
-                  document.getElementById("referral-rewards")?.scrollIntoView({ behavior: "smooth" });
-                }, 100);
-              }}
-              className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition text-left"
-            >
-              <Award className="h-4 w-4 shrink-0 text-purple-500" />
-              <span>Bonus Questions</span>
-            </button>
-
             <div className="pt-2 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
               Account
             </div>
@@ -796,10 +747,10 @@ export function StudentDashboard() {
               </div>
               <span
                 className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                  hasActiveBundle ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                  accountIsActive ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
                 }`}
               >
-                {hasActiveBundle ? "● Active" : "○ Inactive"}
+                {accountIsActive ? "Account active" : "Account inactive"}
               </span>
             </div>
 
@@ -921,31 +872,6 @@ export function StudentDashboard() {
                 )}
               </button>
 
-              <button
-                onClick={() => switchTab("referral")}
-                className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-left min-h-[44px] cursor-pointer ${
-                  activeTab === "referral"
-                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
-                    : "text-slate-700 hover:bg-slate-50"
-                }`}
-              >
-                <Gift className="h-4 w-4 shrink-0 text-emerald-500" />
-                <span>Referral Program</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  switchTab("referral");
-                  setTimeout(() => {
-                    document.getElementById("referral-rewards")?.scrollIntoView({ behavior: "smooth" });
-                  }, 120);
-                }}
-                className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 transition text-left min-h-[44px] cursor-pointer"
-              >
-                <Award className="h-4 w-4 shrink-0 text-purple-500" />
-                <span>Bonus Questions (Rewards)</span>
-              </button>
-
               <div className="pt-2 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
                 Account
               </div>
@@ -992,14 +918,6 @@ export function StudentDashboard() {
 
         {/* VIEW 3: NOTICE BOARD */}
         {activeTab === "notices" && <StudentNoticeBoard />}
-
-        {/* VIEW 4: REFERRAL PROGRAM */}
-        {activeTab === "referral" && (
-          <StudentReferralView
-            onOpenNote={(note) => void openNote(note)}
-            openingId={openingId}
-          />
-        )}
 
         {/* VIEW 4: MAIN DASHBOARD */}
         {activeTab === "dashboard" && (
@@ -1708,30 +1626,6 @@ export function StudentDashboard() {
                       )}
                     </div>
                   </section>
-
-                  {/* ── ❓ 5. Referral Reward Callout (Most Repeated Questions) ───── */}
-                  <div className="rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-start sm:items-center gap-3">
-                      <div className="grid h-10 w-10 place-items-center rounded-xl bg-indigo-100 text-indigo-700 shrink-0">
-                        <Gift className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h3 className="text-xs sm:text-sm font-bold text-slate-900">
-                          Looking for ❓ Most Repeated Questions?
-                        </h3>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          Refer 3 friends who purchase Semester 1 to unlock the Most Repeated Questions Pack — FREE.
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => switchTab("referral")}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-indigo-200 bg-white px-4 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-50 transition shadow-2xs shrink-0 self-start sm:self-auto cursor-pointer"
-                    >
-                      <span>Refer 3 Friends</span>
-                      <ChevronRight className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
 
                   {/* ── 💡 6. AI Academic Assistant Hero Card ────────────────────── */}
                   <section className="rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50/90 via-white to-blue-50/50 p-6 sm:p-7 shadow-2xs">

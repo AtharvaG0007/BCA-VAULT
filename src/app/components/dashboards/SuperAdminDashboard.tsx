@@ -35,7 +35,6 @@ import { adminApi } from "@/lib/supabase/adminService";
 import { supabase } from "@/lib/supabase/client";
 import { useAdminAuth } from "../auth/AdminAuthContext";
 import { availableSubjects } from "../../data/syllabus";
-import { AdminEmailPage } from "../pages/AdminEmailPage";
 import {
   DashboardSkeleton,
   StudentsTableSkeleton,
@@ -62,15 +61,9 @@ type Row = Record<string, any>;
 const PAGES = [
   { key: "dashboard", label: "Dashboard", icon: BarChart3, group: "DASHBOARD" },
   { key: "students", label: "Students", icon: Users, group: "STUDENTS" },
-  { key: "payments", label: "Payment CRM", icon: ShieldCheck, group: "PAYMENTS" },
   { key: "exam-kits", label: "Exam Kits Verification", icon: ShieldCheck, group: "PAYMENTS" },
-  { key: "referrals", label: "Referral Management", icon: Gift, group: "REFERRALS" },
   { key: "notices", label: "Notice Board", icon: Bell, group: "NOTICES" },
-  { key: "bundles", label: "Bundles", icon: Package, group: "CONTENT" },
   { key: "notes", label: "Study Notes", icon: BookOpen, group: "CONTENT" },
-  { key: "access", label: "Access Control", icon: KeyRound, group: "CONTENT" },
-  { key: "email", label: "Email Console", icon: Mail, group: "SYSTEM" },
-  { key: "activity", label: "Activity Logs", icon: Clock, group: "SYSTEM" },
 ] as const;
 
 const formatDate = (v: any) =>
@@ -555,35 +548,20 @@ export function SuperAdminDashboard() {
     setLoading(true);
     setError("");
     try {
-      const [p, s, a, b, n, l, ref] = await Promise.all([
-        adminApi.listPayments(paymentFilter, search),
+      const [s, n] = await Promise.all([
         adminApi.listStudents(activeTab === "students" ? search : ""),
-        adminApi.listAccess(),
-        adminApi.listBundles(),
         adminApi.listNotes(),
-        adminApi.listActivity(),
-        adminApi.listReferrals(),
       ]);
 
-      const errors = [p.error, s.error, a.error, b.error, n.error, l.error, ref?.error].filter(Boolean);
+      const errors = [s.error, n.error].filter(Boolean);
       if (errors.length > 0) {
         throw errors[0];
       }
 
       setData({
-        payments: p.data || [],
         students: s.data || [],
-        access: a.data || [],
-        bundles: b.data || [],
         notes: n.data || [],
-        activity: l.data || [],
-        referrals: ref?.data?.referrals || [],
-        rewards: ref?.data?.rewards || [],
       });
-
-      if (ref?.data?.metrics) {
-        setReferralMetrics(ref.data.metrics);
-      }
     } catch (err: any) {
       console.error("[SuperAdmin] load error:", err);
       setError(err.message || "Unable to load data from Supabase.");
@@ -596,17 +574,14 @@ export function SuperAdminDashboard() {
     void loadData();
   }, [activeTab, paymentFilter]);
 
-  const payments = data.payments || [];
   const students = data.students || [];
-  const access = data.access || [];
-  const bundles = data.bundles || [];
   const notes = data.notes || [];
-  const activity = data.activity || [];
-  const adminReferrals = data.referrals || [];
-  const adminRewards = data.rewards || [];
-
-  const approvedPayments = payments.filter((x) => x.status === "approved");
-  const totalRevenue = approvedPayments.reduce((acc, x) => acc + Number(x.amount || 0), 0);
+  const payments: Row[] = [];
+  const access: Row[] = [];
+  const bundles: Row[] = [];
+  const activity: Row[] = [];
+  const adminReferrals: Row[] = [];
+  const adminRewards: Row[] = [];
 
   const reviewPayment = async (id: string, status: "approved" | "rejected", note = "") => {
     setActionLoading(true);
@@ -994,31 +969,17 @@ export function SuperAdminDashboard() {
             {activeTab === "referrals" && <ReferralsSkeleton />}
             {activeTab === "bundles" && <BundlesSkeleton />}
             {activeTab === "notes" && <NotesTableSkeleton />}
-            {activeTab === "access" && <AccessTableSkeleton />}
-            {activeTab === "email" && <EmailConsoleSkeleton />}
-            {activeTab === "activity" && <ActivityLogsSkeleton />}
           </>
         ) : (
           <>
             {/* Dashboard Tab */}
             {activeTab === "dashboard" && (
               <div className="space-y-6">
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {[
                     { label: "Total Students", value: students.length },
-                    {
-                      label: "Pending Payments",
-                      value: payments.filter((x) => x.status === "pending").length,
-                    },
-                    {
-                      label: "Approved Access",
-                      value: access.filter((x) => x.status === "active").length,
-                    },
-                    { label: "Total Revenue", value: formatMoney(totalRevenue) },
-                    { label: "Total Referrals", value: referralMetrics.total_referrals },
-                    { label: "Pending Referrals", value: referralMetrics.pending_referrals },
-                    { label: "Successful Referrals", value: referralMetrics.successful_referrals },
-                    { label: "Unlocked Rewards", value: referralMetrics.rewards_unlocked },
+                    { label: "Active Accounts", value: students.filter((student) => student.status === "active").length },
+                    { label: "Published Free Notes", value: notes.filter((note) => note.published).length },
                   ].map((stat) => (
                     <div
                       key={stat.label}
@@ -1032,16 +993,16 @@ export function SuperAdminDashboard() {
 
                 <div className="rounded-2xl border border-slate-800 bg-slate-950 p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-base font-bold text-white">Recent Payment Submissions</h3>
+                    <h3 className="text-base font-bold text-white">Most Repeated Questions payments</h3>
                     <Link
-                      to="/admin/payments"
+                      to="/admin/exam-kits"
                       className="text-xs font-bold text-indigo-400 hover:text-indigo-300"
                     >
-                      View All Payments →
+                      Open Verification Queue →
                     </Link>
                   </div>
                   {payments.length === 0 ? (
-                    <p className="py-8 text-center text-xs text-slate-500">No payment submissions recorded yet.</p>
+                    <p className="py-8 text-center text-xs text-slate-500">Open the verification queue to check submitted payments and grant question pack access.</p>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full min-w-[640px] text-left text-xs">
@@ -1415,14 +1376,6 @@ export function SuperAdminDashboard() {
                       <RefreshCw className="h-3.5 w-3.5" />
                       <span>Refresh</span>
                     </button>
-                    <button
-                      type="button"
-                      onClick={openCreateStudentModal}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-indigo-500 transition shadow-sm"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      <span>Add Student</span>
-                    </button>
                   </div>
                 </div>
 
@@ -1435,26 +1388,15 @@ export function SuperAdminDashboard() {
                         <thead>
                           <tr className="border-b border-slate-800 text-slate-400 font-semibold tracking-wide">
                             <th className="pb-3 pr-4">STUDENT</th>
-                            <th className="pb-3 pr-4">ACCOUNT</th>
-                            <th className="pb-3 pr-4">PAYMENT</th>
-                            <th className="pb-3 pr-4">BUNDLE</th>
+                            <th className="pb-3 pr-4">CONTACT</th>
+                            <th className="pb-3 pr-4">STATUS</th>
                             <th className="pb-3 pr-4">REGISTERED</th>
                             <th className="pb-3 text-right">ACTIONS</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/60 text-slate-300">
                           {students.map((s) => {
-                            const assignedBundles: string[] = s.assigned_bundles || [];
-                            const rawPaymentStatus = String(s.payment_status || "unpaid").toLowerCase();
-                            const paymentDisplay =
-                              rawPaymentStatus === "approved"
-                                ? "Approved"
-                                : rawPaymentStatus === "pending"
-                                ? "Pending"
-                                : "Unpaid";
-                            const isVerified = Boolean(s.is_verified || s.email_confirmed_at);
                             const isActive = s.status === "active";
-                            const isMenuOpen = actionMenuStudentId === s.user_id;
 
                             return (
                               <tr key={s.user_id} className="hover:bg-slate-900/50">
@@ -1462,74 +1404,20 @@ export function SuperAdminDashboard() {
                                 <td className="py-3.5 pr-4">
                                   <p className="font-bold text-white text-sm">{s.full_name || "—"}</p>
                                   <p className="text-xs text-slate-400 mt-0.5">{s.email || "—"}</p>
-                                  {s.user_id && (
-                                    <div className="flex items-center gap-1 mt-0.5">
-                                      <code className="text-[10px] font-mono text-slate-500 select-all">
-                                        {s.user_id.slice(0, 8)}...{s.user_id.slice(-4)}
-                                      </code>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleCopyPassword(s.user_id)}
-                                        title="Copy User ID"
-                                        className="text-slate-500 hover:text-slate-300 transition"
-                                      >
-                                        <Copy className="h-2.5 w-2.5" />
-                                      </button>
-                                    </div>
-                                  )}
                                 </td>
 
-                                {/* ACCOUNT */}
+                                {/* CONTACT */}
                                 <td className="py-3.5 pr-4">
-                                  <div className="space-y-1">
-                                    <div className="flex items-center gap-1.5 text-xs font-semibold">
-                                      {isVerified ? (
-                                        <span className="inline-flex items-center gap-1 text-emerald-400">
-                                          <CheckCircle2 className="h-3 w-3 text-emerald-400" />
-                                          <span>Verified</span>
-                                        </span>
-                                      ) : (
-                                        <span className="inline-flex items-center gap-1 text-amber-400">
-                                          <Clock className="h-3 w-3 text-amber-400" />
-                                          <span>Unverified</span>
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="flex items-center gap-1.5 text-xs font-medium">
-                                      <span
-                                        className={`h-1.5 w-1.5 rounded-full ${
-                                          isActive ? "bg-emerald-400" : "bg-rose-400"
-                                        }`}
-                                      />
-                                      <span className={isActive ? "text-slate-300 capitalize" : "text-rose-400 capitalize"}>
-                                        {isActive ? "Active" : s.status || "Inactive"}
-                                      </span>
-                                    </div>
-                                  </div>
+                                  <p className="text-slate-300">{s.phone || "No phone number"}</p>
+                                  <p className="mt-1 text-[10px] text-slate-500">{s.course || "BCA"} · Semester {s.semester || 1}</p>
                                 </td>
 
-                                {/* PAYMENT */}
+                                {/* ACCOUNT STATUS */}
                                 <td className="py-3.5 pr-4">
-                                  <StatusBadge status={paymentDisplay} />
-                                </td>
-
-                                {/* BUNDLE */}
-                                <td className="py-3.5 pr-4">
-                                  {assignedBundles.length > 0 ? (
-                                    <div className="flex flex-wrap gap-1 max-w-[240px] line-clamp-2">
-                                      {assignedBundles.map((bTitle, idx) => (
-                                        <span
-                                          key={idx}
-                                          className="inline-block rounded-md bg-indigo-950/80 border border-indigo-800/80 px-2 py-0.5 text-[11px] font-bold text-indigo-300 truncate max-w-[220px]"
-                                          title={bTitle}
-                                        >
-                                          {bTitle}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <span className="text-slate-500 text-xs">No bundle</span>
-                                  )}
+                                  <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold ${isActive ? "bg-emerald-950 text-emerald-300" : "bg-rose-950 text-rose-300"}`}>
+                                    <span className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-emerald-400" : "bg-rose-400"}`} />
+                                    {isActive ? "Active" : "Inactive"}
+                                  </span>
                                 </td>
 
                                 {/* REGISTERED */}
@@ -1539,91 +1427,27 @@ export function SuperAdminDashboard() {
 
                                 {/* ACTIONS */}
                                 <td className="py-3.5 text-right">
-                                  <div
-                                    className="inline-flex items-center justify-end gap-2 relative"
-                                    data-action-menu={s.user_id}
-                                  >
-                                    <button
-                                      type="button"
-                                      onClick={async () => {
-                                        await adminApi.updateProfile(
-                                          s.user_id,
-                                          s.status === "active" ? "inactive" : "active"
-                                        );
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      const nextStatus = isActive ? "inactive" : "active";
+                                      if (isActive && !window.confirm(`Ban ${s.full_name || s.email || "this student"}? They will lose access to their account.`)) return;
+                                      try {
+                                        await adminApi.updateProfile(s.user_id, nextStatus);
+                                        toast.success(isActive ? "Student account banned." : "Student account reactivated.");
                                         await loadData();
-                                      }}
-                                      className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition shadow-xs ${
-                                        isActive
-                                          ? "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
-                                          : "bg-emerald-950/80 text-emerald-300 border border-emerald-700/80 hover:bg-emerald-900/80"
-                                      }`}
-                                    >
-                                      {isActive ? "Deactivate" : "Activate"}
-                                    </button>
-
-                                    <div className="relative">
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setActionMenuStudentId(isMenuOpen ? null : s.user_id);
-                                        }}
-                                        className="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800 px-2 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-750 hover:text-white transition"
-                                        title="More actions"
-                                      >
-                                        <MoreVertical className="h-3.5 w-3.5" />
-                                        <span>More</span>
-                                      </button>
-
-                                      {isMenuOpen && (
-                                        <div
-                                          className="absolute right-0 top-full mt-1.5 w-44 rounded-xl border border-slate-700 bg-slate-900 py-1.5 shadow-2xl z-30 text-left"
-                                          onClick={(e) => e.stopPropagation()}
-                                        >
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              setActionMenuStudentId(null);
-                                              setModal({ kind: "grant_access", initialUserId: s.user_id });
-                                            }}
-                                            className="flex w-full items-center gap-2 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 transition"
-                                          >
-                                            <Package className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
-                                            <span>Manage Bundles</span>
-                                          </button>
-
-                                          <button
-                                            type="button"
-                                            onClick={async () => {
-                                              setActionMenuStudentId(null);
-                                              if (confirm(`Send password reset email to ${s.email}?`)) {
-                                                await adminApi.resetPassword(s.email);
-                                                toast.success("Password reset email sent successfully.");
-                                              }
-                                            }}
-                                            className="flex w-full items-center gap-2 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 transition"
-                                          >
-                                            <KeyRound className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-                                            <span>Reset Password</span>
-                                          </button>
-
-                                          {!isVerified && (
-                                            <button
-                                              type="button"
-                                              onClick={() => {
-                                                setActionMenuStudentId(null);
-                                                setModal({ kind: "verify_student_email", student: s });
-                                              }}
-                                              className="flex w-full items-center gap-2 px-3 py-2 text-xs font-semibold text-emerald-300 hover:bg-slate-800 transition border-t border-slate-800/80"
-                                            >
-                                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                                              <span>Verify Email</span>
-                                            </button>
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
+                                      } catch (err: any) {
+                                        toast.error(err.message || "Could not update student account status.");
+                                      }
+                                    }}
+                                    className={`rounded-lg px-3 py-2 text-xs font-bold transition ${
+                                      isActive
+                                        ? "border border-rose-700 bg-rose-950/60 text-rose-300 hover:bg-rose-900"
+                                        : "border border-emerald-700 bg-emerald-950/60 text-emerald-300 hover:bg-emerald-900"
+                                    }`}
+                                  >
+                                    {isActive ? "Ban user" : "Reactivate"}
+                                  </button>
                                 </td>
                               </tr>
                             );
@@ -1856,10 +1680,6 @@ export function SuperAdminDashboard() {
                   </div>
                 )}
               </div>
-            )}
-
-            {activeTab === "email" && (
-              <AdminEmailPage embedded />
             )}
 
             {/* ── NOTICE BOARD MANAGEMENT ────────────────────────────── */}
