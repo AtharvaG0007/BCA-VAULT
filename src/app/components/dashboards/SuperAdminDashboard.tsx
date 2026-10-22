@@ -1005,7 +1005,7 @@ export function SuperAdminDashboard() {
                     <p className="py-8 text-center text-xs text-slate-500">Open the verification queue to check submitted payments and grant question pack access.</p>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="w-full min-w-[640px] text-left text-xs">
+                      <table className="w-full min-w-[900px] text-left text-xs">
                         <thead>
                           <tr className="border-b border-slate-800 text-slate-400 font-semibold">
                             <th className="pb-3">Student</th>
