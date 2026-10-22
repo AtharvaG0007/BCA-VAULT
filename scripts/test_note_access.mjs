@@ -83,11 +83,11 @@ for (const [name, options, req, status] of [
   ['invalid authentication', { auth: 'invalid' }, request(), 401],
   ['authentication service exception', { auth: 'throw' }, request(), 500],
   ['missing note ID', {}, request('POST', origin, 'token', {}), 400],
-  ['inactive account', { profile: { status: 'inactive' } }, request(), 403],
+  ['inactive account cannot access paid question pack', { profile: { status: 'inactive' }, note: { id: 'test-note', title: 'Most Repeated Questions', published: true } }, request(), 403],
   ['missing profile', { profile: null }, request(), 403],
   ['unknown note', {}, request(), 404],
   ['unpublished note', { note: { id: 'test-note', published: false } }, request(), 403],
-  ['note without entitlement', { note: { id: 'test-note', published: true } }, request(), 403],
+  ['paid question note requires Exam Kit entitlement', { note: { id: 'test-note', title: 'Most Repeated Questions', published: true } }, request(), 403],
   ['unsupported HTTP method', {}, request('DELETE'), 405],
 ]) {
   await test(`${name} returns ${status} with CORS and JSON`, async () => {

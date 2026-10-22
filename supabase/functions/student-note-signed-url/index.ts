@@ -143,8 +143,8 @@ Deno.serve(async (request: Request) => {
 
     // 3. Classify resource type. Regular published notes are free; question-answer packs remain gated.
     const isPaidQuestionResource = (
-      /most[\\s_-]*repeated[\\s_-]*(questions|topics)/i.test(note.title || "") ||
-      /most[\\s_-]*repeated[\\s_-]*(questions|topics)|repted[\\s_-]*(questions|topics)|refral_bouns|referral_bonus|questions_complete|question.*answer/i.test(note.storage_path || "")
+      /most[\s_-]*repeated[\s_-]*(questions|topics)/i.test(note.title || "") ||
+      /most[\s_-]*repeated[\s_-]*(questions|topics)|repted[\s_-]*(questions|topics)|refral_bouns|referral_bonus|questions_complete|question.*answer/i.test(note.storage_path || "")
     );
 
     // 4. Verify student authorization
