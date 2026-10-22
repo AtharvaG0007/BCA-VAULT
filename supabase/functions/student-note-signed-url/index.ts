@@ -132,9 +132,11 @@ Deno.serve(async (request: Request) => {
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (profileErr || !profile || profile.status !== "active") {
+    // Notes-only access is granted to any existing registered student profile.
+    // Other account-gated features continue to use the profile's active status.
+    if (profileErr || !profile) {
       return respond(
-        { success: false, error: "Your account is not active. Please contact support." },
+        { success: false, error: "A registered student account is required to access notes." },
         403,
         corsHeaders
       );
