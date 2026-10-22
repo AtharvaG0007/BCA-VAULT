@@ -49,10 +49,31 @@ export const adminApi = {
     return q;
   },
   listStudents: async (search = "") => {
+    const attachBundleAccess = async (students: any[]) => {
+      if (!students.length) return students;
+      const ids = students.map((student) => student.user_id).filter(Boolean);
+      const { data: grants, error } = await adminSupabase
+        .from("access_permissions")
+        .select("user_id,status,bundles(title)")
+        .in("user_id", ids);
+      if (error) throw error;
+      const byUser = new Map<string, any[]>();
+      for (const grant of grants ?? []) {
+        const rows = byUser.get(grant.user_id) ?? [];
+        const bundle = Array.isArray(grant.bundles) ? grant.bundles[0] : grant.bundles;
+        if (grant.status === "active") rows.push(bundle?.title || "Bundle");
+        byUser.set(grant.user_id, rows);
+      }
+      return students.map((student) => ({
+        ...student,
+        active_bundle_titles: byUser.get(student.user_id) ?? [],
+      }));
+    };
+
     try {
       const res = await adminFn<{ success: boolean; data: any[]; count?: number }>("/students/list", { search });
       if (res && res.data) {
-        return { data: res.data, error: null, count: res.count ?? res.data.length };
+        return { data: await attachBundleAccess(res.data), error: null, count: res.count ?? res.data.length };
       }
     } catch (edgeErr) {
       console.warn("[adminApi.listStudents] Edge function fallback:", edgeErr);
@@ -62,54 +83,19 @@ export const adminApi = {
       .from("profiles")
       .select("user_id,full_name,email,phone,course,semester,status,created_at,updated_at", { count: "exact" })
       .order("created_at", { ascending: false })
-      .range(0, 99);
+      .range(0, 999);
 
     if (search) {
       q = q.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
     }
 
     const { data: students, error: studentsErr, count } = await q;
-    if (studentsErr || !students?.length) {
-      return { data: students ?? [], error: studentsErr, count };
+    if (studentsErr) return { data: [], error: studentsErr, count };
+    try {
+      return { data: await attachBundleAccess(students ?? []), error: null, count };
+    } catch (error) {
+      return { data: students ?? [], error: error as any, count };
     }
-
-    const userIds = students.map((s) => s.user_id);
-    const [accessRes, paymentsRes] = await Promise.all([
-      adminSupabase
-        .from("access_permissions")
-        .select("user_id,bundle_id,status,bundles(title)")
-        .in("user_id", userIds)
-        .eq("status", "active"),
-      adminSupabase
-        .from("payment_submissions")
-        .select("user_id,status,created_at")
-        .in("user_id", userIds)
-        .order("created_at", { ascending: false }),
-    ]);
-
-    const accessByUserId = new Map<string, string[]>();
-    (accessRes.data || []).forEach((row: any) => {
-      const title = row.bundles?.title || "Active Bundle";
-      const list = accessByUserId.get(row.user_id) || [];
-      list.push(title);
-      accessByUserId.set(row.user_id, list);
-    });
-
-    const paymentByUserId = new Map<string, string>();
-    (paymentsRes.data || []).forEach((row: any) => {
-      if (!paymentByUserId.has(row.user_id)) {
-        paymentByUserId.set(row.user_id, row.status);
-      }
-    });
-
-    const enriched = students.map((s) => ({
-      ...s,
-      assigned_bundles: accessByUserId.get(s.user_id) || [],
-      payment_status: paymentByUserId.get(s.user_id) || "unpaid",
-      is_verified: true, // fallback assumption if edge fn unavailable
-    }));
-
-    return { data: enriched, error: null, count };
   },
   listAccess: async () => {
     const { data: access, error: accessError } = await adminSupabase.from("access_permissions").select("id,user_id,bundle_id,status,granted_at,granted_by,expires_at,bundles(title)").order("granted_at", { ascending: false }).range(0, 99);
@@ -276,8 +262,7 @@ export const adminApi = {
   },
 
   updateProfile: async (id: string, status: "active" | "inactive") => {
-    const result = await adminSupabase.from("profiles").update({ status }).eq("user_id", id);
-    if (result.error) throw result.error;
+    await adminFn<{ success: boolean }>("/students/status", { userId: id, status });
   },
   grantAccess: async (user_id: string, bundle_id: string, expires_at?: string) => {
     return adminFn<{ success: boolean; message: string }>("/access/grant", {

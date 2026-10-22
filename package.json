@@ -8,6 +8,7 @@
     "dev": "vite",
     "typecheck": "tsc --noEmit",
     "test:quiz": "node scripts/test_quiz_database.mjs",
+    "test:exam-kits": "node scripts/test_exam_kits_security.mjs",
     "test:notes": "node scripts/test_note_access.mjs",
     "typecheck:edge": "tsc -p supabase/functions/tsconfig.json --noEmit"
   },

@@ -5,6 +5,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+const GOOGLE_REGISTRATION_FORM_URL = ""; // Add the final Google Form URL here when it is ready.
+
 const learningItems = [
   { icon: Laptop, title: "Install your IDE", detail: "Set up Visual Studio Code and prepare your workspace." },
   { icon: Sparkles, title: "Understand AI assistants", detail: "A beginner-friendly overview of ChatGPT and Claude." },
@@ -92,8 +94,8 @@ export function BootcampsPage() {
             <div className="flex items-start gap-3">
               <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" />
               <div>
-                <h3 className="font-extrabold text-emerald-950">You’re interested in the free bootcamp!</h3>
-                <p className="mt-1 text-sm leading-6 text-emerald-900">Registration and Zoom details are not connected yet. The joining link will appear here once it has been added. No payment is required for the first session.</p>
+                <h3 className="font-extrabold text-emerald-950">Bootcamp registration form coming soon</h3>
+                <p className="mt-1 text-sm leading-6 text-emerald-900">The Google Form link is not configured yet. It will collect your contact details and preferred domain before the session schedule and Zoom details are shared.</p>
                 <button onClick={() => setShowDetails(false)} className="mt-3 text-xs font-bold text-emerald-800 underline underline-offset-4">Dismiss</button>
               </div>
             </div>
@@ -127,11 +129,11 @@ export function BootcampsPage() {
             </div>
 
             <div className="rounded-3xl border border-slate-800 bg-slate-950 p-5 text-white shadow-sm sm:p-7">
-              <div className="flex items-center justify-between gap-3"><span className="rounded-full bg-violet-400/15 px-3 py-1 text-xs font-black text-violet-200">UPCOMING SERIES</span><span className="text-2xl font-black">$99</span></div>
+              <div className="flex items-center justify-between gap-3"><span className="rounded-full bg-violet-400/15 px-3 py-1 text-xs font-black text-violet-200">NEXT SESSION</span><span className="text-2xl font-black">₹99</span></div>
               <h3 className="mt-4 text-xl font-black">Full Website Creation Bootcamp</h3>
               <p className="mt-2 text-sm leading-6 text-slate-300">A planned deeper bootcamp for building, refining and presenting a complete website with modern AI-assisted workflows.</p>
               <ul className="mt-4 space-y-2 text-xs text-slate-300"><li className="flex gap-2"><CheckCircle2 className="h-4 w-4 shrink-0 text-violet-300" /> Guided project-based learning</li><li className="flex gap-2"><CheckCircle2 className="h-4 w-4 shrink-0 text-violet-300" /> Live Q&A and practical demonstrations</li><li className="flex gap-2"><CheckCircle2 className="h-4 w-4 shrink-0 text-violet-300" /> Tool setup, design and website workflow</li></ul>
-              <div className="mt-5 rounded-xl border border-white/10 bg-white/5 p-3 text-xs leading-5 text-slate-300">Planned price: $99. Dates, curriculum and registration will be announced before enrollment opens.</div>
+              <div className="mt-5 rounded-xl border border-white/10 bg-white/5 p-3 text-xs leading-5 text-slate-300">Session price: ₹99 INR. Dates, curriculum and registration will be announced before enrollment opens.</div>
             </div>
           </div>
         </section>

@@ -36,6 +36,7 @@ import { supabase } from "@/lib/supabase/client";
 import { useAdminAuth } from "../auth/AdminAuthContext";
 import { AdminEmailPage } from "../pages/AdminEmailPage";
 import { AdminExamKitsPage } from "../pages/AdminExamKitsPage";
+import { availableSubjects } from "../../data/syllabus";
 import {
   DashboardSkeleton,
   StudentsTableSkeleton,
@@ -2050,7 +2051,7 @@ export function SuperAdminDashboard() {
                         <span>Referral Linked: {modal.payment.referral_code}</span>
                       </div>
                       <p className="text-[11px] leading-relaxed text-slate-300">
-                        Approving this payment will qualify the referral and unlock the referrer's <strong>Most Repeated Questions</strong> reward.
+                        Approving this payment records the eligible referral. Referral status does not grant paid Exam Kit access.
                       </p>
                     </div>
                   )}
@@ -2174,16 +2175,16 @@ export function SuperAdminDashboard() {
                       </div>
                     </div>
                     <div>
-                      <p className="text-slate-500 font-semibold">Reward Designation</p>
-                      <p className="font-semibold text-indigo-300 mt-0.5">Semester 1 Most Repeated Questions</p>
+                      <p className="text-slate-500 font-semibold">Referral tracking</p>
+                      <p className="font-semibold text-indigo-300 mt-0.5">Semester 1 payment attribution</p>
                     </div>
                     <div>
-                      <p className="text-slate-500 font-semibold">Reward Access Status</p>
+                      <p className="text-slate-500 font-semibold">Historical reward record</p>
                       <p className="font-bold mt-0.5">
                         {modal.item.reward_status === "unlocked" ? (
-                          <span className="text-emerald-400">Reward Unlocked (3/3 Referrals)</span>
+                          <span className="text-slate-400">Historical record (does not grant current kit access)</span>
                         ) : modal.item.status === "successful" ? (
-                          <span className="text-indigo-300">Successful Referral (Requires 3 for Reward)</span>
+                          <span className="text-indigo-300">Successful referral recorded</span>
                         ) : (
                           <span className="text-amber-400">Waiting for payment verification</span>
                         )}
@@ -2195,15 +2196,15 @@ export function SuperAdminDashboard() {
                   <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 text-slate-300 text-[11px] leading-relaxed">
                     {modal.item.reward_status === "unlocked" ? (
                       <span className="text-emerald-300">
-                        ✓ 3 successful referrals reached. Referrer has active authorization to the three Semester 1 Most Repeated Questions PDFs (C Programming, Foundation of Computing, HTML + CSS + JavaScript).
+                        Historical referral reward data is retained for auditing. Current Exam Kit access requires a separately reviewed Exam Kit payment.
                       </span>
                     ) : modal.item.status === "successful" ? (
                       <span className="text-indigo-300">
-                        ✓ This referral is successful (payment approved). It contributes toward the 3 successful referrals required to unlock the Semester 1 Most Repeated Questions pack.
+                        This referral is recorded after payment approval. Referral activity does not unlock paid Exam Kits.
                       </span>
                     ) : (
                       <span className="text-amber-300">
-                        ⏳ Waiting for eligible payment verification. Once an admin approves Student B's eligible Semester 1 payment in Payment CRM, this referral will become successful.
+                        Waiting for eligible payment verification. This status tracks the referral only; Exam Kit access is reviewed separately.
                       </span>
                     )}
                   </div>

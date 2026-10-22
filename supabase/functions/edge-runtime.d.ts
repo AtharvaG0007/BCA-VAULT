@@ -9,6 +9,10 @@ declare module "npm:@supabase/supabase-js@2" {
   export * from "@supabase/supabase-js";
 }
 
+declare module "npm:pdf-lib@1.17.1" {
+  export * from "pdf-lib";
+}
+
 declare module "jsr:@supabase/supabase-js@2.49.8" {
   export * from "@supabase/supabase-js";
 }

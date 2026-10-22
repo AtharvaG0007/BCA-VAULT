@@ -30,6 +30,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(404).json({ error: "Note not found or unavailable." });
     }
 
+    // Keep all Most Repeated Questions/Topics PDFs locked until they are explicitly
+    // made available through the paid Exam Kits entitlement flow.
+    const isPaidQuestionResource =
+      /most[\\s_-]*repeated[\\s_-]*(questions|topics)/i.test(note.title || "") ||
+      /most[\\s_-]*repeated[\\s_-]*(questions|topics)|repted[\\s_-]*(questions|topics)|refral_bouns|referral_bonus|questions_complete|question.*answer/i.test(note.storage_path || "");
+
+    if (isPaidQuestionResource) {
+      try {
+        await c.from("activity_logs").insert({
+          actor_id: user.id,
+          action: "DOCUMENT_ACCESS_DENIED",
+          target_type: "note",
+          target_id: note.id,
+          metadata: {
+            note_title: note.title,
+            bundle_id: note.bundle_id,
+            reason: "most_repeated_topics_temporarily_locked",
+          },
+        });
+      } catch {
+        // Non-blocking audit log
+      }
+      return res.status(403).json({
+        error: "Most Repeated Questions and Topics PDFs are temporarily locked.",
+      });
+    }
+
     const nowIso = new Date().toISOString();
     let hasAccess = false;
 

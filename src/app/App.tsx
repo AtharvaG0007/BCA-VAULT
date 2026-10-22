@@ -157,6 +157,7 @@ function AppLayout() {
               <Route path="/superadmin/*" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/app/quiz" element={<ProtectedRoute allowedRoles={["member"]}><QuizPage /></ProtectedRoute>} />
               <Route path="/app/quiz/:competitionId" element={<ProtectedRoute allowedRoles={["member"]}><QuizPage /></ProtectedRoute>} />
+              <Route path="/app/referral" element={<Navigate to="/exam-kits" replace />} />
               <Route path="/app/dashboard" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
               <Route path="/app/notices" element={<ProtectedRoute allowedRoles={["member"]}><StudentNoticeBoardPage /></ProtectedRoute>} />
               <Route path="/app/*" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />

@@ -291,7 +291,6 @@ interface DashboardDataCache {
   userId: string;
   access: AccessItem[];
   notes: NoteItem[];
-  latestPayment: PaymentRecord | null;
   noticeCount: number;
   timestamp: number;
 }
@@ -389,7 +388,6 @@ export function StudentDashboard() {
     ) {
       setAccess(studentDashboardCache.access);
       setNotes(studentDashboardCache.notes);
-      setLatestPayment(studentDashboardCache.latestPayment);
       setNoticeCount(studentDashboardCache.noticeCount);
       setLoading(false);
       return;
@@ -418,7 +416,6 @@ export function StudentDashboard() {
 
       let loadedAccess: AccessItem[] = [];
       let loadedNotes: NoteItem[] = [];
-      let loadedPayment: PaymentRecord | null = null;
       let loadedNoticeCount = 0;
 
       if (accessRes.error) {
@@ -435,10 +432,6 @@ export function StudentDashboard() {
         setNotes(loadedNotes);
       }
 
-      if (paymentRes && !paymentRes.error && paymentRes.data) {
-        loadedPayment = paymentRes.data as PaymentRecord;
-        setLatestPayment(loadedPayment);
-      }
       if (typeof noticeRes?.count === "number") {
         loadedNoticeCount = noticeRes.count;
         setNoticeCount(loadedNoticeCount);
@@ -449,7 +442,6 @@ export function StudentDashboard() {
           userId: user.id,
           access: loadedAccess,
           notes: loadedNotes,
-          latestPayment: loadedPayment,
           noticeCount: loadedNoticeCount,
           timestamp: Date.now(),
         };
@@ -1777,7 +1769,7 @@ export function StudentDashboard() {
                     </div>
                   </section>
 
-                  {/* ── ❓ 5. Referral Reward Callout (Most Repeated Questions) ───── */}
+                  {/* ── 5. Paid Exam Kit callout ───── */}
                   <div className="rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-start sm:items-center gap-3">
                       <div className="grid h-10 w-10 place-items-center rounded-xl bg-indigo-100 text-indigo-700 shrink-0">
@@ -1785,18 +1777,18 @@ export function StudentDashboard() {
                       </div>
                       <div>
                         <h3 className="text-xs sm:text-sm font-bold text-slate-900">
-                          Looking for ❓ Most Repeated Questions?
+                          Looking for paid Most Repeated Questions kits?
                         </h3>
                         <p className="text-xs text-slate-500 mt-0.5">
-                          Refer 3 friends who purchase Semester 1 to unlock the Most Repeated Questions Pack — FREE.
+                          Select a kit, submit your UPI payment details, and track manual verification in My Exam Kits.
                         </p>
                       </div>
                     </div>
                     <button
-                      onClick={() => switchTab("referral")}
+                      onClick={() => navigate("/app/exam-kits")}
                       className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-indigo-200 bg-white px-4 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-50 transition shadow-2xs shrink-0 self-start sm:self-auto cursor-pointer"
                     >
-                      <span>Refer 3 Friends</span>
+                      <span>Explore Exam Kits</span>
                       <ChevronRight className="h-3.5 w-3.5" />
                     </button>
                   </div>

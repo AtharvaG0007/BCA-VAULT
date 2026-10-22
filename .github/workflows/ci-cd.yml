@@ -158,6 +158,12 @@ jobs:
           SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || env.DEFAULT_PROJECT_REF }}
         run: supabase functions deploy bca-admin --project-ref "$SUPABASE_PROJECT_REF" --use-api
 
+      - name: Deploy exam-kits (verify-jwt preserved)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || env.DEFAULT_PROJECT_REF }}
+        run: supabase functions deploy exam-kits --project-ref "$SUPABASE_PROJECT_REF" --use-api
+
       - name: Deploy student-note-signed-url (verify-jwt preserved)
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
