@@ -15,7 +15,6 @@ import {
   Copy,
   Check,
   GraduationCap,
-  FileQuestion,
   Calendar,
   CheckCircle2,
   ExternalLink,
@@ -40,11 +39,6 @@ const LEARNING_PROMPTS = [
     label: "📝 Revision Summary",
     icon: BookOpen,
     query: "Give me a concise revision summary of Functions and Recursion in C.",
-  },
-  {
-    label: "🎯 Quiz Me (MCQs)",
-    icon: FileQuestion,
-    query: "Start an interactive quiz for BCA Semester 1. Ask me Question 1 with 4 options.",
   },
   {
     label: "📋 Exam Questions",
@@ -78,8 +72,8 @@ export function AIChatbot() {
   // Initialize personalized welcome message
   useEffect(() => {
     const welcomeText = studentName
-      ? `Hello **${studentName}**! 🎓 Welcome to your **BCA Vault AI Learning Assistant**.\n\nI have access to your **BCA Semester ${semester}** curriculum and notes. I can help you with:\n- 💡 **Step-by-step topic explanations**\n- 📝 **Chapter summaries & revision**\n- 🎯 **Interactive practice quizzes**\n- 📋 **Exam-oriented answers & PYQ trends**\n- 📅 **Custom study plans**\n\nWhat would you like to learn or revise today?`
-      : `Hi there! 👋 I am the **BCA Vault AI Learning Assistant**.\n\nI can help you understand BCA theory concepts, explain C programming, DBMS, and Web Tech, generate practice MCQs, or assist with syllabus questions.\n\nHow can I help your learning today?`;
+      ? `Hello **${studentName}**! 🎓 Welcome to your **BCA Vault AI Learning Assistant**.\n\nI have access to your **BCA Semester ${semester}** curriculum and notes. I can help you with:\n- 💡 **Step-by-step topic explanations**\n- 📝 **Chapter summaries & revision**\n- 📋 **Exam-oriented answers & PYQ trends**\n- 📅 **Custom study plans**\n\nWhat would you like to learn or revise today?`
+      : `Hi there! 👋 I am the **BCA Vault AI Learning Assistant**.\n\nI can help you understand BCA theory concepts, explain C programming, DBMS, and Web Tech, or assist with syllabus questions.\n\nHow can I help your learning today?`;
 
     setMessages([
       {

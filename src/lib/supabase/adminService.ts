@@ -109,7 +109,12 @@ export const adminApi = {
   },
   listBundles: () => adminSupabase.from("bundles").select("id,title,description,price,published,created_at,notes(count),access_permissions(count)").order("created_at", { ascending: false }).range(0, 99),
   listNotes: () => adminSupabase.from("notes").select("id,title,description,subject,semester,bundle_id,storage_bucket,storage_path,published,created_at,bundles(title)").order("created_at", { ascending: false }).range(0, 99),
-  listActivity: () => adminSupabase.from("activity_logs").select("id,action,target_type,target_id,metadata,created_at,actor_id").order("created_at", { ascending: false }).range(0, 99),
+  listStudentActivity: (userId: string) => adminSupabase
+    .from("activity_logs")
+    .select("id,action,target_type,target_id,created_at")
+    .eq("actor_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(25),
   
   listReferrals: async () => {
     try {

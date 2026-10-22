@@ -7,7 +7,6 @@ import {
   Code2,
   Copy,
   Database,
-  FileQuestion,
   HelpCircle,
   Lightbulb,
   Loader2,
@@ -64,7 +63,6 @@ const QUICK_ACTIONS = [
   { label: "💡 Explain Simpler", promptSuffix: "Can you explain the previous concept in even simpler beginner terms with a real-life analogy?" },
   { label: "💻 Give Code Example", promptSuffix: "Please provide a complete, clean, commented code example for this concept." },
   { label: "📋 5-Mark Exam Format", promptSuffix: "Format this answer specifically as a standard 5-mark university exam answer with key points." },
-  { label: "🎯 Quiz Me on This", promptSuffix: "Start an interactive quiz on this topic. Ask me Question 1 with 4 options (A, B, C, D)." },
   { label: "📝 Summarize in 3 Points", promptSuffix: "Summarize this entire topic into exactly 3 high-yield bullet points for quick revision." },
 ];
 

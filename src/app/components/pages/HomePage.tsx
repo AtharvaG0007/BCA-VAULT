@@ -10,7 +10,6 @@ import { Community } from "../home/Community";
 import { PopularBundles } from "../home/PopularBundles";
 import { CreditSpotlight } from "../home/CreditSpotlight";
 import { FAQ } from "../home/FAQ";
-import { Newsletter } from "../home/Newsletter";
 
 export function HomePage() {
   return (
@@ -27,7 +26,6 @@ export function HomePage() {
       <PopularBundles />
       <CreditSpotlight />
       <FAQ />
-      <Newsletter />
     </main>
   );
 }

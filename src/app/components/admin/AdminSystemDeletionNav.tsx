@@ -32,8 +32,8 @@ export function AdminSystemDeletionNav() {
     };
 
     const sync = () => {
-      const emailLink = document.querySelector<HTMLAnchorElement>('a[href="/admin/email"]');
-      if (!emailLink) return;
+      const dashboardLink = document.querySelector<HTMLAnchorElement>('a[href="/admin/dashboard"]');
+      if (!dashboardLink) return;
 
       if (!noticeLink || !document.body.contains(noticeLink)) {
         noticeLink = document.querySelector<HTMLAnchorElement>('a[data-admin-notice-board="true"]') || makeLink(
@@ -42,7 +42,7 @@ export function AdminSystemDeletionNav() {
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg>',
           "adminNoticeBoard"
         );
-        if (!noticeLink.parentElement) emailLink.insertAdjacentElement("afterend", noticeLink);
+        if (!noticeLink.parentElement) dashboardLink.insertAdjacentElement("afterend", noticeLink);
       }
 
       if (!deleteLink || !document.body.contains(deleteLink)) {
@@ -52,7 +52,7 @@ export function AdminSystemDeletionNav() {
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v5"></path><path d="M14 11v5"></path></svg>',
           "adminDeleteUsers"
         );
-        if (!deleteLink.parentElement) (noticeLink || emailLink).insertAdjacentElement("afterend", deleteLink);
+        if (!deleteLink.parentElement) (noticeLink || dashboardLink).insertAdjacentElement("afterend", deleteLink);
       }
 
       if (noticeLink) {

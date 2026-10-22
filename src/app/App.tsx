@@ -54,7 +54,6 @@ function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ d
   });
 }
 
-const QuizPage = safeLazy(() => import("./components/quiz/QuizPage").then(m => ({ default: m.QuizPage })));
 const HomePage = safeLazy(() => import("./components/pages/HomePage").then((m) => ({ default: m.HomePage })));
 const NotesPage = safeLazy(() => import("./components/pages/NotesPage").then((m) => ({ default: m.NotesPage })));
 const PYQPage = safeLazy(() => import("./components/pages/PYQPage").then((m) => ({ default: m.PYQPage })));
@@ -77,7 +76,6 @@ const LegalConsentPage = safeLazy(() => import("./components/pages/LegalConsentP
 const SuccessPage = safeLazy(() => import("./components/pages/SuccessPage").then((m) => ({ default: m.SuccessPage })));
 const PaymentPage = safeLazy(() => import("./components/pages/PaymentPage").then((m) => ({ default: m.PaymentPage })));
 const AdminLoginPage = safeLazy(() => import("./components/pages/AdminLoginPage").then((m) => ({ default: m.AdminLoginPage })));
-const AdminEmailPage = safeLazy(() => import("./components/pages/AdminEmailPage").then((m) => ({ default: m.AdminEmailPage })));
 
 function PageWrapper({ children }: { children: React.ReactNode }) {
   return <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }} className="w-full max-w-full min-w-0">{children}</motion.div>;
@@ -101,7 +99,6 @@ function AppLayout() {
   const { hasAccepted } = useLegal();
   const hideNav = noNavRoutes.some((p) => location.pathname.startsWith(p));
   const isAuthRoute = location.pathname.startsWith("/auth");
-  const isQuizRoute = location.pathname.startsWith("/app/quiz");
   const isStudentRoute = location.pathname.startsWith("/app");
   const isPurchaseRoute = location.pathname.startsWith("/purchase") || location.pathname.startsWith("/payment");
   const isAdminRoute = location.pathname.startsWith("/admin") || location.pathname.startsWith("/admin-root");
@@ -144,20 +141,16 @@ function AppLayout() {
               <Route path="/dashboard/*" element={<RoleRedirect />} />
               <Route path="/admin" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/admin/dashboard" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
-              <Route path="/admin/email" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminEmailPage /></AdminProtectedRoute>} />
               <Route path="/admin/exam-kits" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminExamKitsPage /></AdminProtectedRoute>} />
               <Route path="/admin/delete-users" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminUserDeletionPage /></AdminProtectedRoute>} />
               <Route path="/admin/notices" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminNoticeBoardPage /></AdminProtectedRoute>} />
               <Route path="/admin/:subpage" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/admin-root" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
-              <Route path="/admin-root/email" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminEmailPage /></AdminProtectedRoute>} />
               <Route path="/admin-root/dashboard" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/admin-root/:subpage" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/superadmin" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/superadmin/*" element={<Navigate to="/admin/dashboard" replace />} />
-              <Route path="/app/quiz" element={<ProtectedRoute allowedRoles={["member"]}><QuizPage /></ProtectedRoute>} />
-              <Route path="/app/quiz/:competitionId" element={<ProtectedRoute allowedRoles={["member"]}><QuizPage /></ProtectedRoute>} />
-              <Route path="/app/referral" element={<Navigate to="/exam-kits" replace />} />
+              <Route path="/app/referral" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
               <Route path="/app/dashboard" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
               <Route path="/app/notices" element={<ProtectedRoute allowedRoles={["member"]}><StudentNoticeBoardPage /></ProtectedRoute>} />
               <Route path="/app/*" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
@@ -174,7 +167,7 @@ function AppLayout() {
         </Suspense>
       </div>
       {!hideNav && <Footer />}
-      {!isAdminRoute && !isQuizRoute && <WhatsAppFloatingButton />}
+      {!isAdminRoute && <WhatsAppFloatingButton />}
       {!isAdminRoute && !isStudentRoute && !isAuthRoute && <><PublicSupportChat />{!isPurchaseRoute && <ReferralFloatingPromo />}</>}
       <Toaster />
     </div>

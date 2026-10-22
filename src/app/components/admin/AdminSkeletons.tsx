@@ -362,131 +362,6 @@ export function NotesTableSkeleton() {
   );
 }
 
-/** Access Control Tab Skeleton */
-export function AccessTableSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <Skeleton className="h-9 w-44 rounded-xl" />
-      </div>
-      <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-slate-800 text-slate-400 font-semibold">
-                <th className="pb-3 pr-4">Student Name</th>
-                <th className="pb-3 pr-4">Student Email</th>
-                <th className="pb-3 pr-4">Authorized Bundle</th>
-                <th className="pb-3 pr-4">Status</th>
-                <th className="pb-3 pr-4">Granted On</th>
-                <th className="pb-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}>
-                  <td className="py-3.5 pr-4"><Skeleton className="h-4 w-32" /></td>
-                  <td className="py-3.5 pr-4"><Skeleton className="h-3.5 w-36" /></td>
-                  <td className="py-3.5 pr-4"><Skeleton className="h-4 w-32" /></td>
-                  <td className="py-3.5 pr-4"><Skeleton className="h-5 w-18 rounded-full" /></td>
-                  <td className="py-3.5 pr-4"><Skeleton className="h-3.5 w-24" /></td>
-                  <td className="py-3.5 text-right"><Skeleton className="h-7 w-16 rounded-lg ml-auto" /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/** Activity Logs Skeleton */
-export function ActivityLogsSkeleton() {
-  return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="border-b border-slate-800 text-slate-400 font-semibold">
-              <th className="pb-3 pr-4">Action</th>
-              <th className="pb-3 pr-4">Target Type</th>
-              <th className="pb-3 pr-4">Target ID</th>
-              <th className="pb-3">Date & Time</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-800/60">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <tr key={i}>
-                <td className="py-3.5 pr-4"><Skeleton className="h-4 w-28" /></td>
-                <td className="py-3.5 pr-4"><Skeleton className="h-3.5 w-24" /></td>
-                <td className="py-3.5 pr-4"><Skeleton className="h-3 w-36 font-mono" /></td>
-                <td className="py-3.5"><Skeleton className="h-3.5 w-32" /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-/** Email Console Skeleton */
-export function EmailConsoleSkeleton() {
-  return (
-    <div className="space-y-6">
-      {/* 4 Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-xl border border-slate-800 bg-slate-900/50 p-4 space-y-2">
-            <Skeleton className="h-2.5 w-20" />
-            <Skeleton className="h-7 w-12" />
-          </div>
-        ))}
-      </div>
-
-      {/* Grid: Left Queue + Right Editor */}
-      <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <Skeleton className="h-3.5 w-24" />
-            <Skeleton className="h-3.5 w-12" />
-          </div>
-          <Skeleton className="h-8 w-full rounded-xl" />
-          <div className="flex gap-2">
-            <Skeleton className="h-7 flex-1 rounded-lg" />
-            <Skeleton className="h-7 flex-1 rounded-lg" />
-          </div>
-          <div className="space-y-2 pt-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="rounded-xl border border-slate-800/80 bg-slate-950/60 p-3.5 space-y-2">
-                <div className="flex justify-between items-center">
-                  <Skeleton className="h-3.5 w-24" />
-                  <Skeleton className="h-4 w-12 rounded-full" />
-                </div>
-                <Skeleton className="h-3 w-40" />
-                <Skeleton className="h-2.5 w-28" />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <Skeleton className="h-5 w-36" />
-            <Skeleton className="h-8 w-24 rounded-xl" />
-          </div>
-          <div className="space-y-3">
-            <Skeleton className="h-9 w-full rounded-xl" />
-            <Skeleton className="h-9 w-full rounded-xl" />
-            <Skeleton className="h-48 w-full rounded-xl" />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /** Full Progressive Admin Shell Skeleton for initial page load or session restore */
 export function AdminShellSkeleton({ pathname = "" }: { pathname?: string }) {
   const isStudents = pathname.includes("student");
@@ -494,9 +369,6 @@ export function AdminShellSkeleton({ pathname = "" }: { pathname?: string }) {
   const isReferrals = pathname.includes("referral");
   const isBundles = pathname.includes("bundle");
   const isNotes = pathname.includes("note");
-  const isAccess = pathname.includes("access");
-  const isEmail = pathname.includes("email");
-  const isActivity = pathname.includes("activit");
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col lg:flex-row">
@@ -542,12 +414,6 @@ export function AdminShellSkeleton({ pathname = "" }: { pathname?: string }) {
           <BundlesSkeleton />
         ) : isNotes ? (
           <NotesTableSkeleton />
-        ) : isAccess ? (
-          <AccessTableSkeleton />
-        ) : isEmail ? (
-          <EmailConsoleSkeleton />
-        ) : isActivity ? (
-          <ActivityLogsSkeleton />
         ) : (
           <DashboardSkeleton />
         )}

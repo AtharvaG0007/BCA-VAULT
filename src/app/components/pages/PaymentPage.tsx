@@ -1,5 +1,4 @@
-import { quizCall } from "@/lib/supabase/quizService";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import {
   ArrowUpRight,
@@ -15,7 +14,6 @@ import {
   Sparkles,
   AlertCircle,
   Loader2,
-  Trophy,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "../auth/AuthContext";
@@ -29,9 +27,6 @@ const UPI_NAME = "BCA Vault";
 
 /** Regular price — always enforced server-side */
 const REGULAR_PRICE = 100;
-/** Top 3 Winner price — requires authenticated server-side redemption */
-const WINNER_PRICE = 100;
-
 const instructions = [
   "Pay ₹100 — the same price for every student using any UPI app or QR code.",
   "Capture a screenshot showing the 12-digit UTR / UPI Transaction ID.",
@@ -44,12 +39,6 @@ export function PaymentPage() {
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
 
-  // Secure server-side winner redemption state
-
-  const [winnerRedemptionId, setWinnerRedemptionId] = useState<string | null>(null);
-  const [winnerRedeeming, setWinnerRedeeming] = useState(false);
-  const [winnerError, setWinnerError] = useState<string | null>(null);
-
   // Student DMS Referral state (separate from winner redemption)
   const [referralInput, setReferralInput] = useState("");
   const [appliedReferral, setAppliedReferral] = useState<string | null>(null);
@@ -60,13 +49,6 @@ export function PaymentPage() {
 
   // Marketing countdown timer: 3 minutes 50 seconds (230 seconds)
   const [secondsRemaining, setSecondsRemaining] = useState(230);
-
-  // Reset winner redemption state if the authenticated user changes or logs out
-  useEffect(() => {
-    setWinnerRedemptionId(null);
-
-    setWinnerError(null);
-  }, [user?.id]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -82,42 +64,13 @@ export function PaymentPage() {
   };
 
   /** Universal bundle price — ₹100 for every student */
-  const currentPrice = winnerRedemptionId ? WINNER_PRICE : REGULAR_PRICE;
+  const currentPrice = REGULAR_PRICE;
 
   const upiUrl = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(
     UPI_NAME
   )}&am=${currentPrice}&cu=INR&tn=${encodeURIComponent(
     `BCA Vault Semester 1 Bundle`
   )}`;
-
-  const claimedRef = useRef(false);
-
-  const handleClaimWinner = useCallback(async () => {
-    if (claimedRef.current || winnerRedeeming) return;
-    setWinnerError(null);
-    if (!user) {
-      setWinnerError("Sign in with your winning account to check eligibility.");
-      return;
-    }
-    claimedRef.current = true;
-    setWinnerRedeeming(true);
-    try {
-      const data = await quizCall<{ redemption_id: string }>("claim");
-      setWinnerRedemptionId(data.redemption_id);
-    } catch (error) {
-      claimedRef.current = false;
-      setWinnerError(error instanceof Error ? error.message : "Unable to check reward eligibility.");
-    } finally {
-      setWinnerRedeeming(false);
-    }
-  }, [user, winnerRedeeming]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("quizReward") === "1" && user && !winnerRedemptionId && !winnerRedeeming && !claimedRef.current) {
-      void handleClaimWinner();
-    }
-  }, [user, winnerRedemptionId, winnerRedeeming, handleClaimWinner]);
 
   const handleApplyReferral = async () => {
     const raw = referralInput.trim();
@@ -197,11 +150,6 @@ export function PaymentPage() {
               <span>Offer timer:</span>
               <span className="text-white">{formatTimer(secondsRemaining)}</span>
             </div>
-            {winnerRedemptionId && (
-              <span className="rounded-lg bg-emerald-400/20 px-3 py-1 text-xs font-bold text-emerald-200 shrink-0">
-                Winner offer unlocked
-              </span>
-            )}
           </div>
         </div>
       </div>
@@ -224,23 +172,8 @@ export function PaymentPage() {
               <div className="flex items-baseline gap-3">
                 <p className="font-mono text-4xl sm:text-5xl font-extrabold text-slate-950">₹{currentPrice}</p>
               </div>
-              {winnerRedemptionId ? (
-                <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
-                  <Trophy className="h-3 w-3" />
-                  <span>Student bundle price — ₹100</span>
-                </div>
-              ) : (
-                <p className="mt-1.5 text-xs text-slate-500">One-time manual UPI payment</p>
-              )}
+              <p className="mt-1.5 text-xs text-slate-500">One-time manual UPI payment</p>
             </div>
-
-            <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-              <h3 className="flex items-center gap-2 font-bold text-amber-900"><Trophy className="h-4 w-4" /> Quiz Winner Recognition</h3>
-              <p className="mt-2 text-sm text-amber-900">Every student can purchase the Semester 1 bundle for ₹100. No winner code or special eligibility is required.</p>
-              {winnerRedemptionId ? <p className="mt-3 text-sm font-semibold text-emerald-800">Universal student price · ₹100</p> : <button type="button" disabled={winnerRedeeming} onClick={() => void handleClaimWinner()} className="mt-3 min-h-11 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{winnerRedeeming ? "Checking…" : "Verify Quiz Winner Status"}</button>}
-              {winnerError && <p role="alert" className="mt-3 text-sm text-red-800">{winnerError}</p>}
-            </div>
-
             {/* Referral Identifier Section (Separate from Discount Coupon) */}
             <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <div className="mb-2">
@@ -437,7 +370,6 @@ export function PaymentPage() {
                 onClose={() => setShowEvidenceModal(false)}
                 initialPrice={currentPrice}
                 initialReferralIdentifier={appliedReferral || undefined}
-                winnerRedemptionId={winnerRedemptionId || undefined}
               />
             )}
           </div>

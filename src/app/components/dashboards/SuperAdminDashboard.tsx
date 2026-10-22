@@ -17,7 +17,6 @@ import {
   KeyRound,
   Loader2,
   LogOut,
-  Mail,
   Menu,
   MoreVertical,
   Package,
@@ -34,7 +33,6 @@ import {
 import { adminApi } from "@/lib/supabase/adminService";
 import { supabase } from "@/lib/supabase/client";
 import { useAdminAuth } from "../auth/AdminAuthContext";
-import { AdminEmailPage } from "../pages/AdminEmailPage";
 import { AdminExamKitsPage } from "../pages/AdminExamKitsPage";
 import { availableSubjects } from "../../data/syllabus";
 import {
@@ -44,9 +42,6 @@ import {
   ReferralsSkeleton,
   BundlesSkeleton,
   NotesTableSkeleton,
-  AccessTableSkeleton,
-  ActivityLogsSkeleton,
-  EmailConsoleSkeleton,
 } from "../admin/AdminSkeletons";
 
 /** Generate a cryptographically strong random password (16 chars, mixed case + digits + symbols). */
@@ -69,9 +64,6 @@ const PAGES = [
   { key: "notices", label: "Notice Board", icon: Bell, group: "NOTICES" },
   { key: "bundles", label: "Bundles", icon: Package, group: "CONTENT" },
   { key: "notes", label: "Study Notes", icon: BookOpen, group: "CONTENT" },
-  { key: "access", label: "Access Control", icon: KeyRound, group: "CONTENT" },
-  { key: "email", label: "Email Console", icon: Mail, group: "SYSTEM" },
-  { key: "activity", label: "Activity Logs", icon: Clock, group: "SYSTEM" },
 ] as const;
 
 const formatDate = (v: any) =>
@@ -552,35 +544,55 @@ export function SuperAdminDashboard() {
     setModal({ kind: "create_student" });
   }, []);
 
+  const openStudentActivity = async (student: Row) => {
+    setModal({ kind: "student_activity", student, loading: true, activities: [] });
+    try {
+      const { data: activities, error } = await adminApi.listStudentActivity(student.user_id);
+      if (error) throw error;
+      setModal((current: any) =>
+        current?.kind === "student_activity" && current.student.user_id === student.user_id
+          ? { ...current, loading: false, activities: activities || [] }
+          : current,
+      );
+    } catch (err: any) {
+      toast.error(err.message || "Unable to load this student's activity.");
+      setModal(null);
+    }
+  };
+
   const loadData = async () => {
     setLoading(true);
     setError("");
     try {
-      const [p, s, a, b, n, l, ref] = await Promise.all([
-        adminApi.listPayments(paymentFilter, search),
-        adminApi.listStudents(activeTab === "students" ? search : ""),
-        adminApi.listAccess(),
-        adminApi.listBundles(),
-        adminApi.listNotes(),
-        adminApi.listActivity(),
-        adminApi.listReferrals(),
+      const needsPayments = activeTab === "dashboard" || activeTab === "payments";
+      const needsStudents = activeTab === "dashboard" || activeTab === "students";
+      const needsBundles = activeTab === "bundles" || activeTab === "notes";
+      const needsNotes = activeTab === "bundles" || activeTab === "notes";
+      const needsReferrals = activeTab === "dashboard" || activeTab === "referrals";
+      const [p, s, b, n, ref] = await Promise.all([
+        needsPayments ? adminApi.listPayments(paymentFilter, search) : Promise.resolve(null),
+        needsStudents ? adminApi.listStudents(activeTab === "students" ? search : "") : Promise.resolve(null),
+        needsBundles ? adminApi.listBundles() : Promise.resolve(null),
+        needsNotes ? adminApi.listNotes() : Promise.resolve(null),
+        needsReferrals ? adminApi.listReferrals() : Promise.resolve(null),
       ]);
 
-      const errors = [p.error, s.error, a.error, b.error, n.error, l.error, ref?.error].filter(Boolean);
+      const errors = [p?.error, s?.error, b?.error, n?.error, ref?.error].filter(Boolean);
       if (errors.length > 0) {
         throw errors[0];
       }
 
-      setData({
-        payments: p.data || [],
-        students: s.data || [],
-        access: a.data || [],
-        bundles: b.data || [],
-        notes: n.data || [],
-        activity: l.data || [],
-        referrals: ref?.data?.referrals || [],
-        rewards: ref?.data?.rewards || [],
-      });
+      setData((current) => ({
+        ...current,
+        ...(p && { payments: p.data || [] }),
+        ...(s && { students: s.data || [] }),
+        ...(b && { bundles: b.data || [] }),
+        ...(n && { notes: n.data || [] }),
+        ...(ref && {
+          referrals: ref.data?.referrals || [],
+          rewards: ref.data?.rewards || [],
+        }),
+      }));
 
       if (ref?.data?.metrics) {
         setReferralMetrics(ref.data.metrics);
@@ -599,10 +611,8 @@ export function SuperAdminDashboard() {
 
   const payments = data.payments || [];
   const students = data.students || [];
-  const access = data.access || [];
   const bundles = data.bundles || [];
   const notes = data.notes || [];
-  const activity = data.activity || [];
   const adminReferrals = data.referrals || [];
   const adminRewards = data.rewards || [];
 
@@ -995,9 +1005,6 @@ export function SuperAdminDashboard() {
             {activeTab === "referrals" && <ReferralsSkeleton />}
             {activeTab === "bundles" && <BundlesSkeleton />}
             {activeTab === "notes" && <NotesTableSkeleton />}
-            {activeTab === "access" && <AccessTableSkeleton />}
-            {activeTab === "email" && <EmailConsoleSkeleton />}
-            {activeTab === "activity" && <ActivityLogsSkeleton />}
           </>
         ) : (
           <>
@@ -1010,10 +1017,6 @@ export function SuperAdminDashboard() {
                     {
                       label: "Pending Payments",
                       value: payments.filter((x) => x.status === "pending").length,
-                    },
-                    {
-                      label: "Approved Access",
-                      value: access.filter((x) => x.status === "active").length,
                     },
                     { label: "Total Revenue", value: formatMoney(totalRevenue) },
                     { label: "Total Referrals", value: referralMetrics.total_referrals },
@@ -1619,6 +1622,18 @@ export function SuperAdminDashboard() {
                                             <span>Reset Password</span>
                                           </button>
 
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setActionMenuStudentId(null);
+                                              void openStudentActivity(s);
+                                            }}
+                                            className="flex w-full items-center gap-2 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 transition"
+                                          >
+                                            <Clock className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                                            <span>Recent Activity</span>
+                                          </button>
+
                                           {!isVerified && (
                                             <button
                                               type="button"
@@ -1648,74 +1663,6 @@ export function SuperAdminDashboard() {
               </div>
             )}
 
-            {/* Access Control Tab */}
-            {activeTab === "access" && (
-              <div className="space-y-4">
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => setModal({ kind: "grant_access" })}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-500 transition"
-                  >
-                    <Plus className="h-3.5 w-3.5" /> Grant Bundle Access
-                  </button>
-                </div>
-
-                <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
-                  {access.length === 0 ? (
-                    <div className="py-12 text-center text-xs text-slate-500">No active access records found.</div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full min-w-[640px] text-left text-xs">
-                        <thead>
-                          <tr className="border-b border-slate-800 text-slate-400 font-semibold">
-                            <th className="pb-3">Student Name</th>
-                            <th className="pb-3">Student Email</th>
-                            <th className="pb-3">Authorized Bundle</th>
-                            <th className="pb-3">Status</th>
-                            <th className="pb-3">Granted On</th>
-                            <th className="pb-3 text-right">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                          {access.map((item) => {
-                            const profile = item.profiles;
-                            const bundle = item.bundles;
-                            return (
-                              <tr key={item.id} className="hover:bg-slate-900/50">
-                                <td className="py-3 font-bold text-white">{profile?.full_name || "—"}</td>
-                                <td className="py-3 text-slate-400">{profile?.email || "—"}</td>
-                                <td className="py-3 font-bold text-indigo-400">{bundle?.title || "—"}</td>
-                                <td className="py-3">
-                                  <StatusBadge status={item.status} />
-                                </td>
-                                <td className="py-3 text-slate-500">{formatDate(item.granted_at)}</td>
-                                <td className="py-3 text-right">
-                                  {item.status === "active" && (
-                                    <button
-                                      onClick={async () => {
-                                        if (confirm("Revoke access for this student?")) {
-                                          await adminApi.revokeAccess(item.id);
-                                          await loadData();
-                                        }
-                                      }}
-                                      className="rounded-lg bg-rose-950/60 border border-rose-800 px-2.5 py-1 text-xs font-bold text-rose-300 hover:bg-rose-900 transition"
-                                    >
-                                      Revoke
-                                    </button>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Notes Tab */}
             {activeTab === "notes" && (
               <div className="space-y-4">
                 <div className="flex justify-end">
@@ -1836,44 +1783,6 @@ export function SuperAdminDashboard() {
               </div>
             )}
 
-            {/* Activity Logs Tab */}
-            {activeTab === "activity" && (
-              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
-                {activity.length === 0 ? (
-                  <div className="py-12 text-center text-xs text-slate-500">No activity logs recorded.</div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[640px] text-left text-xs">
-                      <thead>
-                        <tr className="border-b border-slate-800 text-slate-400 font-semibold">
-                          <th className="pb-3">Action</th>
-                          <th className="pb-3">Target Type</th>
-                          <th className="pb-3">Target ID</th>
-                          <th className="pb-3">Date & Time</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                        {activity.map((l) => (
-                          <tr key={l.id} className="hover:bg-slate-900/50">
-                            <td className="py-3 font-mono font-bold text-indigo-300">{l.action}</td>
-                            <td className="py-3 text-slate-400">{l.target_type || "—"}</td>
-                            <td className="py-3 font-mono text-[11px] text-slate-500">{l.target_id || "—"}</td>
-                            <td className="py-3 text-slate-500">
-                              {new Date(l.created_at).toLocaleString("en-IN")}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === "email" && (
-              <AdminEmailPage embedded />
-            )}
-
             {activeTab === "exam-kits" && (
               <AdminExamKitsPage embedded />
             )}
@@ -1958,11 +1867,38 @@ export function SuperAdminDashboard() {
                 </div>
               )}
 
+              {modal.kind === "student_activity" && (
+                <div className="space-y-4 text-sm">
+                  <div>
+                    <p className="font-bold text-white">{modal.student.full_name || "Student"}</p>
+                    <p className="mt-1 text-xs text-slate-400">Recent account activity</p>
+                  </div>
+                  {modal.loading ? (
+                    <div className="flex items-center gap-2 py-6 text-xs text-slate-400">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Loading recent activity…
+                    </div>
+                  ) : modal.activities.length === 0 ? (
+                    <p className="rounded-xl bg-slate-900 p-4 text-xs text-slate-400">No activity recorded for this student yet.</p>
+                  ) : (
+                    <ul className="divide-y divide-slate-800 rounded-xl border border-slate-800 bg-slate-900 px-4">
+                      {modal.activities.map((item: Row) => (
+                        <li key={item.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                          <div>
+                            <p className="text-xs font-semibold text-slate-200">{String(item.action || "Activity").replace(/_/g, " ")}</p>
+                            {item.target_type && <p className="mt-0.5 text-[11px] text-slate-500">{item.target_type}</p>}
+                          </div>
+                          <time className="text-[11px] text-slate-500">{new Date(item.created_at).toLocaleString("en-IN")}</time>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+
               {modal.kind === "delete_bundle" && (
                 <div className="space-y-4 text-sm text-white">
                   <p className="mb-2"><strong>Bundle:</strong> {modal.bundle.title}</p>
                   <p className="mb-2"><strong>Notes attached:</strong> {notes.filter((n) => n.bundle_id === modal.bundle.id).length}</p>
-                  <p className="mb-2"><strong>Students with access:</strong> {access.filter((a) => a.bundle_id === modal.bundle.id).length}</p>
                   <p className="text-rose-400 mb-4">This action may remove the bundle and its associated access records. This cannot be undone.</p>
                   <div className="flex justify-end space-x-2">
                     <button
