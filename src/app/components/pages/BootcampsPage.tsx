@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const learningItems = [
+const GOOGLE_REGISTRATION_FORM_URL = ""; // Add the final Google Form URL here when it is ready.\n\nconst learningItems = [
   { icon: Laptop, title: "Install your IDE", detail: "Set up Visual Studio Code and prepare your workspace." },
   { icon: Sparkles, title: "Understand AI assistants", detail: "A beginner-friendly overview of ChatGPT and Claude." },
   { icon: Layers3, title: "Explore Figma", detail: "Learn how to turn ideas and wireframes into a clear design." },
@@ -92,8 +92,8 @@ export function BootcampsPage() {
             <div className="flex items-start gap-3">
               <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" />
               <div>
-                <h3 className="font-extrabold text-emerald-950">You’re interested in the free bootcamp!</h3>
-                <p className="mt-1 text-sm leading-6 text-emerald-900">Registration and Zoom details are not connected yet. The joining link will appear here once it has been added. No payment is required for the first session.</p>
+                <h3 className="font-extrabold text-emerald-950">Bootcamp registration form coming soon</h3>
+                <p className="mt-1 text-sm leading-6 text-emerald-900">The Google Form link is not configured yet. It will collect your contact details and preferred domain before the session schedule and Zoom details are shared.</p>
                 <button onClick={() => setShowDetails(false)} className="mt-3 text-xs font-bold text-emerald-800 underline underline-offset-4">Dismiss</button>
               </div>
             </div>
