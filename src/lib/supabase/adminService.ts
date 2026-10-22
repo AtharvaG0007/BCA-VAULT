@@ -49,10 +49,30 @@ export const adminApi = {
     return q;
   },
   listStudents: async (search = "") => {
+    const attachBundleAccess = async (students: any[]) => {
+      if (!students.length) return students;
+      const ids = students.map((student) => student.user_id).filter(Boolean);
+      const { data: grants, error } = await adminSupabase
+        .from("access_permissions")
+        .select("user_id,status,bundles(title)")
+        .in("user_id", ids);
+      if (error) throw error;
+      const byUser = new Map<string, any[]>();
+      for (const grant of grants ?? []) {
+        const rows = byUser.get(grant.user_id) ?? [];
+        if (grant.status === "active") rows.push(grant.bundles?.title || "Bundle");
+        byUser.set(grant.user_id, rows);
+      }
+      return students.map((student) => ({
+        ...student,
+        active_bundle_titles: byUser.get(student.user_id) ?? [],
+      }));
+    };
+
     try {
       const res = await adminFn<{ success: boolean; data: any[]; count?: number }>("/students/list", { search });
       if (res && res.data) {
-        return { data: res.data, error: null, count: res.count ?? res.data.length };
+        return { data: await attachBundleAccess(res.data), error: null, count: res.count ?? res.data.length };
       }
     } catch (edgeErr) {
       console.warn("[adminApi.listStudents] Edge function fallback:", edgeErr);
@@ -62,14 +82,19 @@ export const adminApi = {
       .from("profiles")
       .select("user_id,full_name,email,phone,course,semester,status,created_at,updated_at", { count: "exact" })
       .order("created_at", { ascending: false })
-      .range(0, 99);
+      .range(0, 999);
 
     if (search) {
       q = q.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
     }
 
     const { data: students, error: studentsErr, count } = await q;
-    return { data: students ?? [], error: studentsErr, count };
+    if (studentsErr) return { data: [], error: studentsErr, count };
+    try {
+      return { data: await attachBundleAccess(students ?? []), error: null, count };
+    } catch (error) {
+      return { data: students ?? [], error: error as any, count };
+    }
   },
   listAccess: async () => {
     const { data: access, error: accessError } = await adminSupabase.from("access_permissions").select("id,user_id,bundle_id,status,granted_at,granted_by,expires_at,bundles(title)").order("granted_at", { ascending: false }).range(0, 99);
