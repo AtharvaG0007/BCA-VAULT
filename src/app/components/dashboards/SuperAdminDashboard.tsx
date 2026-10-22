@@ -1086,7 +1086,7 @@ export function SuperAdminDashboard() {
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="w-full min-w-[640px] text-left text-xs">
+                      <table className="w-full min-w-[900px] text-left text-xs">
                         <thead>
                           <tr className="border-b border-slate-800 text-slate-400 font-semibold">
                             <th className="pb-3">Student Name</th>
@@ -1346,6 +1346,12 @@ export function SuperAdminDashboard() {
             {/* Students Tab */}
             {activeTab === "students" && (
               <div className="space-y-4">
+                <div className="rounded-2xl border border-indigo-800 bg-indigo-950/50 p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div><p className="text-sm font-bold text-white">Free notes access is automatic</p><p className="mt-1 text-xs leading-5 text-indigo-200">Registered accounts should get published standard notes. Most Repeated Topics and Exam Kits stay locked until you approve a payment.</p></div>
+                    <Link to="/admin/exam-kits" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-violet-600 px-3 py-2 text-xs font-bold text-white hover:bg-violet-500"><ShieldCheck className="h-3.5 w-3.5" /> Review Exam Kit payments</Link>
+                  </div>
+                </div>
                 {/* Compact and organized header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5">
@@ -1389,7 +1395,10 @@ export function SuperAdminDashboard() {
                           <tr className="border-b border-slate-800 text-slate-400 font-semibold tracking-wide">
                             <th className="pb-3 pr-4">STUDENT</th>
                             <th className="pb-3 pr-4">CONTACT</th>
-                            <th className="pb-3 pr-4">STATUS</th>
+                            <th className="pb-3 pr-4">ACCOUNT</th>
+                            <th className="pb-3 pr-4">FREE NOTES</th>
+                            <th className="pb-3 pr-4">BUNDLE ACCESS</th>
+                            <th className="pb-3 pr-4">EXAM KIT</th>
                             <th className="pb-3 pr-4">REGISTERED</th>
                             <th className="pb-3 text-right">ACTIONS</th>
                           </tr>
@@ -1419,6 +1428,19 @@ export function SuperAdminDashboard() {
                                     {isActive ? "Active" : "Inactive"}
                                   </span>
                                 </td>
+
+                                {/* FREE NOTES ACCESS: automatic for registered profiles */}
+                                <td className="py-3.5 pr-4"><span className="inline-flex rounded-full border border-emerald-800 bg-emerald-950/60 px-2.5 py-1 text-[10px] font-bold text-emerald-300">Automatic</span></td>
+
+                                {/* Existing active bundle entitlements */}
+                                <td className="py-3.5 pr-4">
+                                  {Array.isArray(s.active_bundle_titles) && s.active_bundle_titles.length > 0 ? (
+                                    <div className="max-w-52 space-y-1">{s.active_bundle_titles.map((title: string) => <span key={title} className="block truncate rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-[10px] font-semibold text-slate-300" title={title}>{title}</span>)}</div>
+                                  ) : <span className="text-[10px] text-slate-500">No bundle grant</span>}
+                                </td>
+
+                                {/* Exam Kit payment review */}
+                                <td className="py-3.5 pr-4"><Link to="/admin/exam-kits" className="inline-flex whitespace-nowrap rounded-lg border border-violet-800 bg-violet-950/60 px-2.5 py-1.5 text-[10px] font-bold text-violet-300 hover:bg-violet-900">Review / approve</Link></td>
 
                                 {/* REGISTERED */}
                                 <td className="py-3.5 pr-4 text-slate-400 text-xs whitespace-nowrap">
