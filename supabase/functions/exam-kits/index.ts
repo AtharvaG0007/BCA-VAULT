@@ -11,6 +11,18 @@ const contentBucket = "most-repeated-questions";
 const evidenceBucket = "exam-kit-payment-evidence";
 const maxContentTitleLength = 160;
 const maxContentDescriptionLength = 1000;
+const examKitSubjects = [
+  { id: "foundation", title: "Foundations of Computing" },
+  { id: "algorithms", title: "Algorithms & Program Design using C" },
+  { id: "client-side", title: "Client-side Web Technologies" },
+  { id: "mathematics", title: "Mathematics" },
+] as const;
+const examKitPlans = [
+  { id: "single", price: 49, selection_mode: "any", subject_count: 1 },
+  { id: "double", price: 79, selection_mode: "any", subject_count: 2 },
+  { id: "all", price: 129, selection_mode: "all", subject_count: null },
+] as const;
+const publishedSubjectIds = new Set(examKitSubjects.map((subject) => subject.id));
 
 function corsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get("Origin") ?? "";
@@ -99,14 +111,9 @@ Deno.serve(async (req: Request) => {
         ? Array.from(new Set<string>(body.subjects.filter((subject: unknown): subject is string => typeof subject === "string")))
         : [];
       const planType = text(body.plan_type);
-      const [{ data: plan, error: planError }, { data: catalogSubjects, error: catalogError }] = await Promise.all([
-        db.from("exam_kit_plans").select("id,price,selection_mode,subject_count").eq("id", planType).eq("published", true).maybeSingle(),
-        db.from("exam_kit_subjects").select("id").eq("published", true),
-      ]);
-      if (planError || catalogError) throw planError ?? catalogError;
-      const publishedSubjectIds = new Set((catalogSubjects ?? []).map((subject) => subject.id));
-      if (!selectedSubjects.every((subject) => publishedSubjectIds.has(subject))) {
-        return reply({ success: false, error: "Choose from the currently published Exam Kit subjects." }, 400, headers);
+      const plan = examKitPlans.find((candidate) => candidate.id === planType);
+      if (!selectedSubjects.every((subject) => publishedSubjectIds.has(subject as typeof examKitSubjects[number]["id"]))) {
+        return reply({ success: false, error: "Choose from the supported Exam Kit subjects." }, 400, headers);
       }
       const validCount = plan?.selection_mode === "all"
         ? selectedSubjects.length === publishedSubjectIds.size && [...publishedSubjectIds].every((subject) => selectedSubjects.includes(subject))
@@ -238,14 +245,7 @@ Deno.serve(async (req: Request) => {
 
     if (action === "my-content") {
       const subjectId = text(body.subject_id);
-      const { data: subject, error: subjectError } = await db
-        .from("exam_kit_subjects")
-        .select("id")
-        .eq("id", subjectId)
-        .eq("published", true)
-        .maybeSingle();
-      if (subjectError) throw subjectError;
-      if (!subject) {
+      if (!publishedSubjectIds.has(subjectId as typeof examKitSubjects[number]["id"])) {
         return reply({ success: false, error: "Unknown subject." }, 400, headers);
       }
 
@@ -327,13 +327,11 @@ Deno.serve(async (req: Request) => {
 
     if (action === "admin-content-list") {
       if (!(await isAdmin(user.id))) return reply({ success: false, error: "Administrator access required." }, 403, headers);
-      const [{ data: data, error: contentError }, { data: subjectsData, error: subjectsError }] = await Promise.all([
-        db.from("exam_kit_content").select("id,subject_id,title,description,storage_path,published,created_at")
-          .eq("storage_bucket", contentBucket).order("created_at", { ascending: false }).limit(200),
-        db.from("exam_kit_subjects").select("id,title").eq("published", true).order("sort_order"),
-      ]);
-      if (contentError || subjectsError) throw contentError ?? subjectsError;
-      return reply({ success: true, content: data ?? [], subjects: subjectsData ?? [] }, 200, headers);
+      const { data, error: contentError } = await db.from("exam_kit_content")
+        .select("id,subject_id,title,description,storage_path,published,created_at")
+        .eq("storage_bucket", contentBucket).order("created_at", { ascending: false }).limit(200);
+      if (contentError) throw contentError;
+      return reply({ success: true, content: data ?? [], subjects: examKitSubjects }, 200, headers);
     }
 
     if (action === "admin-content-save") {
@@ -344,14 +342,7 @@ Deno.serve(async (req: Request) => {
       const description = text(body.description);
       const storagePath = text(body.storage_path);
       const published = body.published === true;
-      const { data: subject, error: subjectError } = await db
-        .from("exam_kit_subjects")
-        .select("id")
-        .eq("id", subjectId)
-        .eq("published", true)
-        .maybeSingle();
-      if (subjectError) throw subjectError;
-      if (!subject) {
+      if (!publishedSubjectIds.has(subjectId as typeof examKitSubjects[number]["id"])) {
         return reply({ success: false, error: "Choose a supported Exam Kit subject." }, 400, headers);
       }
       if (title.length < 1 || title.length > maxContentTitleLength || description.length > maxContentDescriptionLength) {

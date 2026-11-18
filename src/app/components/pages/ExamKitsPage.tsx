@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/app/components/auth/AuthContext";
@@ -39,7 +39,7 @@ export function ExamKitsPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [plans, setPlans] = useState<ExamKitPlan[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(true);
-  const [catalogError, setCatalogError] = useState("");
+  const [catalogError] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [notice, setNotice] = useState(false);
@@ -57,27 +57,7 @@ export function ExamKitsPage() {
   const maxSelectableCount = Math.max(0, ...plans.filter((plan) => plan.selection_mode === "any").map((plan) => plan.subject_count ?? 0));
   const upiUri = order ? `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent("BCA Vault")}&am=${order.amount}&cu=INR&tn=${encodeURIComponent("BCA Vault Exam Kits "+order.order_code)}` : "";
 
-  useEffect(() => {
-    let active = true;
-    async function loadCatalog() {
-      setCatalogLoading(true);
-      setCatalogError("");
-      const [subjectResult, planResult] = await Promise.all([
-        supabase.from("exam_kit_subjects").select("id,title,short_description,description,topics").eq("published", true).order("sort_order"),
-        supabase.from("exam_kit_plans").select("id,title,detail,badge,price,selection_mode,subject_count").eq("published", true).order("sort_order"),
-      ]);
-      if (!active) return;
-      if (subjectResult.error || planResult.error) {
-        setCatalogError("Exam Kit options are temporarily unavailable. Please refresh or try again later.");
-      } else {
-        setSubjects((subjectResult.data ?? []) as Subject[]);
-        setPlans((planResult.data ?? []) as ExamKitPlan[]);
-      }
-      setCatalogLoading(false);
-    }
-    void loadCatalog();
-    return () => { active = false; };
-  }, []);
+
 
   const visibleSubjects = useMemo(
     () => subjects.filter((s) => (s.title + " " + s.short_description + " " + s.topics.join(" ")).toLowerCase().includes(search.toLowerCase())),
