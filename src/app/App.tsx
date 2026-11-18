@@ -9,6 +9,7 @@ import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
 import { AdminAuthProvider } from "@/app/components/auth/AdminAuthContext";
 import { AdminProtectedRoute } from "./components/guards/AdminProtectedRoute";
+import { AdminPaymentEvidencePage } from "./components/pages/AdminPaymentEvidencePage";
 import { PublicSupportChat } from "./components/chatbot/PublicSupportChat";
 import { WhatsAppFloatingButton } from "./components/support/WhatsAppFloatingButton";
 import { StudentShellSkeleton } from "./components/student/StudentSkeletons";
@@ -141,6 +142,7 @@ function AppLayout() {
               <Route path="/admin" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/admin/dashboard" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/admin/exam-kits" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminExamKitsPage /></AdminProtectedRoute>} />
+              <Route path="/admin/payment-evidence" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminPaymentEvidencePage /></AdminProtectedRoute>} />
               <Route path="/admin/delete-users" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminUserDeletionPage /></AdminProtectedRoute>} />
               <Route path="/admin/notices" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><AdminNoticeBoardPage /></AdminProtectedRoute>} />
               <Route path="/admin/:subpage" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
