@@ -11,7 +11,6 @@ import { AdminAuthProvider } from "@/app/components/auth/AdminAuthContext";
 import { AdminProtectedRoute } from "./components/guards/AdminProtectedRoute";
 import { PublicSupportChat } from "./components/chatbot/PublicSupportChat";
 import { WhatsAppFloatingButton } from "./components/support/WhatsAppFloatingButton";
-import { ReferralFloatingPromo } from "./components/marketing/ReferralFloatingPromo";
 import { StudentShellSkeleton } from "./components/student/StudentSkeletons";
 import { AdminSystemDeletionNav } from "./components/admin/AdminSystemDeletionNav";
 import { Toaster } from "./components/ui/sonner";
@@ -123,8 +122,8 @@ function AppLayout() {
               <Route path="/app/exam-kits" element={<ProtectedRoute allowedRoles={["member"]}><ExamKitsPage /></ProtectedRoute>} />
               <Route path="/app/bootcamps" element={<ProtectedRoute allowedRoles={["member"]}><BootcampsPage /></ProtectedRoute>} />
               <Route path="/app/exam-kits/portal" element={<ProtectedRoute allowedRoles={["member"]}><StudentExamKitsPortal /></ProtectedRoute>} />
-              <Route path="/referral" element={<PageWrapper><ReferralPage /></PageWrapper>} />
-              <Route path="/referral-program" element={<Navigate to="/referral" replace />} />
+              <Route path="/referral" element={<Navigate to="/" replace />} />
+              <Route path="/referral-program" element={<Navigate to="/" replace />} />
               <Route path="/pricing" element={<PageWrapper><PricingPage /></PageWrapper>} />
               <Route path="/semester/:sem" element={<PageWrapper><NotesPage /></PageWrapper>} />
               <Route path="/success" element={<PageWrapper><SuccessPage /></PageWrapper>} />
@@ -150,7 +149,7 @@ function AppLayout() {
               <Route path="/admin-root/:subpage" element={<AdminProtectedRoute allowedRoles={["superadmin"]}><SuperAdminDashboard /></AdminProtectedRoute>} />
               <Route path="/superadmin" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/superadmin/*" element={<Navigate to="/admin/dashboard" replace />} />
-              <Route path="/app/referral" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
+              <Route path="/app/referral" element={<Navigate to="/app/dashboard" replace />} />
               <Route path="/app/dashboard" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
               <Route path="/app/notices" element={<ProtectedRoute allowedRoles={["member"]}><StudentNoticeBoardPage /></ProtectedRoute>} />
               <Route path="/app/*" element={<ProtectedRoute allowedRoles={["member"]}><StudentDashboard /></ProtectedRoute>} />
@@ -168,7 +167,7 @@ function AppLayout() {
       </div>
       {!hideNav && <Footer />}
       {!isAdminRoute && <WhatsAppFloatingButton />}
-      {!isAdminRoute && !isStudentRoute && !isAuthRoute && <><PublicSupportChat />{!isPurchaseRoute && <ReferralFloatingPromo />}</>}
+      {!isAdminRoute && !isStudentRoute && !isAuthRoute && <><PublicSupportChat /></>}
       <Toaster />
     </div>
   );
