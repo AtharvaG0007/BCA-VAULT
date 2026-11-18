@@ -7,7 +7,7 @@ const db = createClient(supabaseUrl, serviceRoleKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-const contentBucket = "most-repeated-questions";
+const contentBucket = "Bca_notes";
 const evidenceBucket = "exam-kit-payment-evidence";
 const maxContentTitleLength = 160;
 const maxContentDescriptionLength = 1000;
@@ -349,7 +349,7 @@ Deno.serve(async (req: Request) => {
         return reply({ success: false, error: "Enter a title and a description under 1,000 characters." }, 400, headers);
       }
       if (!validContentPath(storagePath)) {
-        return reply({ success: false, error: "Enter a relative PDF path inside the private most-repeated-questions bucket." }, 400, headers);
+        return reply({ success: false, error: "Enter a relative PDF path inside the private Bca_notes bucket." }, 400, headers);
       }
 
       const values = {
