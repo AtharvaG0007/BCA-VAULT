@@ -50,9 +50,9 @@ const subjectIcons: Record<string, typeof BookOpen> = {
 export function ExamKitsPage() {
   const navigate = useNavigate();
   const { user, appUser } = useAuth();
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [plans, setPlans] = useState<ExamKitPlan[]>([]);
-  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [subjects] = useState<Subject[]>(examKitSubjects);
+  const [plans] = useState<ExamKitPlan[]>(examKitPlans);
+  const [catalogLoading] = useState(false);
   const [catalogError] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [search, setSearch] = useState("");
