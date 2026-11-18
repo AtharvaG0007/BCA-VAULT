@@ -1,10 +1,10 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/app/components/auth/AuthContext";
 import { QRCodeSVG } from "qrcode.react";
 import {
-  ArrowLeft, ArrowRight, BookOpen, Calculator, Check, Code2, FileQuestion,
+  ArrowLeft, ArrowRight, BookOpen, Calculator, Check, Code2, Download, FileQuestion,
   Globe, GraduationCap, Layers3, LockKeyhole, Search, ShieldCheck, Sparkles, X, Loader2, Copy, CheckCircle2,
 } from "lucide-react";
 
@@ -54,6 +54,42 @@ export function ExamKitsPage() {
   const [plans] = useState<ExamKitPlan[]>(examKitPlans);
   const [catalogLoading] = useState(false);
   const [catalogError] = useState("");
+  const [freePdfs, setFreePdfs] = useState<{ name: string; url: string }[]>([]);
+  const [freePdfsLoading, setFreePdfsLoading] = useState(true);
+  const [freePdfsError, setFreePdfsError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadFreePdfs() {
+      setFreePdfsLoading(true);
+      setFreePdfsError("");
+      const folder = "bca sem1 imp pdf";
+      const { data: files, error } = await supabase.storage
+        .from("Bca_notes")
+        .list(folder, { limit: 100, sortBy: { column: "name", order: "asc" } });
+      if (error) {
+        if (!cancelled) setFreePdfsError("Unable to load the free PDFs. Please sign in again or refresh the page.");
+        if (!cancelled) setFreePdfsLoading(false);
+        return;
+      }
+
+      const pdfFiles = (files ?? []).filter((file) => file.name.toLowerCase().endsWith(".pdf"));
+      const links = await Promise.all(pdfFiles.map(async (file) => {
+        const { data, error: linkError } = await supabase.storage
+          .from("Bca_notes")
+          .createSignedUrl(`${folder}/${file.name}`, 3600);
+        return !linkError && data?.signedUrl ? { name: file.name, url: data.signedUrl } : null;
+      }));
+      if (!cancelled) {
+        const available = links.filter((item): item is { name: string; url: string } => Boolean(item));
+        setFreePdfs(available);
+        if (available.length !== pdfFiles.length) setFreePdfsError("Some PDFs could not be opened. Please try again shortly.");
+        setFreePdfsLoading(false);
+      }
+    }
+    void loadFreePdfs();
+    return () => { cancelled = true; };
+  }, [user?.id]);
   const [selected, setSelected] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [notice, setNotice] = useState(false);
@@ -130,16 +166,43 @@ export function ExamKitsPage() {
           </div>
         </section>
 
-        <section aria-label="Most Repeated Topics PDF availability" className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:p-5">
-          <div className="flex items-start gap-3">
-            <FileQuestion className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
-            <div>
-              <h2 className="font-bold text-amber-950">Most Repeated Topics PDFs – Availability Notice</h2>
-              <p className="mt-1 text-sm leading-6 text-amber-900">
-                These PDFs are not available on the website yet. They are currently being shared in the BCA Vault WhatsApp group. Please check the group to access the PDFs.
-              </p>
+        <section aria-label="Free predicted questions and topics PDFs" className="mt-6 rounded-3xl border border-emerald-200 bg-emerald-50/70 p-5 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
+              <FileQuestion className="mt-1 h-6 w-6 shrink-0 text-emerald-700" />
+              <div>
+                <span className="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">FREE FOR SIGNED-IN STUDENTS</span>
+                <h2 className="mt-2 text-xl font-black text-emerald-950">Most Predicted Questions & Important Topics – BCA Semester 1</h2>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-emerald-900">
+                  Get free access to these PDFs. They are prepared using previous-paper pattern analysis, recurring question trends, topic importance and exam-level analysis to help you prioritize revision.
+                </p>
+                <p className="mt-2 max-w-3xl text-xs leading-5 text-emerald-800">
+                  Disclaimer: These are predictions and study guidance only, not official or guaranteed exam questions. We cannot guarantee that these topics will appear or that studying them alone will ensure a pass. Please prepare the complete syllabus too.
+                </p>
+              </div>
             </div>
           </div>
+          {freePdfsLoading ? (
+            <p className="mt-5 rounded-xl bg-white/80 p-4 text-sm text-slate-600">Loading free PDFs…</p>
+          ) : freePdfsError ? (
+            <p role="alert" className="mt-5 rounded-xl border border-amber-200 bg-white p-4 text-sm text-amber-800">{freePdfsError}</p>
+          ) : freePdfs.length === 0 ? (
+            <p className="mt-5 rounded-xl border border-amber-200 bg-white p-4 text-sm text-amber-800">No PDFs are currently available in this folder.</p>
+          ) : (
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
+              {freePdfs.map((file) => (
+                <article key={file.name} className="flex flex-col justify-between gap-4 rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm">
+                  <div>
+                    <p className="text-sm font-bold leading-5 text-slate-900">{file.name.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ")}</p>
+                    <p className="mt-1 text-xs text-emerald-700">Free PDF · Available for 1 hour per link</p>
+                  </div>
+                  <a href={file.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-800">
+                    <Download className="h-4 w-4" /> Open free PDF
+                  </a>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="mt-8">
