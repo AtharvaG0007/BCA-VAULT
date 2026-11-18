@@ -121,6 +121,48 @@ Deno.serve(async (request: Request) => {
     const action = text(body.action);
     const bundleId = text(body.bundle_id);
 
+    // Admin-only register and review. The service-role key stays in this Edge Function.
+    if (action === "admin-list" || action === "admin-review") {
+      if (!user) return respond({ success: false, error: "Super Admin sign-in required." }, 401, corsHeaders);
+      const { data: adminProfile } = await admin.from("admin_profiles").select("user_id")
+        .eq("user_id", user.id).eq("role", "superadmin").eq("status", "active").maybeSingle();
+      if (!adminProfile) return respond({ success: false, error: "Super Admin access required." }, 403, corsHeaders);
+      if (action === "admin-list") {
+        const [{ data: students, error: studentError }, { data: submissions, error: submissionError }] = await Promise.all([
+          admin.from("profiles").select("user_id,full_name,email,phone,course,semester,status,created_at").order("created_at", { ascending: false }).limit(2000),
+          admin.from("payment_submissions").select("id,reference_id,user_id,full_name,email,phone,course,semester,amount,utr,screenshot_bucket,screenshot_path,status,admin_notes,verified_at,created_at,bundle_id").order("created_at", { ascending: false }).limit(2000),
+        ]);
+        if (studentError) throw studentError;
+        if (submissionError) throw submissionError;
+        const evidence = await Promise.all((submissions ?? []).map(async (row: any) => {
+          const { data } = await admin.storage.from(row.screenshot_bucket).createSignedUrl(row.screenshot_path, 300);
+          return { ...row, screenshot_url: data?.signedUrl ?? null };
+        }));
+        return respond({ success: true, students: students ?? [], submissions: evidence }, 200, corsHeaders);
+      }
+      const submissionId = text(body.submission_id);
+      const decision = text(body.decision);
+      const adminNotes = text(body.admin_notes);
+      if (!submissionId || !["approved", "rejected"].includes(decision)) return respond({ success: false, error: "Invalid review request." }, 400, corsHeaders);
+      if (decision === "rejected" && adminNotes.length < 3) return respond({ success: false, error: "A rejection reason is required." }, 400, corsHeaders);
+      const { data: submission } = await admin.from("payment_submissions").select("id,user_id,bundle_id,status").eq("id", submissionId).maybeSingle();
+      if (!submission) return respond({ success: false, error: "Payment submission not found." }, 404, corsHeaders);
+      if (submission.status !== "pending") return respond({ success: false, error: "This payment has already been reviewed." }, 409, corsHeaders);
+      const { data: updated, error: updateError } = await admin.from("payment_submissions").update({
+        status: decision, admin_notes: adminNotes || null, verified_at: new Date().toISOString(), verified_by: user.id,
+      }).eq("id", submissionId).eq("status", "pending").select("id").maybeSingle();
+      if (updateError) throw updateError;
+      if (!updated) return respond({ success: false, error: "Another admin already reviewed this payment. Refresh the register." }, 409, corsHeaders);
+      if (decision === "approved" && submission.user_id && submission.bundle_id) {
+        const { error: accessError } = await admin.from("access_permissions").upsert({
+          user_id: submission.user_id, bundle_id: submission.bundle_id, status: "active",
+          granted_at: new Date().toISOString(), granted_by: user.id, expires_at: null,
+        }, { onConflict: "user_id,bundle_id" });
+        if (accessError) throw accessError;
+      }
+      return respond({ success: true, status: decision }, 200, corsHeaders);
+    }
+
     const bundle = await getSem1Bundle(bundleId);
     if (!bundle) {
       return respond({ success: false, error: "The course bundle is currently unavailable." }, 400, corsHeaders);
