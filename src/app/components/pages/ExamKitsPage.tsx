@@ -26,6 +26,20 @@ type ExamKitPlan = {
   subject_count: number | null;
 };
 
+const examKitSubjects: Subject[] = [
+  { id: "foundation", title: "Foundations of Computing", short_description: "Computer fundamentals and IT basics", description: "Revise the core concepts of computing and information technology.", topics: ["Computer fundamentals", "Number systems and memory", "Operating systems basics", "Computer networks and IT"] },
+  { id: "algorithms", title: "Algorithms & Program Design using C", short_description: "C programming and problem solving", description: "Practice programming fundamentals, logic building and algorithm design.", topics: ["C language fundamentals", "Control statements and functions", "Arrays, strings and pointers", "Algorithms and problem solving"] },
+  { id: "client-side", title: "Client-side Web Technologies", short_description: "HTML, CSS and JavaScript", description: "Prepare the essential concepts used to build interactive websites.", topics: ["HTML structure and forms", "CSS styling and layouts", "JavaScript fundamentals", "DOM and browser interaction"] },
+  { id: "mathematics", title: "Mathematics", short_description: "Core mathematical concepts", description: "Review key mathematical concepts and worked problem-solving methods.", topics: ["Core concepts and formulae", "Step-by-step problem solving", "Important definitions", "Practice questions"] },
+];
+
+const examKitPlans: ExamKitPlan[] = [
+  { id: "single", title: "Single Subject", detail: "Choose any one subject kit.", badge: "", price: 49, selection_mode: "any", subject_count: 1 },
+  { id: "double", title: "Two Subjects", detail: "Choose any two subject kits.", badge: "POPULAR", price: 79, selection_mode: "any", subject_count: 2 },
+  { id: "all", title: "Complete Combo", detail: "Get all four subject kits.", badge: "BEST VALUE", price: 129, selection_mode: "all", subject_count: null },
+];
+
+
 const subjectIcons: Record<string, typeof BookOpen> = {
   foundation: Layers3,
   algorithms: Code2,
@@ -112,6 +126,18 @@ export function ExamKitsPage() {
               <p className="mt-2 text-xs leading-5 text-indigo-100">One-time prices appear in the plan catalog below.</p>
               {/* Prices are loaded from the published Exam Kit plan catalog. */}
 
+            </div>
+          </div>
+        </section>
+
+        <section aria-label="Most Repeated Topics PDF availability" className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:p-5">
+          <div className="flex items-start gap-3">
+            <FileQuestion className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+            <div>
+              <h2 className="font-bold text-amber-950">Most Repeated Topics PDFs – Availability Notice</h2>
+              <p className="mt-1 text-sm leading-6 text-amber-900">
+                These PDFs are not available on the website yet. They are currently being shared in the BCA Vault WhatsApp group. Please check the group to access the PDFs.
+              </p>
             </div>
           </div>
         </section>
