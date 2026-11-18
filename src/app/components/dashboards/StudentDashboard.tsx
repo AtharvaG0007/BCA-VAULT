@@ -615,21 +615,7 @@ export function StudentDashboard() {
               <span>Exam Roadmaps</span>
             </button>
 
-            <button
-              onClick={() => {
-                switchTab("dashboard");
-                setNoteCategory("repeated");
-                setTimeout(() => {
-                  document.getElementById("study-materials")?.scrollIntoView({ behavior: "smooth" });
-                }, 100);
-              }}
-              className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition text-left"
-            >
-              <Flame className="h-4 w-4 shrink-0 text-amber-500" />
-              <span>Most Repeated Topics</span>
-            </button>
-
-            <button
+<button
               onClick={() => {
                 switchTab("dashboard");
                 setTimeout(() => {
@@ -916,21 +902,7 @@ export function StudentDashboard() {
                 <span>Exam Roadmaps</span>
               </button>
 
-              <button
-                onClick={() => {
-                  switchTab("dashboard");
-                  setNoteCategory("repeated");
-                  setTimeout(() => {
-                    document.getElementById("study-materials")?.scrollIntoView({ behavior: "smooth" });
-                  }, 120);
-                }}
-                className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 transition text-left min-h-[44px] cursor-pointer"
-              >
-                <Flame className="h-4 w-4 shrink-0 text-amber-500" />
-                <span>Most Repeated Topics</span>
-              </button>
-
-              <button
+  <button
                 onClick={() => {
                   switchTab("dashboard");
                   setTimeout(() => {
