@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
-import { BookOpen, Menu, X, Search, ChevronDown, User, LogOut, LayoutDashboard, Gift, Home, FileText, Package } from "lucide-react";
+import { BookOpen, Menu, X, Search, ChevronDown, User, LogOut, LayoutDashboard, Home, FileText, Package } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "./ui/utils";
 import { useAuth } from "./auth/AuthContext";
@@ -10,7 +10,6 @@ const navLinks = [
   { label: "Notes", href: "/notes", children: [{ label: "Semester 1 Notes", href: "/semester/1" }, { label: "All Subjects", href: "/notes" }, { label: "Semester 2 (Coming Soon)", href: "/notes" }] },
   { label: "PYQ", href: "/pyq", children: [{ label: "PYQ Papers", href: "/pyq" }, { label: "PYQ Analysis", href: "/pyq/analysis" }] },
   { label: "Question Packs", href: "/exam-kits", badge: "Paid add-on" },
-  { label: "Referral Program", href: "/referral", badge: "Unlock Qs" },
 ];
 
 export function Navbar() {
@@ -117,14 +116,6 @@ export function Navbar() {
                       <BellIcon />
                       <span>Notice Board</span>
                     </Link>
-                    <Link
-                      to="/app/referral"
-                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-[#1E40AF] transition"
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      <Gift className="w-3.5 h-3.5 text-indigo-600" />
-                      <span>Referral Program</span>
-                    </Link>
                     <div className="border-t border-gray-100 mt-1 pt-1">
                       <button
                         onClick={handleLogout}
@@ -176,7 +167,6 @@ export function Navbar() {
         <MobileLink to="/notes" icon={<FileText className="w-3.5 h-3.5" />} label="Notes" close={() => setMobileOpen(false)} />
         <MobileLink to="/exam-kits" icon={<Package className="w-3.5 h-3.5" />} label="Paid Question Packs" close={() => setMobileOpen(false)} />
         {isLoggedIn && <MobileLink to="/app/notices" icon={<BellIcon />} label="Notice Board" close={() => setMobileOpen(false)} />}
-        <MobileLink to="/referral" icon={<Gift className="w-3.5 h-3.5" />} label="Referral Program" close={() => setMobileOpen(false)} />
       </div></div>
       {isLoggedIn && <div className="pt-3 border-t border-gray-100"><span className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-2 block mb-2">Account</span><div className="space-y-1.5"><div className="bg-slate-50 border border-slate-200 rounded-xl p-3"><p className="text-xs font-black text-slate-900 truncate">{studentName}</p><p className="text-[11px] text-slate-500 truncate">{studentEmail}</p></div><MobileLink to="/app/dashboard" icon={<LayoutDashboard className="w-3.5 h-3.5" />} label="Student Dashboard" close={() => setMobileOpen(false)} /><MobileLink to="/app/profile" icon={<User className="w-3.5 h-3.5" />} label="My Profile" close={() => setMobileOpen(false)} /><button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-red-600 bg-red-50"><LogOut className="w-3.5 h-3.5" />Sign out</button></div></div>}
       {!isLoggedIn && <div className="pt-3 border-t border-gray-100"><Button className="w-full mb-2" onClick={() => { navigate("/auth/signup"); setMobileOpen(false); }}>Create Free Account</Button><Button variant="outline" className="w-full" onClick={() => { navigate("/auth/login"); setMobileOpen(false); }}>Login</Button></div>}
