@@ -678,20 +678,7 @@ export function StudentDashboard() {
               <span>Referral Program</span>
             </button>
 
-            <button
-              onClick={() => {
-                switchTab("referral");
-                setTimeout(() => {
-                  document.getElementById("referral-rewards")?.scrollIntoView({ behavior: "smooth" });
-                }, 100);
-              }}
-              className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition text-left"
-            >
-              <Award className="h-4 w-4 shrink-0 text-purple-500" />
-              <span>Bonus Questions</span>
-            </button>
-
-            <div className="pt-2 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+<div className="pt-2 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
               Account
             </div>
 
